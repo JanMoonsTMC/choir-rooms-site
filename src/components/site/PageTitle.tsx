@@ -9,22 +9,22 @@ import Image from 'next/image'
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 
-const TONES = { mint: 'bg-mint-wash', blue: 'bg-blue-tint', purple: 'bg-purple-wash', yellow: 'bg-yellow-wash' }
+const TONES = { river: 'bg-river-wash', blue: 'bg-mist', plum: 'bg-plum-wash', straw: 'bg-straw-wash' }
 
 type PageTitleProps = {
   title: string
   intro?: string | null
   tone?: keyof typeof TONES
   image?: { src: string; alt: string } | null
-  // The colour of the picture's offset: coral for the clinic, purple for the workshops.
-  imageAccent?: 'coral' | 'purple'
+  // The colour of the picture's offset: brass for the clinic, plum for the workshops.
+  imageAccent?: 'brass' | 'plum'
   // Optional small things under the intro, for example badges.
   children?: ReactNode
   // For example a smaller top margin when a "Workshops ›" line (ParentLink) sits above the title.
   className?: string
 }
 
-export function PageTitle({ title, intro, tone = 'mint', image, imageAccent = 'coral', children, className }: PageTitleProps) {
+export function PageTitle({ title, intro, tone = 'river', image, imageAccent = 'brass', children, className }: PageTitleProps) {
   return (
     <header
       className={cn(
@@ -43,7 +43,7 @@ export function PageTitle({ title, intro, tone = 'mint', image, imageAccent = 'c
         <div
           className={cn(
             'framed relative aspect-[3/2] overflow-hidden [--offset-size:8px]',
-            imageAccent === 'purple' ? 'offset-purple' : 'offset-coral',
+            imageAccent === 'plum' ? 'offset-plum' : 'offset-brass',
           )}
         >
           <Image src={image.src} alt={image.alt} fill sizes="(min-width: 768px) 24rem, 100vw" className="object-cover" />

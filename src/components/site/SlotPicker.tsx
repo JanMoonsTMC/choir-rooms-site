@@ -45,8 +45,8 @@ export function SlotPicker({ slots, selected, error }: SlotPickerProps) {
               <label
                 className={cn(
                   'flex min-h-11 cursor-pointer items-start gap-3 rounded-control border-[1.5px] border-ink bg-canvas px-4 py-3',
-                  // The chosen slot: a thicker frame and a mint wash, besides the filled radio button.
-                  'has-checked:border-2 has-checked:bg-mint-wash',
+                  // The chosen slot: a thicker frame and a river wash, besides the filled radio button.
+                  'has-checked:border-2 has-checked:bg-river-wash',
                   // The keyboard is on this slot: the whole card gets the focus ring.
                   'has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus has-focus-visible:outline-solid',
                   error && 'border-2 bg-error-wash',

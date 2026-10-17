@@ -12,7 +12,7 @@ vi.mock('@vercel/analytics', () => ({ track: vercel.track }))
 // For the site layout's test: Vercel's page-view component as a stand-in that can be recognised, and
 // the layout's other parts replaced by nothing (they need a database and Next.js's font loader).
 vi.mock('@vercel/analytics/next', () => ({ Analytics: function VercelAnalytics() { return null } }))
-vi.mock('next/font/google', () => ({ Hanken_Grotesk: () => ({ variable: 'font' }) }))
+vi.mock('next/font/google', () => ({ Fraunces: () => ({ variable: 'font-heading' }), Source_Sans_3: () => ({ variable: 'font-body' }) }))
 vi.mock('@/components/site/Header', () => ({ Header: () => null }))
 vi.mock('@/components/site/Footer', () => ({ Footer: () => null }))
 

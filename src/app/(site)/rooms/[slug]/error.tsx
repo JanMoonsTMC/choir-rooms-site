@@ -25,7 +25,7 @@ export default function RoomError({ retry }: ErrorPageProps) {
       <PageTitle
         title="This page could not be shown"
         intro="Something went wrong while showing this page. Try again, or go back to all rooms."
-        tone="yellow"
+        tone="straw"
       />
       <div className="flex flex-wrap gap-3">
         <Button type="button" onClick={() => retry()}>Try again</Button>

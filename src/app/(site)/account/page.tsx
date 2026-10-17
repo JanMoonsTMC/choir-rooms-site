@@ -76,7 +76,7 @@ export default async function AccountPage() {
               const room = typeof slot.room === 'object' ? slot.room : null
               const past = new Date(slot.startsAt) <= now
               return (
-                <li key={booking.id} className="framed grid gap-2 p-5 offset-mint">
+                <li key={booking.id} className="framed grid gap-2 p-5 offset-river">
                   <p className="flex flex-wrap items-center gap-3 font-heading text-lg font-extrabold">
                     {formatSlotTime(slot.startsAt, slot.endsAt)}
                     {/* "Past" in words, not only a colour. */}
