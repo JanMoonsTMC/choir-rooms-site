@@ -11,7 +11,7 @@ const file = readChecksFile()
 
 for (const page of pagesToCheck(file)) {
   test(`checks.json: ${page.path}`, async ({ browser }, testInfo) => {
-    const path = page.path.replace('{test-clinic}', () => readFixture().clinic.slug)
+    const path = page.path.replace('{test-room}', () => readFixture().room.slug)
     // The evaluator starts every group at 1100 px; at the phone width, each group first narrows the page.
     const width = testInfo.project.use.viewport?.width
     const groups = width === 390 ? page.groups.map((group) => ({ ...group, steps: [{ width: 390 as const }, ...group.steps] })) : page.groups

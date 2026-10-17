@@ -1,6 +1,6 @@
 // What this is: the "Choose a time" part of the booking form: one radio button per time slot, with
-// its date and time and how many places are left. A full slot stays in the list, so the user sees it
-// exists, but it cannot be chosen, and it says "Full" in words (not only in a colour).
+// its date and time and whether it is free. A booked slot stays in the list, so the user sees it
+// exists, but it cannot be chosen, and it says "Booked" in words (not only in a colour).
 //
 // How it shows the slots: `slots.map(...)` makes one list item per slot. Any list of records is shown
 // on a page this same way.
@@ -10,12 +10,14 @@ import { FieldError } from '@/components/site/FieldError'
 import { placesLabel } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
-// One time slot as the form needs it: worked out on the clinic page, from the slot and its bookings.
+// One time slot as the form needs it: worked out on the room page, from the slot and its bookings.
 export type SlotChoice = {
   id: number
-  // "Saturday 10 October, 15:00", in Brussels time (formatSlotTime in src/lib/format.ts).
+  // "Tuesday 20 October, 19:00–21:00", in Brussels time (formatSlotTime in src/lib/format.ts).
   label: string
   placesLeft: number
+  // How many groups the slot takes in all (usually 1).
+  places: number
 }
 
 type SlotPickerProps = {
@@ -48,7 +50,7 @@ export function SlotPicker({ slots, selected, error }: SlotPickerProps) {
                   // The keyboard is on this slot: the whole card gets the focus ring.
                   'has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-focus has-focus-visible:outline-solid',
                   error && 'border-2 bg-error-wash',
-                  // A full slot: quieter than the open ones (dashed frame, grey text), and "Full" in words.
+                  // A booked slot: quieter than the free ones (dashed frame, grey text), and "Booked" in words.
                   'has-disabled:cursor-not-allowed has-disabled:border-dashed has-disabled:bg-canvas has-disabled:text-ink-soft',
                 )}
               >
@@ -63,7 +65,7 @@ export function SlotPicker({ slots, selected, error }: SlotPickerProps) {
                 />
                 <span className="grid">
                   <span className="font-semibold">{slot.label}</span>
-                  <span className={full ? 'font-semibold' : 'text-ink-soft'}>{placesLabel(slot.placesLeft)}</span>
+                  <span className={full ? 'font-semibold' : 'text-ink-soft'}>{placesLabel(slot.placesLeft, slot.places)}</span>
                 </span>
               </label>
             </li>

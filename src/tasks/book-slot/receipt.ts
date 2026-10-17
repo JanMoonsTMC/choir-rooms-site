@@ -1,6 +1,6 @@
-// The confirmation link after a booking: /clinics/<slug>/booked?ref=<booking id>.<signature>.
+// The confirmation link after a booking: /rooms/<slug>/booked?ref=<booking id>.<signature>.
 //
-// WHY a signature: the confirmation page reads the booking to show its clinic and time. If the link
+// WHY a signature: the confirmation page reads the booking to show its room and time. If the link
 // held only the booking's number, anyone could type other numbers and learn when other people booked.
 // The signature is a code worked out from the number and the site's secret (PAYLOAD_SECRET). Only this
 // server can make it, so a changed or made-up link does not match and the page shows nothing.

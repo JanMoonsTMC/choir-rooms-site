@@ -1,5 +1,5 @@
 // "My bookings", /account: the page of the optional members' area (src/lib/membersArea.ts) where a
-// logged-in member sees the repair clinic bookings they made while logged in, and can log out. While
+// logged-in member sees the room bookings they made while logged in, and can log out. While
 // the area is off it does not exist: it answers with the 404 page. Without a member's log-in it sends
 // the user to /account/login.
 //
@@ -41,14 +41,14 @@ export default async function AccountPage() {
     user: { ...member, collection: 'members' },
   })
   const slotIds = bookings.docs.map((booking) => booking.timeSlot).filter((id): id is number => typeof id === 'number')
-  // Each slot's time and clinic (public content), the clinic with its name and address only.
+  // Each slot's time and room (public content), the room with its name and address only.
   const slots = slotIds.length === 0
     ? []
     : (await payload.find({
         collection: 'timeSlots',
         where: { id: { in: slotIds } },
-        select: { startsAt: true, clinic: true },
-        populate: { clinics: { name: true, slug: true } },
+        select: { startsAt: true, endsAt: true, room: true },
+        populate: { rooms: { name: true, slug: true } },
         depth: 1,
         joins: false,
         pagination: false,
@@ -68,23 +68,23 @@ export default async function AccountPage() {
         {rows.length === 0 ? (
           <Notice label="No bookings yet">
             <p>Bookings you make while logged in show up here.</p>
-            <ButtonLink href="/clinics" variant="secondary" className="mt-2 w-fit">Book a practice room</ButtonLink>
+            <ButtonLink href="/rooms" variant="secondary" className="mt-2 w-fit">Book a practice room</ButtonLink>
           </Notice>
         ) : (
           <ul aria-label="Your bookings" className="grid gap-4">
             {rows.map(({ booking, slot }) => {
-              const clinic = typeof slot.clinic === 'object' ? slot.clinic : null
+              const room = typeof slot.room === 'object' ? slot.room : null
               const past = new Date(slot.startsAt) <= now
               return (
                 <li key={booking.id} className="framed grid gap-2 p-5 offset-mint">
                   <p className="flex flex-wrap items-center gap-3 font-heading text-lg font-extrabold">
-                    {formatSlotTime(slot.startsAt)}
+                    {formatSlotTime(slot.startsAt, slot.endsAt)}
                     {/* "Past" in words, not only a colour. */}
                     {past && <Badge tone="outline">Past</Badge>}
                   </p>
-                  {clinic && (
+                  {room && (
                     <p className="min-w-0 [overflow-wrap:anywhere]">
-                      <Link href={`/clinics/${clinic.slug}`}>{clinic.name}</Link>
+                      <Link href={`/rooms/${room.slug}`}>{room.name}</Link>
                     </p>
                   )}
                 </li>

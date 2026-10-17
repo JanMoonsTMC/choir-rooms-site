@@ -8,24 +8,25 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import type { Payload } from 'payload'
 import { getTestPayload, resetCollections } from '../setup/payload'
 import { refuseUnlessThrowAwayTestDatabase } from '../setup/safety'
+import { roomData, slotData } from '../setup/rooms'
 import { createBooking } from '../../src/tasks/book-slot/createBooking'
 
 const FULL = 'This slot is full. Choose another time.'
-const clean = ['bookings', 'timeSlots', 'clinics', 'throttle']
-const editor = { collection: 'users', id: 1, email: 'editor@campuscycle.example' }
+const clean = ['bookings', 'timeSlots', 'rooms', 'throttle']
+const editor = { collection: 'users', id: 1, email: 'editor@riversidevoices.example' }
 
 describe.runIf(process.env.CI_REAL_POSTGRES === '1')('booking at the same moment (real Postgres)', () => {
   let p: Payload
-  let clinicId: number
+  let roomId: number
 
   const form = (fields: Record<string, string>) => {
     const data = new FormData()
-    const all = { clinic: 'test-clinic', requestId: randomUUID(), name: 'Test Person', email: 'test@campuscycle.example', ...fields }
+    const all = { room: 'test-room', requestId: randomUUID(), name: 'Test Person', email: 'test@riversidevoices.example', ...fields }
     for (const [name, value] of Object.entries(all)) data.append(name, value)
     return data
   }
   const slot = async (places = 2) =>
-    p.create({ collection: 'timeSlots', data: { clinic: clinicId, startsAt: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString(), places } })
+    p.create({ collection: 'timeSlots', data: slotData(roomId, new Date(Date.now() + 6 * 24 * 60 * 60 * 1000), places) })
   const count = async (slotId: number) => (await p.count({ collection: 'bookings', where: { timeSlot: { equals: slotId } } })).totalDocs
 
   beforeAll(async () => {
@@ -34,7 +35,7 @@ describe.runIf(process.env.CI_REAL_POSTGRES === '1')('booking at the same moment
   })
   beforeEach(async () => {
     await resetCollections(clean)
-    clinicId = (await p.create({ collection: 'clinics', data: { name: 'Test clinic', slug: 'test-clinic', day: 'Saturday', startTime: '15:00', endTime: '17:00', summary: 'Test instance.' } })).id
+    roomId = (await p.create({ collection: 'rooms', data: roomData })).id
   })
   afterAll(() => resetCollections(clean))
 
@@ -99,8 +100,8 @@ describe.runIf(process.env.CI_REAL_POSTGRES === '1')('booking at the same moment
   it('two editors move a booking each into the last place at once: one move is saved, the other is refused', async () => {
     const target = await slot(1)
     const from = await slot(2)
-    const a = await p.create({ collection: 'bookings', data: { timeSlot: from.id, name: 'Test Person', email: 'test@campuscycle.example' } })
-    const b = await p.create({ collection: 'bookings', data: { timeSlot: from.id, name: 'Test Person', email: 'test@campuscycle.example' } })
+    const a = await p.create({ collection: 'bookings', data: { timeSlot: from.id, name: 'Test Person', email: 'test@riversidevoices.example' } })
+    const b = await p.create({ collection: 'bookings', data: { timeSlot: from.id, name: 'Test Person', email: 'test@riversidevoices.example' } })
     const moves = await Promise.allSettled(
       [a, b].map((booking) => p.update({ collection: 'bookings', id: booking.id, data: { timeSlot: target.id }, overrideAccess: false, user: editor })),
     )

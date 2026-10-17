@@ -2,9 +2,9 @@ import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 import { commitTransaction, createLocalReq, initTransaction, killTransaction } from 'payload'
 import { lockTimeSlot } from '../../src/lib/slotLock'
 import { getTestPayload, resetCollections } from '../setup/payload'
+import { roomData, slotData } from '../setup/rooms'
 
-const clean = ['bookings', 'timeSlots', 'clinics']
-const clinicData = { name: 'Test clinic', slug: 'test-clinic', day: 'Saturday' as const, startTime: '15:00', endTime: '17:00', summary: 'Test instance.' }
+const clean = ['bookings', 'timeSlots', 'rooms']
 
 describe('lockTimeSlot', () => {
   beforeEach(() => resetCollections(clean))
@@ -26,8 +26,8 @@ describe('lockTimeSlot', () => {
 
   it('locks an existing time slot inside a transaction', async () => {
     const p = await getTestPayload()
-    const clinic = await p.create({ collection: 'clinics', data: clinicData })
-    const slot = await p.create({ collection: 'timeSlots', data: { clinic: clinic.id, startsAt: '2026-10-10T13:00:00Z', places: 2 } })
+    const room = await p.create({ collection: 'rooms', data: roomData })
+    const slot = await p.create({ collection: 'timeSlots', data: slotData(room.id, '2026-10-10T17:00:00Z', 2) })
     const req = await createLocalReq({}, p)
     expect(await initTransaction(req)).toBe(true)
     try {

@@ -1,6 +1,6 @@
 'use client'
 
-// What this is: the clinic's booking form: choose a time, give a name and an e-mail address, add a
+// What this is: a room's booking form: choose a time, give a name and an e-mail address, add a
 // note if you like, and press "Book this slot". It runs in the browser ('use client'), so it can show
 // "Saving your booking…" while the server works and point at the problems when a booking was not
 // saved. The checks and the save happen on the server: src/tasks/book-slot/ (see its README.md).
@@ -27,19 +27,16 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { MADE_UP_DATA_NOTICE } from '@/content/riverside-voices'
-import type { Repair } from '@/payload-types'
 import type { BookingField, BookingResult, BookingValues } from '@/tasks/book-slot/createBooking'
 import { saveBooking } from '@/tasks/book-slot/saveBooking'
 import { typedValues } from '@/tasks/book-slot/typedValues'
 
 type BookingFormProps = {
-  // The clinic's slug: the server checks that the chosen time belongs to this clinic.
-  clinic: string
+  // The room's slug: the server checks that the chosen time belongs to this room.
+  room: string
   slots: SlotChoice[]
-  // A random code the clinic page makes for this one form (see requestId in src/collections/Bookings.ts).
+  // A random code the room page makes for this one form (see requestId in src/collections/Bookings.ts).
   requestId: string
-  // The clinic's repairs, the same records as the price list above the form. Used by W6 (below).
-  repairs: Pick<Repair, 'id' | 'name' | 'price'>[]
   // The member who is logged in, with the optional members' area on (src/lib/membersArea.ts): their
   // name ('' when their account has none) and their e-mail address, and nothing else. null when the
   // area is off or nobody is logged in, and then the form is the ordinary one.
@@ -49,8 +46,8 @@ type BookingFormProps = {
 const EMPTY: BookingValues = { timeSlot: '', name: '', email: '', note: '' }
 
 // What the user sent last time, for every part inside the form. The fields below get it directly; a
-// part in its own function, such as W6's repair choice, reads it with useSentValues(), so it can show
-// what the user had chosen when the form comes back.
+// part in its own function can read it with useSentValues(), so it can show what the user had chosen
+// when the form comes back.
 export const SentValues = createContext<BookingValues>(EMPTY)
 export function useSentValues(): BookingValues {
   return use(SentValues)
@@ -75,33 +72,8 @@ async function sendBooking(previous: BookingResult | null, formData: FormData): 
   }
 }
 
-// W6: the repair choice, ready to switch on. Remove the // in front of every line of this function.
-// Then replace the whole line {/* W6: <RepairChoice repairs={props.repairs} /> */} in the form below
-// with <RepairChoice repairs={props.repairs} />. The server side is the two lines the W6 comment in
-// createBooking.ts names (src/tasks/book-slot/createBooking.ts).
-// function RepairChoice({ repairs }: { repairs: BookingFormProps['repairs'] }) {
-//   // The repairs ticked in the last send, so they stay ticked when the form comes back.
-//   const sent = useSentValues()
-//   return (
-//     <fieldset className="grid gap-3">
-//       <legend className="mb-1 font-semibold">
-//         Repairs <span className="font-normal text-ink-soft">(optional)</span>
-//       </legend>
-//       {repairs.map((repair) => {
-//         const label = repair.name // To show the price in the choice too, add the record's price here (formatPrice(repair.price)): it reads the stored price, nothing is copied. Also import formatPrice from '@/lib/format', as the clinic page does.
-//         return (
-//           <label key={repair.id} className="flex min-h-11 items-center gap-3">
-//             <input type="checkbox" name="repairs" value={repair.id} defaultChecked={sent.repairs?.includes(String(repair.id))} className="size-5 accent-ink" />
-//             {label}
-//           </label>
-//         )
-//       })}
-//     </fieldset>
-//   )
-// }
-
 export function BookingForm(props: BookingFormProps) {
-  const { clinic, slots, requestId, member } = props
+  const { room, slots, requestId, member } = props
   // state: null at first, then the answer of the last send (only failures come back: a saved booking
   // opens the confirmation page instead).
   const [state, formAction] = useActionState(sendBooking, null)
@@ -142,8 +114,8 @@ export function BookingForm(props: BookingFormProps) {
           </Notice>
         )}
 
-        {/* Not shown: which clinic this is, and the form's random code. */}
-        <input type="hidden" name="clinic" value={clinic} />
+        {/* Not shown: which room this is, and the form's random code. */}
+        <input type="hidden" name="room" value={room} />
         <input type="hidden" name="requestId" value={requestId} />
 
         <SlotPicker slots={slots} selected={values.timeSlot} error={errors.timeSlot} />
@@ -180,8 +152,6 @@ export function BookingForm(props: BookingFormProps) {
           />
           {errors.note && <FieldError id="note-error">{errors.note}</FieldError>}
         </div>
-
-        {/* W6: <RepairChoice repairs={props.repairs} /> */}
 
         {/* The trap field: name="extra" is TRAP_FIELD in src/tasks/book-slot/guards.ts (keep the two the
             same). People never see it, a screen reader skips it (aria-hidden) and Tab never reaches it

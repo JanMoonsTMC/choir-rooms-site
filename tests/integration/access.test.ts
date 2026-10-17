@@ -5,16 +5,17 @@ import sharp from 'sharp'
 import config from '../setup/config'
 import { getTestPayload, resetCollections } from '../setup/payload'
 import { refuseUnlessThrowAwayTestDatabase } from '../setup/safety'
+import { roomData, slotData } from '../setup/rooms'
 
 // These tests delete every user: never on a real database.
 refuseUnlessThrowAwayTestDatabase()
 
-const editor = { collection: 'users', id: 1, email: 'editor@campuscycle.example' }
-const member = { collection: 'members', id: 2, email: 'member@campuscycle.example' }
-const publicCollections: CollectionSlug[] = ['pages', 'topics', 'workshops', 'clinics', 'timeSlots', 'repairs', 'media']
-const clean = ['bookings', 'timeSlots', 'clinics', 'workshops', 'topics', 'repairs', 'pages', 'throttle', 'users']
+const editor = { collection: 'users', id: 1, email: 'editor@riversidevoices.example' }
+const member = { collection: 'members', id: 2, email: 'member@riversidevoices.example' }
+const publicCollections: CollectionSlug[] = ['pages', 'features', 'rooms', 'timeSlots', 'media']
+const clean = ['bookings', 'timeSlots', 'rooms', 'features', 'pages', 'throttle', 'users']
 // The booking's private details used in these tests. None of them may ever reach a public reader.
-const PRIVATE_DATA = /Private Test Person|private@campuscycle|Private test note/
+const PRIVATE_DATA = /Private Test Person|private@riversidevoices|Private test note/
 
 describe('collection access', () => {
   beforeEach(() => resetCollections(clean))
@@ -56,7 +57,7 @@ describe('collection access', () => {
     const p = await getTestPayload()
     const response = await handleEndpoints({ config, path: '/api/bookings', request: new Request('http://localhost/api/bookings', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ timeSlot: 1, name: 'Test Person', email: 'test@campuscycle.example' }),
+      body: JSON.stringify({ timeSlot: 1, name: 'Test Person', email: 'test@riversidevoices.example' }),
     }) })
     expect(response.status).toBe(403)
     expect((await p.count({ collection: 'bookings' })).totalDocs).toBe(0)
@@ -78,34 +79,32 @@ describe('collection access', () => {
     const p = await getTestPayload()
     const options = { overrideAccess: false, user: editor }
     const page = await p.create({ collection: 'pages', data: { title: 'Test page', slug: 'test-page' }, ...options })
-    const topic = await p.create({ collection: 'topics', data: { name: 'Test topic', slug: 'test-topic' }, ...options })
-    const workshop = await p.create({ collection: 'workshops', data: { title: 'Test workshop', slug: 'test-workshop', level: 'beginner', day: 'Tuesday', startTime: '18:30', price: 15, groupSize: 6, summary: 'Test instance.', topics: [topic.id] }, ...options })
-    const clinic = await p.create({ collection: 'clinics', data: { name: 'Test clinic', slug: 'test-clinic', day: 'Saturday', startTime: '15:00', endTime: '17:00', summary: 'Test instance.' }, ...options })
-    const slot = await p.create({ collection: 'timeSlots', data: { clinic: clinic.id, startsAt: '2026-10-10T13:00:00Z', places: 2 }, ...options })
-    const repair = await p.create({ collection: 'repairs', data: { name: 'Test repair', price: 5 }, ...options })
+    const feature = await p.create({ collection: 'features', data: { name: 'Test equipment', slug: 'test-equipment' }, ...options })
+    const room = await p.create({ collection: 'rooms', data: { ...roomData, features: [feature.id] }, ...options })
+    const slot = await p.create({ collection: 'timeSlots', data: slotData(room.id, '2026-10-10T17:00:00Z', 2), ...options })
     // A second editor account, so deleting `user` below never removes the last one (that is refused).
-    await p.create({ collection: 'users', data: { email: 'editor@campuscycle.example', password: 'test-password-0123456789' }, ...options })
-    const user = await p.create({ collection: 'users', data: { email: 'test@campuscycle.example', password: 'test-password-0123456789' }, ...options })
-    const booking = await p.create({ collection: 'bookings', data: { timeSlot: slot.id, name: 'Test Person', email: 'private@campuscycle.example' }, overrideAccess: true })
-    for (const [collection, id] of [['bookings', booking.id], ['timeSlots', slot.id], ['clinics', clinic.id], ['workshops', workshop.id], ['topics', topic.id], ['repairs', repair.id], ['pages', page.id], ['users', user.id]] as const) {
+    await p.create({ collection: 'users', data: { email: 'editor@riversidevoices.example', password: 'test-password-0123456789' }, ...options })
+    const user = await p.create({ collection: 'users', data: { email: 'test@riversidevoices.example', password: 'test-password-0123456789' }, ...options })
+    const booking = await p.create({ collection: 'bookings', data: { timeSlot: slot.id, name: 'Test Person', email: 'private@riversidevoices.example' }, overrideAccess: true })
+    for (const [collection, id] of [['bookings', booking.id], ['timeSlots', slot.id], ['rooms', room.id], ['features', feature.id], ['pages', page.id], ['users', user.id]] as const) {
       expect((await p.findByID({ collection, id, ...options })).id).toBe(id)
       await expect(p.update({ collection, id, data: {}, ...options })).resolves.toHaveProperty('id', id)
       await expect(p.delete({ collection, id, ...options })).resolves.toHaveProperty('id', id)
     }
   })
 
-  it('removes booking joins from public slot and clinic data even when Local API access is bypassed', async () => {
+  it('removes booking joins from public slot and room data even when Local API access is bypassed', async () => {
     const p = await getTestPayload()
-    const clinic = await p.create({ collection: 'clinics', data: { name: 'Test clinic', slug: 'test-clinic', day: 'Saturday', startTime: '15:00', endTime: '17:00', summary: 'Test instance.' } })
-    const slot = await p.create({ collection: 'timeSlots', data: { clinic: clinic.id, startsAt: '2026-10-10T13:00:00Z', places: 2 } })
-    await p.create({ collection: 'bookings', data: { timeSlot: slot.id, name: 'Private Test Person', email: 'private@campuscycle.example', note: 'Private test note' } })
+    const room = await p.create({ collection: 'rooms', data: roomData })
+    const slot = await p.create({ collection: 'timeSlots', data: slotData(room.id, '2026-10-10T17:00:00Z', 2) })
+    await p.create({ collection: 'bookings', data: { timeSlot: slot.id, name: 'Private Test Person', email: 'private@riversidevoices.example', note: 'Private test note' } })
     for (const user of [undefined, member]) {
       for (const depth of [0, 1, 2, 10]) {
         for (const overrideAccess of [false, true]) {
-          for (const [collection, id] of [['timeSlots', slot.id], ['clinics', clinic.id]] as const) {
+          for (const [collection, id] of [['timeSlots', slot.id], ['rooms', room.id]] as const) {
             const result = await p.findByID({ collection, id, depth, overrideAccess, user })
             expect(result).not.toHaveProperty('bookings')
-            for (const slotDoc of collection === 'clinics' ? (result as { timeSlots?: { docs?: unknown[] } }).timeSlots?.docs ?? [] : []) {
+            for (const slotDoc of collection === 'rooms' ? (result as { timeSlots?: { docs?: unknown[] } }).timeSlots?.docs ?? [] : []) {
               if (typeof slotDoc === 'object') expect(slotDoc).not.toHaveProperty('bookings')
             }
             expect(JSON.stringify(result)).not.toMatch(PRIVATE_DATA)
@@ -117,18 +116,18 @@ describe('collection access', () => {
 
   it('shows an editor the slot\'s bookings with access checks switched on', async () => {
     const p = await getTestPayload()
-    const clinic = await p.create({ collection: 'clinics', data: { name: 'Test clinic', slug: 'test-clinic', day: 'Saturday', startTime: '15:00', endTime: '17:00', summary: 'Test instance.' } })
-    const slot = await p.create({ collection: 'timeSlots', data: { clinic: clinic.id, startsAt: '2026-10-10T13:00:00Z', places: 2 } })
-    const booking = await p.create({ collection: 'bookings', data: { timeSlot: slot.id, name: 'Private Test Person', email: 'private@campuscycle.example' } })
+    const room = await p.create({ collection: 'rooms', data: roomData })
+    const slot = await p.create({ collection: 'timeSlots', data: slotData(room.id, '2026-10-10T17:00:00Z', 2) })
+    const booking = await p.create({ collection: 'bookings', data: { timeSlot: slot.id, name: 'Private Test Person', email: 'private@riversidevoices.example' } })
     const found = await p.findByID({ collection: 'timeSlots', id: slot.id, overrideAccess: false, user: editor })
     expect(found.bookings?.docs?.map(b => typeof b === 'object' ? b.id : b)).toEqual([booking.id])
   })
 
   it('refuses queries that filter on bookings, so nobody can guess names or e-mail addresses', async () => {
     const p = await getTestPayload()
-    const clinic = await p.create({ collection: 'clinics', data: { name: 'Test clinic', slug: 'test-clinic', day: 'Saturday', startTime: '15:00', endTime: '17:00', summary: 'Test instance.' } })
-    const slot = await p.create({ collection: 'timeSlots', data: { clinic: clinic.id, startsAt: '2026-10-10T13:00:00Z', places: 2 } })
-    await p.create({ collection: 'bookings', data: { timeSlot: slot.id, name: 'Private Test Person', email: 'private@campuscycle.example', note: 'Private test note' } })
+    const room = await p.create({ collection: 'rooms', data: roomData })
+    const slot = await p.create({ collection: 'timeSlots', data: slotData(room.id, '2026-10-10T17:00:00Z', 2) })
+    await p.create({ collection: 'bookings', data: { timeSlot: slot.id, name: 'Private Test Person', email: 'private@riversidevoices.example', note: 'Private test note' } })
     for (const user of [undefined, member]) {
       // A matching and a non-matching guess must look exactly the same: both are refused outright.
       for (const guess of ['private', 'nobody-has-this']) {
@@ -136,22 +135,22 @@ describe('collection access', () => {
         await expect(slotQuery).rejects.toMatchObject({ name: 'QueryError' })
         await expect(slotQuery.catch((error: Error) => error.message)).resolves.not.toMatch(PRIVATE_DATA)
       }
-      // The same filter one level further, from clinics ('timeSlots.bookings.email'), is refused too,
+      // The same filter one level further, from rooms ('timeSlots.bookings.email'), is refused too,
       // but Payload 3.90.2 leaves some of its own checks unfinished when it refuses that one, which
-      // the test runner reports as stray errors. The depth-2 test below covers clinics instead.
+      // the test runner reports as stray errors. The depth-2 test below covers rooms instead.
       await expect(p.find({ collection: 'timeSlots', where: { bookings: { exists: true } }, overrideAccess: false, user })).rejects.toMatchObject({ name: 'QueryError' })
     }
   })
 
-  it('leaves bookings out of clinic and slot lists, even when the joins are asked for at depth 2', async () => {
+  it('leaves bookings out of room and slot lists, even when the joins are asked for at depth 2', async () => {
     const p = await getTestPayload()
-    const clinic = await p.create({ collection: 'clinics', data: { name: 'Test clinic', slug: 'test-clinic', day: 'Saturday', startTime: '15:00', endTime: '17:00', summary: 'Test instance.' } })
-    const slot = await p.create({ collection: 'timeSlots', data: { clinic: clinic.id, startsAt: '2026-10-10T13:00:00Z', places: 2 } })
-    await p.create({ collection: 'bookings', data: { timeSlot: slot.id, name: 'Private Test Person', email: 'private@campuscycle.example', note: 'Private test note' } })
+    const room = await p.create({ collection: 'rooms', data: roomData })
+    const slot = await p.create({ collection: 'timeSlots', data: slotData(room.id, '2026-10-10T17:00:00Z', 2) })
+    await p.create({ collection: 'bookings', data: { timeSlot: slot.id, name: 'Private Test Person', email: 'private@riversidevoices.example', note: 'Private test note' } })
     for (const user of [undefined, member]) {
-      const clinics = await p.find({ collection: 'clinics', depth: 2, joins: { timeSlots: { limit: 10 } }, overrideAccess: false, user })
-      expect(clinics.docs).toHaveLength(1)
-      expect(JSON.stringify(clinics)).not.toMatch(PRIVATE_DATA)
+      const rooms = await p.find({ collection: 'rooms', depth: 2, joins: { timeSlots: { limit: 10 } }, overrideAccess: false, user })
+      expect(rooms.docs).toHaveLength(1)
+      expect(JSON.stringify(rooms)).not.toMatch(PRIVATE_DATA)
       const slots = await p.find({ collection: 'timeSlots', depth: 2, joins: { bookings: { limit: 10 } }, overrideAccess: false, user })
       expect(slots.docs).toHaveLength(1)
       expect(slots.docs[0]).not.toHaveProperty('bookings')
@@ -162,16 +161,16 @@ describe('collection access', () => {
   it('refuses to delete the last editor, and allows it while another editor remains', async () => {
     const p = await getTestPayload()
     const options = { overrideAccess: false, user: editor }
-    const first = await p.create({ collection: 'users', data: { email: 'first@campuscycle.example', password: 'test-password-0123456789' }, overrideAccess: true })
+    const first = await p.create({ collection: 'users', data: { email: 'first@riversidevoices.example', password: 'test-password-0123456789' }, overrideAccess: true })
     await expect(p.delete({ collection: 'users', id: first.id, ...options })).rejects.toThrow(
       'You cannot delete the last editor: nobody could log in to /admin any more. Create another editor first if you want to replace this one.',
     )
     expect((await p.count({ collection: 'users' })).totalDocs).toBe(1)
-    const second = await p.create({ collection: 'users', data: { email: 'second@campuscycle.example', password: 'test-password-0123456789' }, overrideAccess: true })
+    const second = await p.create({ collection: 'users', data: { email: 'second@riversidevoices.example', password: 'test-password-0123456789' }, overrideAccess: true })
     await expect(p.delete({ collection: 'users', id: first.id, ...options })).resolves.toHaveProperty('id', first.id)
     // The bulk form (select every editor in /admin, then delete) must not get round the rule either.
     // It is refused as a whole, before anything is deleted.
-    await p.create({ collection: 'users', data: { email: 'third@campuscycle.example', password: 'test-password-0123456789' }, overrideAccess: true })
+    await p.create({ collection: 'users', data: { email: 'third@riversidevoices.example', password: 'test-password-0123456789' }, overrideAccess: true })
     await expect(p.delete({ collection: 'users', where: { id: { exists: true } }, ...options })).rejects.toThrow('You cannot delete the last editor')
     expect((await p.count({ collection: 'users' })).totalDocs).toBe(2)
     // Deleting only some of them is fine.
@@ -183,7 +182,7 @@ describe('collection access', () => {
   // at all gets the usual "not allowed" (403), never a hint about how many editors there are.
   it('refuses an anonymous or member delete of the last editor as Forbidden, not with the last-editor message', async () => {
     const p = await getTestPayload()
-    const only = await p.create({ collection: 'users', data: { email: 'only@campuscycle.example', password: 'test-password-0123456789' }, overrideAccess: true })
+    const only = await p.create({ collection: 'users', data: { email: 'only@riversidevoices.example', password: 'test-password-0123456789' }, overrideAccess: true })
     for (const user of [undefined, member]) {
       const byId = p.delete({ collection: 'users', id: only.id, overrideAccess: false, user })
       await expect(byId).rejects.toThrow(/not allowed/)

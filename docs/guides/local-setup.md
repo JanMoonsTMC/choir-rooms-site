@@ -316,6 +316,6 @@ Did you seed a database with an earlier version of this starter? Then two things
   own computer, run `npm run seed -- --again` once: it fills in Site facts and adds back missing
   example records, and never overwrites one. On your live site, fill in **Site facts** in `/admin`.
 - **The gear workshop still has "ends by 15:00" in its text.** See
-  [Updating a site that already has the example content](../../src/tasks/find-workshop/README.md#updating-a-site-that-already-has-the-example-content).
+  [Updating a site that already has the example content](https://github.com/buildingbetterwebsites/campuscycle-starter/blob/main/src/tasks/find-workshop/README.md#updating-a-site-that-already-has-the-example-content).
 
 A new copy of the starter has neither problem.

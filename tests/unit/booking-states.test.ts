@@ -1,13 +1,13 @@
-// What the booking form and the clinic pages show when something goes wrong: the box at the top of the
-// form (BookingProblem) for each kind of answer, and the clinic pages' last safety net (error.tsx).
+// What the booking form and the room pages show when something goes wrong: the box at the top of the
+// form (BookingProblem) for each kind of answer, and the room pages' last safety net (error.tsx).
 import { createElement, isValidElement, type ReactNode } from 'react'
 import { renderToString } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 import { BookingProblem } from '../../src/components/site/BookingProblem'
-import ClinicError from '../../src/app/(site)/clinics/[slug]/error'
+import RoomError from '../../src/app/(site)/rooms/[slug]/error'
 
 const FULL = 'This slot is full. Choose another time.'
-const values = { timeSlot: '', name: 'Test Person', email: 'test@campuscycle.example', note: '' }
+const values = { timeSlot: '', name: 'Test Person', email: 'test@riversidevoices.example', note: '' }
 // React writes ' as &#x27; and " as &quot; in HTML; turn them back, so the tests compare plain text.
 const text = (html: string) => html.replace(/&#x27;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/<!-- -->/g, '')
 const box = (result: Parameters<typeof BookingProblem>[0]['result']) => text(renderToString(createElement(BookingProblem, { result })))
@@ -44,7 +44,7 @@ describe('the box at the top of the booking form', () => {
   })
 })
 
-describe("the clinic pages' last safety net (error.tsx)", () => {
+describe("the room pages' last safety net (error.tsx)", () => {
   // The button inside the page: the first element in the tree that has an onClick.
   function findClick(node: ReactNode): (() => void) | undefined {
     if (!isValidElement(node)) return Array.isArray(node) ? node.map(findClick).find(Boolean) : undefined
@@ -52,19 +52,19 @@ describe("the clinic pages' last safety net (error.tsx)", () => {
     return props.onClick ?? findClick(props.children)
   }
 
-  it('says what happened in plain words, offers Try again and a way to the room booking page', () => {
-    const page = ClinicError({ error: new Error('secret detail'), retry: () => undefined })
+  it('says what happened in plain words, offers Try again and a way to all rooms', () => {
+    const page = RoomError({ error: new Error('secret detail'), retry: () => undefined })
     const html = text(renderToString(page))
     expect(html).toMatch(/<h1[^>]*>This page could not be shown<\/h1>/)
-    expect(html).toContain('Something went wrong while showing this page. Try again, or go back to the room booking page.')
+    expect(html).toContain('Something went wrong while showing this page. Try again, or go back to all rooms.')
     expect(html).toMatch(/<button[^>]*>Try again<\/button>/)
-    expect(html).toMatch(/<a[^>]*href="\/clinics"[^>]*>Book a room<\/a>/)
+    expect(html).toMatch(/<a[^>]*href="\/rooms"[^>]*>All rooms<\/a>/)
     expect(html).not.toContain('secret detail')
   })
 
   it('"Try again" asks for the page again', () => {
     const retry = vi.fn()
-    findClick(ClinicError({ error: new Error('x'), retry }))?.()
+    findClick(RoomError({ error: new Error('x'), retry }))?.()
     expect(retry).toHaveBeenCalledTimes(1)
   })
 })

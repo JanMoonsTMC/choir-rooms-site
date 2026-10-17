@@ -39,8 +39,9 @@ vi.mock('next/navigation', async (importOriginal) => ({
   usePathname: () => '/',
 }))
 
-import ClinicPage from '../../src/app/(site)/clinics/[slug]/page'
-import BookedPage from '../../src/app/(site)/clinics/[slug]/booked/page'
+import RoomPage from '../../src/app/(site)/rooms/[slug]/page'
+import BookedPage from '../../src/app/(site)/rooms/[slug]/booked/page'
+import { roomData, slotData } from '../setup/rooms'
 import AccountPage from '../../src/app/(site)/account/page'
 import LoginPage from '../../src/app/(site)/account/login/page'
 import { signIn, signOut } from '../../src/app/(site)/account/actions'
@@ -52,11 +53,11 @@ import { createBooking } from '../../src/tasks/book-slot/createBooking'
 import { bookingRef } from '../../src/tasks/book-slot/receipt'
 import { saveBooking } from '../../src/tasks/book-slot/saveBooking'
 
-// These tests delete every member, booking, slot and clinic: never on a real database.
+// These tests delete every member, booking, slot and room: never on a real database.
 refuseUnlessThrowAwayTestDatabase()
 
-const clean = ['bookings', 'timeSlots', 'clinics', 'throttle', 'members']
-const editor = { collection: 'users', id: 1, email: 'editor@campuscycle.example' }
+const clean = ['bookings', 'timeSlots', 'rooms', 'throttle', 'members']
+const editor = { collection: 'users', id: 1, email: 'editor@riversidevoices.example' }
 const PASSWORD = 'test-password-0123456789'
 const DAY = 24 * 60 * 60 * 1000
 const COOKIE = 'payload-token'
@@ -83,10 +84,10 @@ function memberFieldAdmin(p: Payload): FieldAdmin {
   return { hidden: admin?.hidden, disableListColumn: admin?.disableListColumn, disableListFilter: admin?.disableListFilter }
 }
 
-// The clinic page and one booking's confirmation page, as HTML, the way the server renders them.
-const clinicPage = async () => text(renderToString(await ClinicPage({ params: Promise.resolve({ slug: 'test-clinic' }) })))
+// The room page and one booking's confirmation page, as HTML, the way the server renders them.
+const clinicPage = async () => text(renderToString(await RoomPage({ params: Promise.resolve({ slug: 'test-room' }) })))
 const bookedPage = async (bookingId: number) =>
-  text(renderToString(await BookedPage({ params: Promise.resolve({ slug: 'test-clinic' }), searchParams: Promise.resolve({ ref: bookingRef(bookingId) }) })))
+  text(renderToString(await BookedPage({ params: Promise.resolve({ slug: 'test-room' }), searchParams: Promise.resolve({ ref: bookingRef(bookingId) }) })))
 
 /** One field of a rendered form, by its id, so a test can read what it was filled in with. */
 function field(html: string, id: string): string {
@@ -140,18 +141,18 @@ describe("the members' area", () => {
   async function twoMembers() {
     switchOn()
     const options = { overrideAccess: false, user: editor }
-    const a = await p.create({ collection: 'members', data: { email: 'a@campuscycle.example', password: PASSWORD, name: 'Member A' }, ...options })
-    const b = await p.create({ collection: 'members', data: { email: 'b@campuscycle.example', password: PASSWORD, name: 'Member B' }, ...options })
+    const a = await p.create({ collection: 'members', data: { email: 'a@riversidevoices.example', password: PASSWORD, name: 'Member A' }, ...options })
+    const b = await p.create({ collection: 'members', data: { email: 'b@riversidevoices.example', password: PASSWORD, name: 'Member B' }, ...options })
     return { a, b }
   }
 
-  // A clinic with two slots; A booked the first, B the second, and someone without an account the first.
+  // A room with two slots; A booked the first, B the second, and someone without an account the first.
   async function bookings(a: number, b: number) {
-    const clinic = await p.create({ collection: 'clinics', data: { name: 'Test clinic', slug: 'test-clinic', day: 'Saturday', startTime: '15:00', endTime: '17:00', summary: 'Test instance.' } })
-    const first = await p.create({ collection: 'timeSlots', data: { clinic: clinic.id, startsAt: new Date(Date.now() + 5 * DAY).toISOString(), places: 5 } })
-    const second = await p.create({ collection: 'timeSlots', data: { clinic: clinic.id, startsAt: new Date(Date.now() + 9 * DAY).toISOString(), places: 5 } })
+    const clinic = await p.create({ collection: 'rooms', data: roomData })
+    const first = await p.create({ collection: 'timeSlots', data: slotData(clinic.id, new Date(Date.now() + 5 * DAY), 5) })
+    const second = await p.create({ collection: 'timeSlots', data: slotData(clinic.id, new Date(Date.now() + 9 * DAY), 5) })
     const booking = (timeSlot: number, member: number | undefined, name: string) =>
-      p.create({ collection: 'bookings', data: { timeSlot, member, name, email: 'test@campuscycle.example' }, overrideAccess: true })
+      p.create({ collection: 'bookings', data: { timeSlot, member, name, email: 'test@riversidevoices.example' }, overrideAccess: true })
     return {
       clinic,
       first,
@@ -174,15 +175,15 @@ describe("the members' area", () => {
     })
 
     it('refuses to create a member, even for code that skips the access rules', async () => {
-      await expect(p.create({ collection: 'members', data: { email: 'a@campuscycle.example', password: PASSWORD }, overrideAccess: true })).rejects.toThrow(/not allowed/)
-      await expect(p.create({ collection: 'members', data: { email: 'a@campuscycle.example', password: PASSWORD }, overrideAccess: false, user: editor })).rejects.toThrow(/not allowed/)
+      await expect(p.create({ collection: 'members', data: { email: 'a@riversidevoices.example', password: PASSWORD }, overrideAccess: true })).rejects.toThrow(/not allowed/)
+      await expect(p.create({ collection: 'members', data: { email: 'a@riversidevoices.example', password: PASSWORD }, overrideAccess: false, user: editor })).rejects.toThrow(/not allowed/)
       await expect(p.find({ collection: 'members', overrideAccess: true })).rejects.toThrow(/not allowed/)
       await expect(p.count({ collection: 'members' })).rejects.toThrow(/not allowed/)
       expect(await memberCount()).toBe(0)
     })
 
     it("refuses every account address of Payload's API, and creates no member", async () => {
-      const account = { email: 'a@campuscycle.example', password: PASSWORD }
+      const account = { email: 'a@riversidevoices.example', password: PASSWORD }
       const calls: [string, string, unknown?][] = [
         ['POST', '/api/members/first-register', account],
         ['POST', '/api/members', account],
@@ -226,14 +227,14 @@ describe("the members' area", () => {
     it('has no pages and no menu link, and is hidden in /admin', async () => {
       expect(await digestOf(AccountPage())).toBe('NEXT_HTTP_ERROR_FALLBACK;404')
       expect(await digestOf(LoginPage({ searchParams: Promise.resolve({}) }))).toBe('NEXT_HTTP_ERROR_FALLBACK;404')
-      expect(await digestOf(signIn(null, loginForm('a@campuscycle.example', PASSWORD)))).toBe('NEXT_HTTP_ERROR_FALLBACK;404')
+      expect(await digestOf(signIn(null, loginForm('a@riversidevoices.example', PASSWORD)))).toBe('NEXT_HTTP_ERROR_FALLBACK;404')
       expect(await digestOf(signOut())).toBe('NEXT_HTTP_ERROR_FALLBACK;404')
 
-      // The menu is exactly the five links it always had.
+      // The menu is exactly the four links it always had.
       const menu = renderToString(await Header())
       expect(menu).not.toContain('My bookings')
       expect(menu).not.toContain('/account')
-      expect(menu.match(/<li>/g)).toHaveLength(5)
+      expect(menu.match(/<li>/g)).toHaveLength(4)
 
       const members = p.collections.members.config
       const hidden = members.admin.hidden as (args: { user: unknown }) => boolean
@@ -249,7 +250,7 @@ describe("the members' area", () => {
       switchOff()
       jar.set(COOKIE, token!)
       const data = new FormData()
-      for (const [name, value] of Object.entries({ clinic: 'test-clinic', requestId: randomUUID(), name: 'Test Person', email: 'test@campuscycle.example', timeSlot: String(first.id), member: String(b.id) })) data.append(name, value)
+      for (const [name, value] of Object.entries({ room: 'test-room', requestId: randomUUID(), name: 'Test Person', email: 'test@riversidevoices.example', timeSlot: String(first.id), member: String(b.id) })) data.append(name, value)
       expect(await digestOf(saveBooking(null, data))).toMatch(/^NEXT_REDIRECT;/)
       const saved = (await p.find({ collection: 'bookings', where: { name: { equals: 'Test Person' } }, depth: 0 })).docs
       expect(saved).toHaveLength(1)
@@ -305,7 +306,7 @@ describe("the members' area", () => {
       const { first } = await bookings(a.id, b.id)
       switchOff()
       const data = new FormData()
-      for (const [name, value] of Object.entries({ clinic: 'test-clinic', requestId: randomUUID(), name: 'Test Person', email: 'test@campuscycle.example', timeSlot: String(first.id) })) data.append(name, value)
+      for (const [name, value] of Object.entries({ room: 'test-room', requestId: randomUUID(), name: 'Test Person', email: 'test@riversidevoices.example', timeSlot: String(first.id) })) data.append(name, value)
       const result = await createBooking(data, { payload: p, ip: '198.51.100.250', now: new Date(), member: a.id })
       expect(result.ok).toBe(true)
       const saved = await p.findByID({ collection: 'bookings', id: (result as { bookingId: number }).bookingId, depth: 0 })
@@ -316,7 +317,7 @@ describe("the members' area", () => {
   describe('switched on (MEMBERS_AREA=on)', () => {
     it('only editors make member accounts: nobody can sign up, and a member cannot make another', async () => {
       const { a } = await twoMembers()
-      const newcomer = { email: 'c@campuscycle.example', password: PASSWORD }
+      const newcomer = { email: 'c@riversidevoices.example', password: PASSWORD }
       expect((await api('POST', '/api/members', { body: newcomer })).status).toBe(403)
       // Payload's "first account" address would let anyone make an account: it stays closed.
       await resetCollections(['members'])
@@ -335,26 +336,26 @@ describe("the members' area", () => {
       // Without a log-in, /account sends the user to the log-in page.
       expect(await digestOf(AccountPage())).toMatch(/^NEXT_REDIRECT;\w+;\/account\/login;/)
 
-      expect(await digestOf(signIn(null, loginForm('A@campuscycle.example ', PASSWORD)))).toMatch(/^NEXT_REDIRECT;\w+;\/account;/)
+      expect(await digestOf(signIn(null, loginForm('A@riversidevoices.example ', PASSWORD)))).toMatch(/^NEXT_REDIRECT;\w+;\/account;/)
       expect(jar.get(COOKIE)).toBeTruthy()
       // Logged in, the log-in page sends the member on to /account.
       expect(await digestOf(LoginPage({ searchParams: Promise.resolve({}) }))).toMatch(/^NEXT_REDIRECT;\w+;\/account;/)
 
       const page = text(renderToString(await AccountPage()))
       expect(page).toContain('You are logged in as Member A.')
-      expect(page).toContain(formatSlotTime(first.startsAt))
-      expect(page).toContain('Test clinic')
+      expect(page).toContain(formatSlotTime(first.startsAt, first.endsAt))
+      expect(page).toContain('Test room')
       // B's booking (the second slot) and the booking without an account are not A's.
-      expect(page).not.toContain(formatSlotTime(second.startsAt))
+      expect(page).not.toContain(formatSlotTime(second.startsAt, second.endsAt))
       expect(page.match(/<li /g)).toHaveLength(1)
-      expect(page).not.toMatch(/Booking of B|Booking without account|test@campuscycle/)
+      expect(page).not.toMatch(/Booking of B|Booking without account|test@riversidevoices/)
       expect(page).toContain('Log out')
     })
 
     it("a wrong password and an unknown e-mail address get the same message, and log nobody in", async () => {
       const { a } = await twoMembers()
       expect(await signIn(null, loginForm(a.email, 'not-the-password'))).toEqual({ message: NO_MATCH_MESSAGE, email: a.email })
-      expect(await signIn(null, loginForm('nobody@campuscycle.example', PASSWORD))).toEqual({ message: NO_MATCH_MESSAGE, email: 'nobody@campuscycle.example' })
+      expect(await signIn(null, loginForm('nobody@riversidevoices.example', PASSWORD))).toEqual({ message: NO_MATCH_MESSAGE, email: 'nobody@riversidevoices.example' })
       expect(NO_MATCH_MESSAGE).toBe("That e-mail and password don't match.")
       // Empty fields are named, and the typed address comes back; the password never does.
       expect(await signIn(null, loginForm('', ''))).toEqual({
@@ -399,22 +400,22 @@ describe("the members' area", () => {
       // No changing bookings, not even A's own.
       expect((await api('PATCH', `/api/bookings/${ofA.id}`, { token, body: { note: 'changed' } })).status).toBe(403)
       expect((await api('DELETE', `/api/bookings/${ofA.id}`, { token })).status).toBe(403)
-      expect((await api('POST', '/api/bookings', { token, body: { timeSlot: ofA.timeSlot, name: 'x', email: 'x@campuscycle.example' } })).status).toBe(403)
+      expect((await api('POST', '/api/bookings', { token, body: { timeSlot: ofA.timeSlot, name: 'x', email: 'x@riversidevoices.example' } })).status).toBe(403)
     })
 
     it("a member can neither see, make nor remove the editors' document locks; an editor still can", async () => {
       const { a, b } = await twoMembers()
       const { clinic } = await bookings(a.id, b.id)
       // A real editor account, so the editor's side goes through the same REST API as the member's.
-      const email = `editor-${randomUUID()}@campuscycle.example`
+      const email = `editor-${randomUUID()}@riversidevoices.example`
       const realEditor = await p.create({ collection: 'users', data: { email, password: PASSWORD } })
       const locks = 'payload-locked-documents'
       try {
         const editorToken = (await p.login({ collection: 'users', data: { email, password: PASSWORD } })).token
         const memberToken = (await p.login({ collection: 'members', data: { email: a.email, password: PASSWORD } })).token
-        const lockOf = (user: { relationTo: string; value: number }) => ({ document: { relationTo: 'clinics', value: clinic.id }, user })
+        const lockOf = (user: { relationTo: string; value: number }) => ({ document: { relationTo: 'rooms', value: clinic.id }, user })
 
-        // The editor opens the clinic in /admin: Payload records the lock, and the editor reads it back.
+        // The editor opens the room in /admin: Payload records the lock, and the editor reads it back.
         const made = await api('POST', `/api/${locks}`, { token: editorToken, body: lockOf({ relationTo: 'users', value: realEditor.id }) })
         expect(made.status).toBe(201)
         const lock = ((await made.json()) as { doc: { id: number } }).doc
@@ -459,7 +460,7 @@ describe("the members' area", () => {
       const { first } = await bookings(a.id, b.id)
       const send = async (name: string) => {
         const data = new FormData()
-        for (const [field, value] of Object.entries({ clinic: 'test-clinic', requestId: randomUUID(), name, email: 'test@campuscycle.example', timeSlot: String(first.id), member: String(b.id) })) data.append(field, value)
+        for (const [field, value] of Object.entries({ room: 'test-room', requestId: randomUUID(), name, email: 'test@riversidevoices.example', timeSlot: String(first.id), member: String(b.id) })) data.append(field, value)
         expect(await digestOf(saveBooking(null, data))).toMatch(/^NEXT_REDIRECT;/)
         return (await p.find({ collection: 'bookings', where: { name: { equals: name } }, depth: 0 })).docs[0]
       }
@@ -498,13 +499,13 @@ describe("the members' area", () => {
     it('leaves the name field empty for a member whose account has no name, never the e-mail address', async () => {
       const { a, b } = await twoMembers()
       await bookings(a.id, b.id)
-      const nameless = await p.create({ collection: 'members', data: { email: 'c@campuscycle.example', password: PASSWORD }, overrideAccess: false, user: editor })
+      const nameless = await p.create({ collection: 'members', data: { email: 'c@riversidevoices.example', password: PASSWORD }, overrideAccess: false, user: editor })
       await digestOf(signIn(null, loginForm(nameless.email, PASSWORD)))
       const page = await clinicPage()
-      expect(page).toContain('You are logged in as c@campuscycle.example. This booking will be saved to your account.')
-      expect(field(page, 'name')).not.toContain('value="c@campuscycle.example"')
+      expect(page).toContain('You are logged in as c@riversidevoices.example. This booking will be saved to your account.')
+      expect(field(page, 'name')).not.toContain('value="c@riversidevoices.example"')
       expect(field(page, 'name')).not.toMatch(/value="[^"]+"/)
-      expect(field(page, 'email')).toContain('value="c@campuscycle.example"')
+      expect(field(page, 'email')).toContain('value="c@riversidevoices.example"')
     })
 
     it('says none of that to someone who is not logged in', async () => {
@@ -537,10 +538,10 @@ describe("the members' area", () => {
     it('shows "Log in" to nobody in particular, and the member with a way out once they are logged in', async () => {
       const { a } = await twoMembers()
 
-      // Nobody logged in: a sixth link that leads to the log-in page, and no sign of an account.
+      // Nobody logged in: a fifth link that leads to the log-in page, and no sign of an account.
       const out = text(renderToString(await Header()))
       expect(out).toMatch(/<a[^>]*href="\/account\/login"[^>]*>Log in<\/a>/)
-      expect(out.match(/<li>/g)).toHaveLength(6)
+      expect(out.match(/<li>/g)).toHaveLength(5)
       expect(out).not.toContain('Log out')
       expect(out).not.toContain('My bookings')
 
@@ -548,7 +549,7 @@ describe("the members' area", () => {
       await digestOf(signIn(null, loginForm(a.email, PASSWORD)))
       const inside = text(renderToString(await Header()))
       expect(inside).toMatch(/<a[^>]*href="\/account"[^>]*>My bookings<\/a>/)
-      expect(inside.match(/<li>/g)).toHaveLength(6)
+      expect(inside.match(/<li>/g)).toHaveLength(5)
       expect(inside).toContain('Member A')
       expect(inside).toMatch(/<button[^>]*type="submit"[^>]*>Log out<\/button>/)
       // As tall as the menu's links (44 px, min-h-11), so it is as easy to hit on a phone.

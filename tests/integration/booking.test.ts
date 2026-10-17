@@ -1,6 +1,6 @@
-// Example task 2, "book a clinic slot", on the test database: the booking function itself
+// Our primary task, "book a practice room for a time slot", on the test database: the booking function itself
 // (createBooking: the checks, the save and its answers), the places rule on the bookings collection,
-// and the two pages a user sees: the clinic's page with its form, and the confirmation.
+// and the two pages a user sees: the room's page with its form, and the confirmation.
 // The race between two people booking the last place at the same moment is in booking-race.test.ts:
 // it needs a real Postgres.
 import { randomUUID } from 'node:crypto'
@@ -15,13 +15,15 @@ import { tabTitle } from '../setup/title'
 import { createBooking } from '../../src/tasks/book-slot/createBooking'
 import { allowRequest } from '../../src/tasks/book-slot/guards'
 import { bookingRef } from '../../src/tasks/book-slot/receipt'
-import ClinicPage, { generateMetadata as clinicMetadata } from '../../src/app/(site)/clinics/[slug]/page'
-import BookedPage from '../../src/app/(site)/clinics/[slug]/booked/page'
+import RoomPage, { generateMetadata as roomMetadata } from '../../src/app/(site)/rooms/[slug]/page'
+import BookedPage from '../../src/app/(site)/rooms/[slug]/booked/page'
+import { formatSlotTime } from '../../src/lib/format'
+import { roomData } from '../setup/rooms'
 
-// These tests delete every booking, slot and clinic: never on a real database.
+// These tests delete every booking, slot and room: never on a real database.
 refuseUnlessThrowAwayTestDatabase()
 
-const clean = ['bookings', 'timeSlots', 'clinics', 'repairs', 'throttle']
+const clean = ['bookings', 'timeSlots', 'rooms', 'throttle']
 const FULL = 'This slot is full. Choose another time.'
 const NOT_SAVED = 'Your booking was not saved. Please try again.'
 const TOO_MANY = 'Too many bookings from this device. Try again in an hour.'
@@ -31,7 +33,7 @@ const NOTICE = 'This is a practice project: use made-up details; no one will con
 const EMAIL_MESSAGE = 'Enter your e-mail address in the right form, like name@example.com.'
 const CANT_SHOW = "We can't show this booking confirmation."
 
-const editor = { collection: 'users', id: 1, email: 'editor@campuscycle.example' }
+const editor = { collection: 'users', id: 1, email: 'editor@riversidevoices.example' }
 const DAY = 24 * 60 * 60 * 1000
 
 // React writes ' as &#x27; and & as &amp; in HTML; turn them back, so the tests compare plain text.
@@ -47,24 +49,26 @@ async function digestOf(promise: Promise<unknown>): Promise<string> {
   return 'no error thrown'
 }
 
-describe('example task 2: book a clinic slot', () => {
+describe('our primary task: book a practice room for a time slot', () => {
   let p: Payload
-  let clinicId: number
-  let otherClinicId: number
+  let roomId: number
+  let otherRoomId: number
   // A different made-up address for every request, so the rate limit (5 an hour per address) only
   // counts where a test means it to.
   let address = 0
   const freshAddress = () => `198.51.100.${++address}`
 
-  async function slot(startsAt: Date, places = 2, clinic = clinicId) {
-    return p.create({ collection: 'timeSlots', data: { clinic, startsAt: startsAt.toISOString(), places } })
+  // A two-hour time slot. Most tests give it 2 places, to test the places rule with more than one booking.
+  async function slot(startsAt: Date, places = 2, room = roomId) {
+    const endsAt = new Date(startsAt.getTime() + 2 * 60 * 60 * 1000)
+    return p.create({ collection: 'timeSlots', data: { room, startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString(), places } })
   }
   const inDays = (days: number) => new Date(Date.now() + days * DAY)
 
   // The form as the browser sends it: the fields the user filled in, plus the hidden ones.
   function form(fields: Record<string, string | string[]>) {
     const data = new FormData()
-    const all = { clinic: 'test-clinic', requestId: randomUUID(), name: 'Test Person', email: 'test@campuscycle.example', note: '', ...fields }
+    const all = { room: 'test-room', requestId: randomUUID(), name: 'Test Person', email: 'test@riversidevoices.example', note: '', ...fields }
     for (const [name, value] of Object.entries(all)) for (const one of [value].flat()) data.append(name, one)
     return data
   }
@@ -77,24 +81,24 @@ describe('example task 2: book a clinic slot', () => {
   beforeEach(async () => {
     await resetCollections(clean)
     await resetSiteFacts()
-    clinicId = (await p.create({ collection: 'clinics', data: { name: 'Test clinic', slug: 'test-clinic', day: 'Saturday', startTime: '15:00', endTime: '17:00', summary: 'Test instance: bring your bicycle.' } })).id
-    otherClinicId = (await p.create({ collection: 'clinics', data: { name: 'Other clinic', slug: 'other-clinic', day: 'Saturday', startTime: '15:00', endTime: '17:00', summary: 'Test instance.' } })).id
+    roomId = (await p.create({ collection: 'rooms', data: { ...roomData, summary: 'Test instance: bring your own music stands.' } })).id
+    otherRoomId = (await p.create({ collection: 'rooms', data: { ...roomData, name: 'Other room', slug: 'other-room' } })).id
   })
   afterAll(() => resetCollections(clean))
 
   describe('createBooking', () => {
     it('saves a valid booking once and answers ok with its id', async () => {
       const target = await slot(inDays(6))
-      const result = await book({ timeSlot: String(target.id), name: '  Test Person ', note: 'Front brake squeaks.' })
+      const result = await book({ timeSlot: String(target.id), name: '  Test Person ', note: 'We need ten chairs.' })
       expect(result).toEqual({ ok: true, bookingId: expect.any(Number) })
       const saved = await rows()
       expect(saved).toHaveLength(1)
-      expect(saved[0]).toMatchObject({ id: result.ok && result.bookingId, timeSlot: target.id, name: 'Test Person', email: 'test@campuscycle.example', note: 'Front brake squeaks.' })
+      expect(saved[0]).toMatchObject({ id: result.ok && result.bookingId, timeSlot: target.id, name: 'Test Person', email: 'test@riversidevoices.example', note: 'We need ten chairs.' })
     })
 
     it('refuses a third booking on a slot with 2 places, with the exact message on the time field', async () => {
       const target = await slot(inDays(6))
-      // A second slot with room, so the clinic page still shows the form (and the full slot in it).
+      // A second slot with places, so the room page still shows the form (and the full slot in it).
       await slot(inDays(7))
       expect((await book({ timeSlot: String(target.id) })).ok).toBe(true)
       expect((await book({ timeSlot: String(target.id) })).ok).toBe(true)
@@ -103,7 +107,7 @@ describe('example task 2: book a clinic slot', () => {
       expect(third).toMatchObject({ ok: false, message: FULL, field: 'timeSlot', values: { name: 'Third Person', timeSlot: '' } })
       expect(await rows()).toHaveLength(2)
       // The page read again (saveBooking.ts refreshes it after this answer) shows that slot as Full.
-      const html = text(renderToString(await ClinicPage({ params: Promise.resolve({ slug: 'test-clinic' }) })))
+      const html = text(renderToString(await RoomPage({ params: Promise.resolve({ slug: 'test-room' }) })))
       expect(html).toMatch(new RegExp(`<input[^>]*disabled=""[^>]*value="${target.id}"`))
       expect(html).not.toMatch(new RegExp(`<input[^>]*checked=""[^>]*value="${target.id}"`))
     })
@@ -126,10 +130,10 @@ describe('example task 2: book a clinic slot', () => {
 
     it('a filled trap field saves nothing and says only that the booking was not saved; a clean retry saves exactly once', async () => {
       const target = await slot(inDays(6))
-      const fields = { timeSlot: String(target.id), name: 'Test Person', email: 'test@campuscycle.example', note: 'A note' }
+      const fields = { timeSlot: String(target.id), name: 'Test Person', email: 'test@riversidevoices.example', note: 'A note' }
       const trapped = await book({ ...fields, extra: 'https://spam.example' })
       // Not ok: no saved state and no confirmation. The words never mention spam or the trap.
-      expect(trapped).toEqual({ ok: false, message: NOT_SAVED, values: { ...fields, repairs: [] } })
+      expect(trapped).toEqual({ ok: false, message: NOT_SAVED, values: fields })
       expect(await rows()).toHaveLength(0)
       // The form sends again without the trap value (the page clears only that): saved, once.
       const retry = await book({ ...fields, extra: '' })
@@ -180,21 +184,13 @@ describe('example task 2: book a clinic slot', () => {
       expect((await p.count({ collection: 'throttle' })).totalDocs).toBe(1)
     })
 
-    it('saves only the whitelisted fields: member=1, repairs=… (before W6) and any other extra field are ignored', async () => {
+    it('saves only the whitelisted fields: member=1 and any other extra field are ignored', async () => {
       const target = await slot(inDays(6))
-      // After W6 the learner has switched the repairs on (bookings.repairs and the two createBooking
-      // lines): then the ticked repairs are saved, so they must be real ones.
-      const w6 = p.collections.bookings.config.flattenedFields.some((field) => field.name === 'repairs')
-      const repairIds = w6
-        ? [(await p.create({ collection: 'repairs', data: { name: 'Check', price: 10 } })).id, (await p.create({ collection: 'repairs', data: { name: 'Full service', price: 45 } })).id]
-        : [1, 2]
-      const result = await book({ timeSlot: String(target.id), member: '1', repairs: repairIds.map(String), createdAt: '2000-01-01T00:00:00Z', id: '999' })
+      const result = await book({ timeSlot: String(target.id), member: '1', requestIdx: 'x', createdAt: '2000-01-01T00:00:00Z', id: '999' })
       expect(result.ok).toBe(true)
       const [saved] = await rows()
       // member exists for the optional members' area, but the form can never fill it in.
       expect(saved.member ?? null).toBeNull()
-      if (w6) expect((saved as unknown as { repairs: unknown }).repairs).toEqual(repairIds)
-      else expect(saved).not.toHaveProperty('repairs')
       expect(saved.id).not.toBe(999)
       expect(saved.createdAt).not.toMatch(/^2000/)
     })
@@ -202,7 +198,7 @@ describe('example task 2: book a clinic slot', () => {
     it('an e-mail address the database would refuse is refused on the e-mail field, and the other values come back', async () => {
       const target = await slot(inDays(6))
       // Without @, without a dot after it, a one-letter ending, two dots in a row, a letter such as ä.
-      for (const email of ['test.campuscycle.example', 'test@campuscycle', 'a@b.c', 'x@y..com', 'a..b@x.be', 'jan@exämple.be']) {
+      for (const email of ['test.riversidevoices.example', 'test@riversidevoices', 'a@b.c', 'x@y..com', 'a..b@x.be', 'jan@exämple.be']) {
         const result = await book({ timeSlot: String(target.id), email, note: 'Keep me' })
         expect(result).toMatchObject({ ok: false, field: 'email', errors: { email: EMAIL_MESSAGE }, values: { email, note: 'Keep me', timeSlot: String(target.id) } })
       }
@@ -237,9 +233,9 @@ describe('example task 2: book a clinic slot', () => {
       expect((await book({ timeSlot: String(target.id), name: 'x'.repeat(100), note: 'y'.repeat(500) })).ok).toBe(true)
     })
 
-    it('refuses a slot in the past, a slot of another clinic and a slot that does not exist', async () => {
+    it('refuses a slot in the past, a slot of another room and a slot that does not exist', async () => {
       const past = await slot(new Date(Date.now() - 60 * 60 * 1000))
-      const elsewhere = await slot(inDays(6), 2, otherClinicId)
+      const elsewhere = await slot(inDays(6), 2, otherRoomId)
       for (const timeSlot of [String(past.id), String(elsewhere.id), '987654', 'abc']) {
         expect(await book({ timeSlot })).toMatchObject({ ok: false, field: 'timeSlot' })
       }
@@ -312,7 +308,7 @@ describe('example task 2: book a clinic slot', () => {
       const target = await slot(inDays(6))
       const response = await handleEndpoints({ config, path: '/api/bookings', request: new Request('http://localhost/api/bookings', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ timeSlot: target.id, name: 'Test Person', email: 'test@campuscycle.example' }),
+        body: JSON.stringify({ timeSlot: target.id, name: 'Test Person', email: 'test@riversidevoices.example' }),
       }) })
       expect(response.status).toBe(403)
       expect(await rows()).toHaveLength(0)
@@ -344,40 +340,43 @@ describe('example task 2: book a clinic slot', () => {
   })
 
   describe('the pages', () => {
-    const clinicPage = async (slug = 'test-clinic') => text(renderToString(await ClinicPage({ params: Promise.resolve({ slug }) })))
-    const bookedPage = async (ref?: string, slug = 'test-clinic') =>
+    const roomPage = async (slug = 'test-room') => text(renderToString(await RoomPage({ params: Promise.resolve({ slug }) })))
+    const bookedPage = async (ref?: string, slug = 'test-room') =>
       text(renderToString(await BookedPage({ params: Promise.resolve({ slug }), searchParams: Promise.resolve(ref === undefined ? {} : { ref }) })))
+    // A day in the coming two weeks (the room page shows those), at a fixed hour in UTC.
+    const soon = (days: number, hourUtc: number) => {
+      const day = new Date(Date.now() + days * DAY)
+      return new Date(Date.UTC(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), hourUtc))
+    }
+    const label = (stored: { startsAt: string; endsAt: string }) => formatSlotTime(stored.startsAt, stored.endsAt)
 
-    it('the clinic page shows the clinic, its future slots in Brussels time with the places left, the price list above the form, and the form', async () => {
-      // Saturday 9 October 2027: 13:00 UTC is 15:00 in Brussels (summer time).
-      const first = await slot(new Date('2027-10-09T13:00:00Z'))
-      const second = await slot(new Date('2027-10-09T13:30:00Z'))
-      const third = await slot(new Date('2027-10-09T14:00:00Z'), 1)
+    it('the room page shows the room, its coming slots in Brussels time and whether each is free, and the form', async () => {
+      const first = await slot(soon(3, 17), 1)
+      const second = await slot(soon(4, 17), 2)
+      const third = await slot(soon(5, 17), 1)
+      // In the past, and more than two weeks ahead: neither is offered.
       await slot(new Date(Date.now() - DAY))
-      await book({ timeSlot: String(second.id), name: 'Private Booker', email: 'private@campuscycle.example', note: 'Private note' })
+      await slot(new Date(Date.now() + 20 * DAY))
+      await book({ timeSlot: String(second.id), name: 'Private Booker', email: 'private@riversidevoices.example', note: 'Private note' })
       await book({ timeSlot: String(third.id) })
-      await p.create({ collection: 'repairs', data: { name: 'Check', price: 10 } })
-      await p.create({ collection: 'repairs', data: { name: 'Full service', price: 45, description: 'Everything checked and adjusted.' } })
-      const html = await clinicPage()
+      const html = await roomPage()
       expect(html).toContain('<h1')
-      expect(html).toContain('Test clinic')
-      expect(html).toContain('Saturday 15:00–17:00')
-      expect(html).toContain('Test instance: bring your bicycle.')
-      expect(html).toContain('Saturday 9 October, 15:00')
-      expect(html).toMatch(/Saturday 9 October, 15:00.*2 places left/s)
-      expect(html).toMatch(/Saturday 9 October, 15:30.*1 place left/s)
-      expect(html).toMatch(/Saturday 9 October, 16:00.*Full/s)
-      // The past slot is not offered.
+      expect(html).toContain('Test room')
+      expect(html).toContain('Up to 12 people')
+      expect(html).toContain('EUR 20 per time slot')
+      expect(html).toContain('Ground floor')
+      expect(html).toContain('Test instance: bring your own music stands.')
+      // Each slot with its day, start and end, in Brussels time, and whether it is free.
+      expect(html).toContain(label(first))
+      expect(html).toMatch(new RegExp(`${label(first)}.*?Free`, 's'))
+      expect(html).toMatch(new RegExp(`${label(second)}.*?1 place left`, 's'))
+      expect(html).toMatch(new RegExp(`${label(third)}.*?Booked`, 's'))
       expect(html.match(/name="timeSlot"/g)).toHaveLength(3)
-      // A full slot stays visible but cannot be chosen.
+      // A booked slot stays visible but cannot be chosen.
       expect(html).toMatch(new RegExp(`<input[^>]*disabled=""[^>]*value="${third.id}"|<input[^>]*value="${third.id}"[^>]*disabled=""`))
       expect(html).toMatch(new RegExp(`<input(?![^>]*disabled)[^>]*value="${first.id}"`))
-      // The price list, from the repair records, above the form; a description only where one exists.
-      expect(html).toMatch(/Check.*EUR 10.*Full service.*Everything checked and adjusted\..*EUR 45.*<form/s)
       // The form: the time group, persistent labels with required/optional in words, the notice, the button.
       expect(html).toMatch(/<fieldset[^>]*>.*<legend[^>]*>.*Choose a time/s)
-      // The error box's links: "#timeSlot" goes to the whole group (its legend stays in view), and a
-      // field keeps room above it for its label when a link scrolls to it.
       expect(html).toMatch(/<fieldset[^>]*id="timeSlot"[^>]*class="[^"]*scroll-mt-6/)
       expect(html).toMatch(/<fieldset[^>]*id="timeSlot"[^>]*tabindex="-1"|<fieldset[^>]*tabindex="-1"[^>]*id="timeSlot"/i)
       for (const field of ['name', 'email']) expect(html).toMatch(new RegExp(`<input[^>]*class="[^"]*scroll-mt-16[^"]*"[^>]*id="${field}"`))
@@ -388,39 +387,41 @@ describe('example task 2: book a clinic slot', () => {
       expect(html).toMatch(/<input[^>]*type="email"/)
       expect(html).toContain(NOTICE)
       expect(html).toMatch(new RegExp(`${NOTICE.replace(/[.:;]/g, '.')}.*<button[^>]*type="submit"[^>]*>Book this slot`, 's'))
-      // A fresh random requestId for this form, and the hidden trap field out of the keyboard's way.
+      expect(html).toMatch(/<input[^>]*type="hidden"[^>]*name="room"[^>]*value="test-room"/)
       expect(html).toMatch(/<input[^>]*type="hidden"[^>]*name="requestId"[^>]*value="[0-9a-f-]{36}"/)
       expect(html).toMatch(/<div[^>]*aria-hidden="true"[^>]*>.*<input[^>]*name="extra"[^>]*tabindex="-1"|<div[^>]*aria-hidden="true"[^>]*>.*<input[^>]*tabindex="-1"[^>]*name="extra"/s)
       // Never anything from a booking: no name, no e-mail address, no note.
-      expect(html).not.toMatch(/Private Booker|private@campuscycle|Private note|Test Person|test@campuscycle/)
+      expect(html).not.toMatch(/Private Booker|private@riversidevoices|Private note|Test Person|test@riversidevoices/)
       expect(html).not.toMatch(/student project/i)
-      expect(await tabTitle(clinicMetadata({ params: Promise.resolve({ slug: 'test-clinic' }) }))).toBe('Test clinic · Riverside Voices')
+      expect(await tabTitle(roomMetadata({ params: Promise.resolve({ slug: 'test-room' }) }))).toBe('Test room · Riverside Voices')
     })
 
-    it('the clinic page says so when there are no future slots, and when every slot is full', async () => {
-      expect(await clinicPage()).toContain('There are no upcoming time slots yet. Check back soon.')
+    it('the room page says so when there are no coming slots, and when every slot is booked', async () => {
+      expect(await roomPage()).toContain('This room has no free time slots in the next two weeks.')
       const only = await slot(inDays(6), 1)
       await book({ timeSlot: String(only.id) })
-      const html = await clinicPage()
-      expect(html).toContain('Every time slot is full.')
+      const html = await roomPage()
+      expect(html).toContain('Every time slot in the next two weeks is booked.')
       expect(html).not.toContain('Book this slot')
     })
 
-    it('an unknown clinic gives the 404 page', async () => {
-      expect(await digestOf(ClinicPage({ params: Promise.resolve({ slug: 'no-such-clinic' }) }))).toBe('NEXT_HTTP_ERROR_FALLBACK;404')
-      expect(await digestOf(BookedPage({ params: Promise.resolve({ slug: 'no-such-clinic' }), searchParams: Promise.resolve({}) }))).toBe('NEXT_HTTP_ERROR_FALLBACK;404')
+    it('an unknown room gives the 404 page', async () => {
+      expect(await digestOf(RoomPage({ params: Promise.resolve({ slug: 'no-such-room' }) }))).toBe('NEXT_HTTP_ERROR_FALLBACK;404')
+      expect(await digestOf(BookedPage({ params: Promise.resolve({ slug: 'no-such-room' }), searchParams: Promise.resolve({}) }))).toBe('NEXT_HTTP_ERROR_FALLBACK;404')
     })
 
-    it('the confirmation shows the exact text, the clinic and the time for a signed link, and nothing from any booking', async () => {
-      const target = await slot(new Date('2027-10-09T13:00:00Z'))
-      const result = await book({ timeSlot: String(target.id), name: 'Private Booker', email: 'private@campuscycle.example' })
+    it('the confirmation shows the exact text, the room and the time for a signed link, and nothing from any booking', async () => {
+      const start = new Date('2027-10-09T08:00:00Z')
+      const target = await slot(start)
+      const result = await book({ timeSlot: String(target.id), name: 'Private Booker', email: 'private@riversidevoices.example' })
       if (!result.ok) throw new Error('setup failed')
       const html = await bookedPage(bookingRef(result.bookingId))
       expect(html).toContain(CONFIRMATION)
       expect(html).not.toMatch(/student project/i)
-      expect(html).toContain('Test clinic')
-      expect(html).toContain('Saturday 9 October, 15:00')
-      expect(html).not.toMatch(/Private Booker|private@campuscycle/)
+      expect(html).toContain('Test room')
+      // 08:00 UTC is 10:00 in Brussels on 9 October (summer time).
+      expect(html).toContain('Saturday 9 October, 10:00–12:00')
+      expect(html).not.toMatch(/Private Booker|private@riversidevoices/)
       expect(html).not.toContain(CANT_SHOW)
     })
 
@@ -429,17 +430,17 @@ describe('example task 2: book a clinic slot', () => {
       const result = await book({ timeSlot: String(target.id) })
       if (!result.ok) throw new Error('setup failed')
       const steps = async (ref?: string) =>
-        trackSteps(await BookedPage({ params: Promise.resolve({ slug: 'test-clinic' }), searchParams: Promise.resolve(ref === undefined ? {} : { ref }) }))
+        trackSteps(await BookedPage({ params: Promise.resolve({ slug: 'test-room' }), searchParams: Promise.resolve(ref === undefined ? {} : { ref }) }))
       expect(await steps(bookingRef(result.bookingId))).toEqual([{ event: 'booking_saved', once: String(result.bookingId) }])
       expect(await steps()).toEqual([])
       expect(await steps(`${result.bookingId}.${'0'.repeat(32)}`)).toEqual([])
     })
 
-    it('a missing, tampered or other clinic\'s link shows "can\'t show" and no booking data, and never claims a save', async () => {
+    it('a missing, tampered or other room\'s link shows "can\'t show" and no booking data, and never claims a save', async () => {
       const target = await slot(new Date('2027-10-09T13:00:00Z'))
-      const elsewhere = await slot(new Date('2027-10-16T13:00:00Z'), 2, otherClinicId)
+      const elsewhere = await slot(new Date('2027-10-16T13:00:00Z'), 2, otherRoomId)
       const mine = await book({ timeSlot: String(target.id) })
-      const theirs = await createBooking(form({ clinic: 'other-clinic', timeSlot: String(elsewhere.id) }), { payload: p, ip: freshAddress(), now: new Date() })
+      const theirs = await createBooking(form({ room: 'other-room', timeSlot: String(elsewhere.id) }), { payload: p, ip: freshAddress(), now: new Date() })
       if (!mine.ok || !theirs.ok) throw new Error('setup failed')
       const good = bookingRef(mine.bookingId)
       const [, signature] = good.split('.')
@@ -457,7 +458,7 @@ describe('example task 2: book a clinic slot', () => {
         expect(html, String(ref)).toContain(CANT_SHOW)
         expect(html, String(ref)).not.toContain('Your booking is saved')
         expect(html, String(ref)).not.toMatch(/9 October|16 October|Test Person/)
-        expect(html, String(ref)).toContain('href="/clinics/test-clinic"')
+        expect(html, String(ref)).toContain('href="/rooms/test-room"')
       }
     })
   })

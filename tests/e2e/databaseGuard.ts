@@ -1,5 +1,5 @@
-// The browser checks write to the database they are given: they make a test clinic with time slots
-// and bookings, and the error-page check renames the clinics table for a moment. That must never
+// The browser checks write to the database they are given: they make a test room with time slots
+// and bookings, and the error-page check renames the rooms table for a moment. That must never
 // happen to a real site's data. So before anything is written (tests/e2e/fixture.ts), this decides:
 //   - never the live database: the same check `npm run dev` and `npm run migrate` use
 //     (check() in scripts/guard.mjs, which reads the live-database marker);

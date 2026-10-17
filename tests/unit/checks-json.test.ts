@@ -37,7 +37,7 @@ describe('checks/checks.json', () => {
 
   it('checks the pages a user reaches, starting with the two tasks', () => {
     const paths = pages.map((page) => page.path)
-    for (const path of ['/', '/workshops', '/workshops/read-music-from-scratch', '/topics/reading-music', '/clinics', '/clinics/{test-clinic}', '/about', '/privacy']) {
+    for (const path of ['/', '/rooms', '/rooms/the-studio', '/rooms/{test-room}', '/about', '/privacy']) {
       expect(paths).toContain(path)
     }
     expect(paths.every((path) => path.startsWith('/'))).toBe(true)
@@ -55,16 +55,16 @@ describe('checks/checks.json', () => {
     }
   })
 
-  it('checks every page for one h1, its landmarks and alt text; the clinic for labels and the practice-project notice', () => {
+  it('checks every page for one h1, its landmarks and alt text; the test room for labels and the practice-project notice', () => {
     const everyPage = JSON.stringify(file.everyPage)
     for (const selector of ['"h1"', 'body > header', 'main', 'body > footer', 'img:not([alt])']) expect(everyPage).toContain(selector)
-    const clinic = JSON.stringify(pages.find((page) => page.path === '/clinics/{test-clinic}'))
-    for (const field of ['name', 'email', 'note']) expect(clinic).toContain(`label[for=\\"${field}\\"]`)
-    expect(clinic).toContain('This is a practice project: use made-up details; no one will contact you.')
+    const room = JSON.stringify(pages.find((page) => page.path === '/rooms/{test-room}'))
+    for (const field of ['name', 'email', 'note']) expect(room).toContain(`label[for=\\"${field}\\"]`)
+    expect(room).toContain('This is a practice project: use made-up details; no one will contact you.')
   })
 
   it('runs through the evaluator: a page that answers every step right passes, one that does not fails with its fix', async () => {
-    const page = pages.find((candidate) => candidate.path === '/clinics/{test-clinic}')!
+    const page = pages.find((candidate) => candidate.path === '/rooms/{test-room}')!
     // A stand-in page that answers each step the way a good page does.
     const good = (): CheckDriver => ({
       begin: async () => {},

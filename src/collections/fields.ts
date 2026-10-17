@@ -27,29 +27,6 @@ export const slug: Field = {
   },
 }
 
-export const day: Field = {
-  name: 'day',
-  type: 'select',
-  required: true,
-  options: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-}
-
-export const startTime: Field = {
-  name: 'startTime',
-  type: 'text',
-  required: true,
-  admin: {
-    description: 'Use the 24-hour clock, for example 18:30.',
-  },
-}
-
-export const price: Field = {
-  name: 'price',
-  type: 'number',
-  required: true,
-  min: 0,
-}
-
 // Places and group sizes count groups or people, so 1.5 or 0 makes no sense.
 export const positiveInteger: NumberFieldSingleValidation = (value) => {
   if (Number.isInteger(value) && Number(value) > 0) {

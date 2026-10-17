@@ -3,7 +3,7 @@
     "The rules this site is checked against in CI (npm run check, tests/e2e/checks.spec.ts), in the words of the course's 'Check my page' checker: src/checks/checks.ts is a copy of it.",
     "Every page listed under pages gets the groups in everyPage, then its own groups. Each group runs in a fresh page, at 1100 px and again at 390 px. A group passes when all its steps pass; when one fails, its fix says what to change.",
     "A step is one of: {selector, count}, {selector, text}, {selector, textIncludes}, {selector, style}, {selector, loaded: true}, {click}, {type: [selector, text]}, {select: [selector, value]}, {width: 390 or 1100}. Selectors are CSS selectors.",
-    "{test-clinic} in a path is the clinic the checks make for themselves (tests/e2e/fixture.ts): a new site has no clinic until you add one.",
+    "{test-room} in a path is the room the checks make for themselves (tests/e2e/fixture.ts), so they can book it as often as they need.",
     "When you add a page or a form, add it here too."
   ],
   "criteria": [
@@ -74,62 +74,13 @@
       "path": "/"
     },
     {
-      "path": "/workshops",
-      "groups": [
-        {
-          "criterion": 3,
-          "steps": [
-            {
-              "selector": "form :is(input, select, textarea):not([type=\"hidden\"], [type=\"submit\"], [type=\"button\"], [type=\"reset\"], [id], [aria-label], [aria-labelledby]):not(label *)",
-              "count": 0
-            },
-            {
-              "selector": "label[for=\"filter-topic\"]",
-              "count": 1
-            },
-            {
-              "selector": "label[for=\"filter-level\"]",
-              "count": 1
-            }
-          ],
-          "fix": "Give every form field a visible <label> whose for= matches the field's id, or put the field inside its <label>."
-        }
-      ]
+      "path": "/rooms"
     },
     {
-      "path": "/workshops?topic=reading-music&level=beginner",
-      "groups": [
-        {
-          "criterion": 3,
-          "steps": [
-            {
-              "selector": "form :is(input, select, textarea):not([type=\"hidden\"], [type=\"submit\"], [type=\"button\"], [type=\"reset\"], [id], [aria-label], [aria-labelledby]):not(label *)",
-              "count": 0
-            },
-            {
-              "selector": "label[for=\"filter-topic\"]",
-              "count": 1
-            },
-            {
-              "selector": "label[for=\"filter-level\"]",
-              "count": 1
-            }
-          ],
-          "fix": "Give every form field a visible <label> whose for= matches the field's id, or put the field inside its <label>."
-        }
-      ]
+      "path": "/rooms/the-studio"
     },
     {
-      "path": "/workshops/read-music-from-scratch"
-    },
-    {
-      "path": "/topics/reading-music"
-    },
-    {
-      "path": "/clinics"
-    },
-    {
-      "path": "/clinics/{test-clinic}",
+      "path": "/rooms/{test-room}",
       "groups": [
         {
           "criterion": 3,
