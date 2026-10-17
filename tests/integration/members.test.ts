@@ -250,7 +250,7 @@ describe("the members' area", () => {
       switchOff()
       jar.set(COOKIE, token!)
       const data = new FormData()
-      for (const [name, value] of Object.entries({ room: 'test-room', requestId: randomUUID(), name: 'Test Person', email: 'test@riversidevoices.example', timeSlot: String(first.id), member: String(b.id) })) data.append(name, value)
+      for (const [name, value] of Object.entries({ room: 'test-room', requestId: randomUUID(), groupName: 'Test choir', groupSize: '10', name: 'Test Person', email: 'test@riversidevoices.example', timeSlot: String(first.id), member: String(b.id) })) data.append(name, value)
       expect(await digestOf(saveBooking(null, data))).toMatch(/^NEXT_REDIRECT;/)
       const saved = (await p.find({ collection: 'bookings', where: { name: { equals: 'Test Person' } }, depth: 0 })).docs
       expect(saved).toHaveLength(1)
@@ -306,7 +306,7 @@ describe("the members' area", () => {
       const { first } = await bookings(a.id, b.id)
       switchOff()
       const data = new FormData()
-      for (const [name, value] of Object.entries({ room: 'test-room', requestId: randomUUID(), name: 'Test Person', email: 'test@riversidevoices.example', timeSlot: String(first.id) })) data.append(name, value)
+      for (const [name, value] of Object.entries({ room: 'test-room', requestId: randomUUID(), groupName: 'Test choir', groupSize: '10', name: 'Test Person', email: 'test@riversidevoices.example', timeSlot: String(first.id) })) data.append(name, value)
       const result = await createBooking(data, { payload: p, ip: '198.51.100.250', now: new Date(), member: a.id })
       expect(result.ok).toBe(true)
       const saved = await p.findByID({ collection: 'bookings', id: (result as { bookingId: number }).bookingId, depth: 0 })
@@ -460,7 +460,7 @@ describe("the members' area", () => {
       const { first } = await bookings(a.id, b.id)
       const send = async (name: string) => {
         const data = new FormData()
-        for (const [field, value] of Object.entries({ room: 'test-room', requestId: randomUUID(), name, email: 'test@riversidevoices.example', timeSlot: String(first.id), member: String(b.id) })) data.append(field, value)
+        for (const [field, value] of Object.entries({ room: 'test-room', requestId: randomUUID(), groupName: 'Test choir', groupSize: '10', name, email: 'test@riversidevoices.example', timeSlot: String(first.id), member: String(b.id) })) data.append(field, value)
         expect(await digestOf(saveBooking(null, data))).toMatch(/^NEXT_REDIRECT;/)
         return (await p.find({ collection: 'bookings', where: { name: { equals: name } }, depth: 0 })).docs[0]
       }

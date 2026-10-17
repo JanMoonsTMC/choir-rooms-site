@@ -3,8 +3,8 @@
 //
 // The checks, in this order:
 //   1. the trap field (guards.ts): a program filled it in, so nothing is saved;
-//   2. the fields themselves: a name, an e-mail address, an optional note, and a time slot of THIS
-//      room that has not started yet;
+//   2. the fields themselves: a time slot of THIS room that has not started yet, the group's name, a
+//      group size that fits the room, a contact name, an e-mail address and an optional note;
 //   3. the same form sent twice (a double click, or a retry after a lost answer) saves one booking;
 //   4. the rate limit (guards.ts): at most 5 bookings an hour from one device. Only a send that got
 //      this far counts, so typing mistakes never use it up;
@@ -17,7 +17,7 @@ import { FULL_MESSAGE } from './capacity'
 import { allowRequest, BOOKING_LIMIT, isTrapFilled } from './guards'
 
 // The fields a user fills in, as text. On any failure they go back to the form, so nothing is lost.
-export type BookingValues = { timeSlot: string; name: string; email: string; note: string }
+export type BookingValues = { timeSlot: string; groupName: string; groupSize: string; name: string; email: string; note: string }
 export type BookingField = keyof BookingValues
 
 export type BookingResult =
@@ -64,6 +64,8 @@ function read(formData: FormData, name: string): string {
 function readValues(formData: FormData): BookingValues {
   return {
     timeSlot: read(formData, 'timeSlot'),
+    groupName: read(formData, 'groupName'),
+    groupSize: read(formData, 'groupSize'),
     name: read(formData, 'name'),
     email: read(formData, 'email'),
     note: read(formData, 'note'),
@@ -85,16 +87,23 @@ const EMAIL =
   /^(?!.*\.\.)[\w!#$%&'*+/=?^`{|}~-](?:[\w!#$%&'*+/=?^`{|}~.-]*[\w!#$%&'*+/=?^`{|}~-])?@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*\.[a-z]{2,}$/i
 const EMAIL_MESSAGE = 'Enter your e-mail address in the right form, like name@example.com.'
 
+/** What the group size field says when the group does not fit the room. */
+export function tooBigMessage(roomName: string, capacity: number): string {
+  return `${roomName} holds at most ${capacity} people. Choose a bigger room for your group.`
+}
+
 /** Checks the fields; returns a message for each field with a problem (none: all is well). */
 async function check(values: BookingValues, roomSlug: string, { payload, now }: BookingContext) {
   const errors: Partial<Record<BookingField, string>> = {}
+
+  // The room this form is for: its time slots, and how many people it holds.
+  const room = (await payload.find({ collection: 'rooms', where: { slug: { equals: roomSlug } }, depth: 0, limit: 1, joins: false })).docs[0]
 
   // The time slot comes first, as it does in the form.
   const slotId = Number(values.timeSlot)
   if (!values.timeSlot) {
     errors.timeSlot = 'Choose a time.'
   } else {
-    const room = (await payload.find({ collection: 'rooms', where: { slug: { equals: roomSlug } }, depth: 0, limit: 1, joins: false })).docs[0]
     const slot = Number.isInteger(slotId) && slotId > 0
       ? await payload.findByID({ collection: 'timeSlots', id: slotId, depth: 0, joins: false, disableErrors: true })
       : null
@@ -105,6 +114,16 @@ async function check(values: BookingValues, roomSlug: string, { payload, now }: 
       errors.timeSlot = STARTED_MESSAGE
     }
   }
+
+  // The group: its name, and how many people come. A group that does not fit is told so now, before
+  // anything is saved, not at the door (requirement R8).
+  if (!values.groupName) errors.groupName = "Enter your group's name."
+  else if (values.groupName.length > 100) errors.groupName = "Your group's name can be at most 100 characters long."
+
+  const people = Number(values.groupSize)
+  if (!values.groupSize) errors.groupSize = 'Enter how many people come.'
+  else if (!/^\d+$/.test(values.groupSize) || people < 1) errors.groupSize = 'Enter how many people come as a whole number, like 12.'
+  else if (room && people > room.capacity) errors.groupSize = tooBigMessage(room.name, room.capacity)
 
   if (!values.name) errors.name = 'Enter your name.'
   else if (values.name.length > 100) errors.name = 'Your name can be at most 100 characters long.'
@@ -199,6 +218,8 @@ async function checkAndSave(formData: FormData, context: BookingContext): Promis
       collection: 'bookings',
       data: {
         timeSlot: Number(values.timeSlot),
+        groupName: values.groupName,
+        groupSize: Number(values.groupSize),
         name: values.name,
         email: values.email,
         note: values.note || undefined,

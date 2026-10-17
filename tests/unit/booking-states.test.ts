@@ -7,7 +7,7 @@ import { BookingProblem } from '../../src/components/site/BookingProblem'
 import RoomError from '../../src/app/(site)/rooms/[slug]/error'
 
 const FULL = 'This slot is full. Choose another time.'
-const values = { timeSlot: '', name: 'Test Person', email: 'test@riversidevoices.example', note: '' }
+const values = { timeSlot: '', groupName: 'Test choir', groupSize: '10', name: 'Test Person', email: 'test@riversidevoices.example', note: '' }
 // React writes ' as &#x27; and " as &quot; in HTML; turn them back, so the tests compare plain text.
 const text = (html: string) => html.replace(/&#x27;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/<!-- -->/g, '')
 const box = (result: Parameters<typeof BookingProblem>[0]['result']) => text(renderToString(createElement(BookingProblem, { result })))

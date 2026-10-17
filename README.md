@@ -108,7 +108,7 @@ fixed in [the course-check contract](docs/COURSE-CHECK-CONTRACT.md). Do not chan
      createBooking.ts names: remove the `//` in front of `const repairs = formData.getAll('repairs')…`
      and in front of `repairs,` in `payload.create`.
 
-  The steps, and how to check the result, are in [the book-slot README](src/tasks/book-slot/README.md#w6-let-the-user-choose-repairs).
+  The steps, and how to check the result, are in [the book-slot README](https://github.com/buildingbetterwebsites/campuscycle-starter/blob/main/src/tasks/book-slot/README.md#w6-let-the-user-choose-repairs).
 
 ## Commands
 

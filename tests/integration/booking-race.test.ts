@@ -21,7 +21,7 @@ describe.runIf(process.env.CI_REAL_POSTGRES === '1')('booking at the same moment
 
   const form = (fields: Record<string, string>) => {
     const data = new FormData()
-    const all = { room: 'test-room', requestId: randomUUID(), name: 'Test Person', email: 'test@riversidevoices.example', ...fields }
+    const all = { room: 'test-room', requestId: randomUUID(), groupName: 'Test choir', groupSize: '10', name: 'Test Person', email: 'test@riversidevoices.example', ...fields }
     for (const [name, value] of Object.entries(all)) data.append(name, value)
     return data
   }
