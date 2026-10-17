@@ -569,10 +569,15 @@ describe('the project document templates', () => {
     expect(sectionsOf(read(file)).map(({ heading }) => heading)).toEqual(headings)
   })
 
-  it('the three team templates say on their first line that a learner working alone can delete them', () => {
+  // A team replaces that first line when it fills in its own document (our D0, D3 and D4 no longer start
+  // with it), so this runs only for the template itself, like the TODO: check further down.
+  it.runIf(process.env.STARTER_TEMPLATE === '1')('the three team templates say on their first line that a learner working alone can delete them', () => {
     for (const file of TEAM_TEMPLATES) {
       expect(read(file).split(/\r?\n/)[0], file).toBe('For teams; a learner working alone can delete this file.')
     }
+  })
+
+  it('the README names the three team documents', () => {
     expect(read('README.md')).toContain(
       'If you work in a team, you also fill in `docs/team-agreement.md`, `docs/content-structure.md` and `docs/design-rationale.md`.',
     )
