@@ -1,126 +1,105 @@
 import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 import type { PostgresAdapter } from '@payloadcms/db-postgres'
-import type { Payload } from 'payload'
-import { hasRepairsRelation, hasWhatToBringList, type FieldShape } from '../../src/lib/courseCheck'
 import { getTestPayload, resetCollections } from '../setup/payload'
+import { roomData, slotData } from '../setup/rooms'
 
-const fieldsOf = (p: Payload, slug: 'clinics' | 'bookings' | 'repairs') => p.collections[slug].config.flattenedFields as readonly FieldShape[]
-
-/** Which of the learners' own additions (W5's list, W6's relationship and its reverse side) the app has. */
-function learnerAdditions(p: Payload) {
-  const has = (slug: 'clinics' | 'bookings' | 'repairs', name: string) => fieldsOf(p, slug).some(f => f.name === name)
-  return { whatToBring: has('clinics', 'whatToBring'), repairs: has('bookings', 'repairs'), reverse: has('repairs', 'bookings') }
-}
-
-const collections = ['bookings', 'timeSlots', 'clinics', 'workshops', 'topics', 'repairs', 'pages']
-export const workshopData = { title: 'Test workshop', slug: 'test-workshop', level: 'beginner' as const, day: 'Tuesday' as const, startTime: '18:30', price: 15, groupSize: 6, summary: 'Test instance.' }
-export const clinicData = { name: 'Test clinic', slug: 'test-clinic', day: 'Saturday' as const, startTime: '15:00', endTime: '17:00', summary: 'Test instance. Code K7Q2.' }
+const collections = ['bookings', 'timeSlots', 'rooms', 'features', 'pages']
+const AT = '2026-10-10T17:00:00Z'
 
 describe('the content model', () => {
   beforeEach(() => resetCollections(collections))
   afterAll(() => resetCollections(collections))
 
-  it('stores many-to-many membership once and reads both directions', async () => {
+  it('stores the room-equipment many-to-many once and reads it from both sides', async () => {
     const p = await getTestPayload()
-    const a = await p.create({ collection: 'topics', data: { name: 'Tyres', slug: 'tyres' } })
-    const b = await p.create({ collection: 'topics', data: { name: 'Maintenance', slug: 'maintenance' } })
-    const first = await p.create({ collection: 'workshops', data: { ...workshopData, topics: [a.id, b.id] } })
-    await p.create({ collection: 'workshops', data: { ...workshopData, slug: 'second', topics: [b.id] } })
-    const found = await p.findByID({ collection: 'topics', id: b.id, depth: 1 })
-    expect(found.workshops?.docs).toHaveLength(2)
-    expect((await p.findByID({ collection: 'workshops', id: first.id, depth: 1 })).topics).toHaveLength(2)
-    await p.update({ collection: 'workshops', id: first.id, data: { topics: [a.id], title: 'Changed title' } })
-    expect((await p.findByID({ collection: 'topics', id: b.id })).workshops?.docs).toHaveLength(1)
+    const piano = await p.create({ collection: 'features', data: { name: 'Piano', slug: 'piano' } })
+    const mirrors = await p.create({ collection: 'features', data: { name: 'Mirrors', slug: 'mirrors' } })
+    const first = await p.create({ collection: 'rooms', data: { ...roomData, features: [piano.id, mirrors.id] } })
+    await p.create({ collection: 'rooms', data: { ...roomData, slug: 'second', features: [mirrors.id] } })
+    expect((await p.findByID({ collection: 'features', id: mirrors.id, depth: 1 })).rooms?.docs).toHaveLength(2)
+    expect((await p.findByID({ collection: 'rooms', id: first.id, depth: 1 })).features).toHaveLength(2)
+    await p.update({ collection: 'rooms', id: first.id, data: { features: [piano.id], name: 'Changed name' } })
+    expect((await p.findByID({ collection: 'features', id: mirrors.id })).rooms?.docs).toHaveLength(1)
   })
 
-  it('keeps required relations, editor reverse bookings, and learner additions separate', async () => {
+  it('keeps the one-to-many links: a room has time slots, a time slot has bookings (only editors see them)', async () => {
     const p = await getTestPayload()
-    const clinic = await p.create({ collection: 'clinics', data: clinicData })
+    const room = await p.create({ collection: 'rooms', data: roomData })
+    const { places: _places, ...withoutPlaces } = slotData(room.id, AT)
     // The generated type requires places even though Payload supplies its default at runtime.
-    // @ts-expect-error Deliberately omit places to exercise the runtime default.
-    const slot = await p.create({ collection: 'timeSlots', data: { clinic: clinic.id, startsAt: '2026-10-10T13:00:00Z' } })
-    expect(slot.places).toBe(2)
-    const booking = await p.create({ collection: 'bookings', data: { timeSlot: slot.id, name: 'Test Person', email: 'test@campuscycle.example' } })
-    const editor = { collection: 'users' as const, id: 1, email: 'editor@campuscycle.example' }
+    // @ts-expect-error Deliberately omit places to exercise the runtime default: one group per slot.
+    const slot = await p.create({ collection: 'timeSlots', data: withoutPlaces })
+    expect(slot.places).toBe(1)
+    const booking = await p.create({ collection: 'bookings', data: { timeSlot: slot.id, groupName: 'Test choir', groupSize: 10, name: 'Test Person', email: 'test@riversidevoices.example' } })
+    const editor = { collection: 'users' as const, id: 1, email: 'editor@riversidevoices.example' }
     const found = await p.findByID({ collection: 'timeSlots', id: slot.id, depth: 1, user: editor })
-    expect(found.bookings?.docs?.map(b => typeof b === 'object' ? b.id : b)).toEqual([booking.id])
-    expect((await p.findByID({ collection: 'clinics', id: clinic.id })).timeSlots?.docs).toHaveLength(1)
-    // The learners' own additions (W5, W6) are not in the starter (the template-only test below), but
-    // they are in every learner's copy after W5 and W6: then they must have the agreed shapes.
-    // bookings.member is the starter's own: it belongs to the optional members' area, which ships
-    // switched off (tests/integration/members.test.ts).
-    const additions = learnerAdditions(p)
-    if (additions.whatToBring) expect(hasWhatToBringList(fieldsOf(p, 'clinics')), 'clinics.whatToBring (W5)').toBe(true)
-    if (additions.repairs) expect(hasRepairsRelation(fieldsOf(p, 'bookings')), 'bookings.repairs (W6)').toBe(true)
-    if (additions.reverse) {
-      expect(fieldsOf(p, 'repairs').find(f => f.name === 'bookings'), 'repairs.bookings (W6)').toMatchObject({ type: 'join', collection: 'bookings', on: 'repairs' })
-    }
+    expect(found.bookings?.docs?.map((b) => (typeof b === 'object' ? b.id : b))).toEqual([booking.id])
+    expect((await p.findByID({ collection: 'rooms', id: room.id })).timeSlots?.docs).toHaveLength(1)
   })
 
-  // The template as published: none of the learners' additions yet. Only in the maintainers' publish
-  // steps (STARTER_TEMPLATE=1), because every learner's copy has them after W5 and W6.
-  it.runIf(process.env.STARTER_TEMPLATE === '1')("in the template, none of the learners' additions (W5, W6) is there yet", async () => {
-    expect(learnerAdditions(await getTestPayload())).toEqual({ whatToBring: false, repairs: false, reverse: false })
-  })
-
-  it('rejects invalid references, duplicate slugs and invalid numeric values', async () => {
+  it('rejects invalid references, duplicate slugs and invalid numbers', async () => {
     const p = await getTestPayload()
-    await p.create({ collection: 'workshops', data: workshopData })
-    await expect(p.create({ collection: 'workshops', data: workshopData })).rejects.toThrow()
-    await expect(p.create({ collection: 'workshops', data: { ...workshopData, slug: 'bad-reference', topics: [999999] } })).rejects.toThrow()
-    for (const data of [{ price: -1 }, { groupSize: 1.5 }, { groupSize: 0 }]) {
-      await expect(p.create({ collection: 'workshops', data: { ...workshopData, slug: 'bad-number', ...data } })).rejects.toThrow()
+    await p.create({ collection: 'rooms', data: roomData })
+    await expect(p.create({ collection: 'rooms', data: roomData })).rejects.toThrow()
+    await expect(p.create({ collection: 'rooms', data: { ...roomData, slug: 'bad-reference', features: [999999] } })).rejects.toThrow(/equipment no longer exists/)
+    for (const data of [{ price: -1 }, { capacity: 1.5 }, { capacity: 0 }]) {
+      await expect(p.create({ collection: 'rooms', data: { ...roomData, slug: 'bad-number', ...data } })).rejects.toThrow()
     }
-    await expect(p.create({ collection: 'timeSlots', data: { clinic: 999999, startsAt: '2026-10-10T13:00:00Z', places: 2 } })).rejects.toThrow(/clinic no longer exists/)
-    await expect(p.create({ collection: 'bookings', data: { timeSlot: 999999, name: 'Test', email: 'test@campuscycle.example' } })).rejects.toThrow()
-    await expect(p.create({ collection: 'repairs', data: { name: 'Test', price: -1 } })).rejects.toThrow()
+    await expect(p.create({ collection: 'timeSlots', data: slotData(999999, AT) })).rejects.toThrow(/room no longer exists/)
+    await expect(p.create({ collection: 'bookings', data: { timeSlot: 999999, name: 'Test', email: 'test@riversidevoices.example' } })).rejects.toThrow()
   })
 
-  it('requires explicit unlinking and does not delete a clinic or slot with dependent records', async () => {
+  it('a time slot must end after it starts', async () => {
     const p = await getTestPayload()
-    const topic = await p.create({ collection: 'topics', data: { name: 'Test', slug: 'test' } })
-    const workshop = await p.create({ collection: 'workshops', data: { ...workshopData, topics: [topic.id] } })
-    await expect(p.delete({ collection: 'topics', id: topic.id })).rejects.toThrow('This topic is still used by workshops (see its Workshops list). Remove it from each workshop, then delete the topic.')
-    await p.update({ collection: 'workshops', id: workshop.id, data: { topics: [] } })
-    await p.delete({ collection: 'topics', id: topic.id })
-    const clinic = await p.create({ collection: 'clinics', data: clinicData })
-    const slot = await p.create({ collection: 'timeSlots', data: { clinic: clinic.id, startsAt: '2026-10-10T13:00:00Z', places: 2 } })
-    const booking = await p.create({ collection: 'bookings', data: { timeSlot: slot.id, name: 'Test', email: 'test@campuscycle.example' } })
-    await expect(p.delete({ collection: 'clinics', id: clinic.id })).rejects.toThrow('This clinic still has time slots. Open Time Slots and move each one to another clinic or delete it (move or delete a slot\'s bookings first). Then delete the clinic.')
+    const room = await p.create({ collection: 'rooms', data: roomData })
+    await expect(p.create({ collection: 'timeSlots', data: { ...slotData(room.id, AT), endsAt: AT } })).rejects.toMatchObject({ data: { errors: [{ path: 'endsAt', message: 'The end must be after the start.' }] } })
+  })
+
+  it('requires explicit unlinking and does not delete equipment, a room or a slot with dependent records', async () => {
+    const p = await getTestPayload()
+    const feature = await p.create({ collection: 'features', data: { name: 'Test', slug: 'test' } })
+    const room = await p.create({ collection: 'rooms', data: { ...roomData, features: [feature.id] } })
+    await expect(p.delete({ collection: 'features', id: feature.id })).rejects.toThrow('This equipment is still listed for rooms (see its Rooms list). Remove it from each room, then delete it.')
+    await p.update({ collection: 'rooms', id: room.id, data: { features: [] } })
+    await p.delete({ collection: 'features', id: feature.id })
+    const slot = await p.create({ collection: 'timeSlots', data: slotData(room.id, AT) })
+    const booking = await p.create({ collection: 'bookings', data: { timeSlot: slot.id, name: 'Test', email: 'test@riversidevoices.example' } })
+    await expect(p.delete({ collection: 'rooms', id: room.id })).rejects.toThrow('This room still has time slots. Open Time Slots and delete them (move or delete their bookings first). Then delete the room.')
     await expect(p.delete({ collection: 'timeSlots', id: slot.id })).rejects.toThrow('This time slot still has bookings. Open Bookings and move each one to another time slot or delete it, then delete the time slot.')
     await p.delete({ collection: 'bookings', id: booking.id })
     await p.delete({ collection: 'timeSlots', id: slot.id })
-    await p.delete({ collection: 'clinics', id: clinic.id })
+    await p.delete({ collection: 'rooms', id: room.id })
   })
 
   it('rejects fractional places and capacity reductions below existing bookings', async () => {
     const p = await getTestPayload()
-    const clinic = await p.create({ collection: 'clinics', data: clinicData })
+    const room = await p.create({ collection: 'rooms', data: roomData })
     for (const places of [0, -1, 1.5]) {
-      await expect(p.create({ collection: 'timeSlots', data: { clinic: clinic.id, startsAt: '2026-10-10T13:00:00Z', places } })).rejects.toMatchObject({ data: { errors: [{ path: 'places', message: 'Enter a whole number of at least 1.' }] } })
+      await expect(p.create({ collection: 'timeSlots', data: slotData(room.id, AT, places) })).rejects.toMatchObject({ data: { errors: [{ path: 'places', message: 'Enter a whole number of at least 1.' }] } })
     }
-    const slot = await p.create({ collection: 'timeSlots', data: { clinic: clinic.id, startsAt: '2026-10-10T13:00:00Z', places: 2 } })
-    expect(slot.label).toContain('15:00')
-    for (const name of ['Test One', 'Test Two']) await p.create({ collection: 'bookings', data: { timeSlot: slot.id, name, email: 'test@campuscycle.example' } })
+    const slot = await p.create({ collection: 'timeSlots', data: slotData(room.id, AT, 2) })
+    // 17:00 UTC is 19:00 in Brussels on 10 October (summer time).
+    expect(slot.label).toContain('19:00')
+    for (const name of ['Test One', 'Test Two']) await p.create({ collection: 'bookings', data: { timeSlot: slot.id, name, email: 'test@riversidevoices.example' } })
     const editor = { collection: 'users', id: 1 }
     await expect(p.update({ collection: 'timeSlots', id: slot.id, data: { places: 1 }, overrideAccess: false, user: editor })).rejects.toThrow('This time slot already has 2 bookings, so it needs at least 2 places. Choose a higher number, or move or delete bookings first.')
     expect((await p.findByID({ collection: 'timeSlots', id: slot.id })).places).toBe(2)
     await expect(p.update({ collection: 'timeSlots', id: slot.id, data: { places: 2 }, overrideAccess: false, user: editor })).resolves.toHaveProperty('places', 2)
-    await expect(p.update({ collection: 'timeSlots', id: slot.id, data: { clinic: 999999 } })).rejects.toThrow(/clinic no longer exists/)
+    await expect(p.update({ collection: 'timeSlots', id: slot.id, data: { room: 999999 } })).rejects.toThrow(/room no longer exists/)
   })
 
   it('rejects a slug that is not lowercase letters, digits and hyphens, and explains a duplicate', async () => {
     const p = await getTestPayload()
-    for (const slug of ['Repair a puncture', 'repair_a_puncture', 'Repair-A-Puncture', '-repair', 'repair-', 'repair--a']) {
-      await expect(p.create({ collection: 'topics', data: { name: 'Test', slug } })).rejects.toMatchObject({ data: { errors: [{ path: 'slug', message: 'Use only lowercase letters, digits and hyphens, for example warm-up-your-voice.' }] } })
+    for (const slug of ['The Hall', 'the_hall', 'The-Hall', '-hall', 'hall-', 'the--hall']) {
+      await expect(p.create({ collection: 'features', data: { name: 'Test', slug } })).rejects.toMatchObject({ data: { errors: [{ path: 'slug', message: 'Use only lowercase letters, digits and hyphens, for example warm-up-your-voice.' }] } })
     }
-    await p.create({ collection: 'topics', data: { name: 'Test', slug: 'repair-a-puncture-2' } })
-    await expect(p.create({ collection: 'topics', data: { name: 'Test', slug: 'repair-a-puncture-2' } })).rejects.toThrow('Another record already uses this slug. Choose a different one.')
+    await p.create({ collection: 'features', data: { name: 'Test', slug: 'the-hall-2' } })
+    await expect(p.create({ collection: 'features', data: { name: 'Test', slug: 'the-hall-2' } })).rejects.toThrow('Another record already uses this slug. Choose a different one.')
   })
 
-  it('explains a workshop image that no longer exists', async () => {
+  it('explains a room picture that no longer exists', async () => {
     const p = await getTestPayload()
-    await expect(p.create({ collection: 'workshops', data: { ...workshopData, image: 999999 } })).rejects.toThrow('This image no longer exists. Choose another image.')
+    await expect(p.create({ collection: 'rooms', data: { ...roomData, image: 999999 } })).rejects.toThrow('This image no longer exists. Choose another image.')
   })
 })
 
@@ -131,48 +110,47 @@ describe('database restrictions without the hooks', () => {
   beforeEach(() => resetCollections(collections))
   afterAll(() => resetCollections(collections))
 
-  async function deleteWithSql(table: 'clinics' | 'time_slots' | 'topics', id: number) {
+  async function deleteWithSql(table: 'rooms' | 'time_slots' | 'features', id: number) {
     const p = await getTestPayload()
     const pool = (p.db as unknown as PostgresAdapter).pool
     // The table names are a fixed list in this file; the id stays a query parameter.
-    return pool.query(`delete from ${table} where id = $1`, [id]).then(() => ({ code: 'deleted' }), (error: { code?: string, constraint?: string }) => error)
+    return pool.query(`delete from ${table} where id = $1`, [id]).then(() => ({ code: 'deleted' }), (error: { code?: string; constraint?: string }) => error)
   }
 
   // Postgres 16 reports a refused ON DELETE RESTRICT as 23503 (foreign_key_violation); Postgres 17,
   // which PGlite runs, reports 23001 (restrict_violation). Both mean "a linked record still exists".
-  // The constraint name proves WHICH link refused the deletion.
   function refusedBy(constraint: string) {
     return { code: expect.stringMatching(/^(23503|23001)$/), constraint }
   }
 
-  it('refuses to delete a clinic that still has a time slot (SQLSTATE 23503 or 23001)', async () => {
+  it('refuses to delete a room that still has a time slot (SQLSTATE 23503 or 23001)', async () => {
     const p = await getTestPayload()
-    const clinic = await p.create({ collection: 'clinics', data: clinicData })
-    await p.create({ collection: 'timeSlots', data: { clinic: clinic.id, startsAt: '2026-10-10T13:00:00Z', places: 2 } })
-    expect(await deleteWithSql('clinics', clinic.id)).toMatchObject(refusedBy('time_slots_clinic_id_clinics_id_fk'))
-    expect((await p.count({ collection: 'clinics' })).totalDocs).toBe(1)
+    const room = await p.create({ collection: 'rooms', data: roomData })
+    await p.create({ collection: 'timeSlots', data: slotData(room.id, AT) })
+    expect(await deleteWithSql('rooms', room.id)).toMatchObject(refusedBy('time_slots_room_id_rooms_id_fk'))
+    expect((await p.count({ collection: 'rooms' })).totalDocs).toBe(1)
   })
 
   it('refuses to delete a time slot that still has a booking (SQLSTATE 23503 or 23001)', async () => {
     const p = await getTestPayload()
-    const clinic = await p.create({ collection: 'clinics', data: clinicData })
-    const slot = await p.create({ collection: 'timeSlots', data: { clinic: clinic.id, startsAt: '2026-10-10T13:00:00Z', places: 2 } })
-    await p.create({ collection: 'bookings', data: { timeSlot: slot.id, name: 'Test Person', email: 'test@campuscycle.example' } })
+    const room = await p.create({ collection: 'rooms', data: roomData })
+    const slot = await p.create({ collection: 'timeSlots', data: slotData(room.id, AT) })
+    await p.create({ collection: 'bookings', data: { timeSlot: slot.id, name: 'Test Person', email: 'test@riversidevoices.example' } })
     expect(await deleteWithSql('time_slots', slot.id)).toMatchObject(refusedBy('bookings_time_slot_id_time_slots_id_fk'))
     expect((await p.count({ collection: 'timeSlots' })).totalDocs).toBe(1)
   })
 
-  it('refuses to delete a topic that a workshop still links to (SQLSTATE 23503 or 23001)', async () => {
+  it('refuses to delete equipment that a room still lists (SQLSTATE 23503 or 23001)', async () => {
     const p = await getTestPayload()
-    const topic = await p.create({ collection: 'topics', data: { name: 'Test topic', slug: 'test-topic' } })
-    const workshop = await p.create({ collection: 'workshops', data: { ...workshopData, topics: [topic.id] } })
-    expect(await deleteWithSql('topics', topic.id)).toMatchObject(refusedBy('workshops_rels_topics_fk'))
-    expect((await p.findByID({ collection: 'workshops', id: workshop.id, depth: 0 })).topics).toEqual([topic.id])
+    const feature = await p.create({ collection: 'features', data: { name: 'Test', slug: 'test-feature' } })
+    const room = await p.create({ collection: 'rooms', data: { ...roomData, features: [feature.id] } })
+    expect(await deleteWithSql('features', feature.id)).toMatchObject(refusedBy('rooms_rels_features_fk'))
+    expect((await p.findByID({ collection: 'rooms', id: room.id, depth: 0 })).features).toEqual([feature.id])
   })
 
   it('still deletes a parent with nothing linked to it (the restriction is not a blanket ban)', async () => {
     const p = await getTestPayload()
-    const clinic = await p.create({ collection: 'clinics', data: clinicData })
-    expect(await deleteWithSql('clinics', clinic.id)).toEqual({ code: 'deleted' })
+    const room = await p.create({ collection: 'rooms', data: roomData })
+    expect(await deleteWithSql('rooms', room.id)).toEqual({ code: 'deleted' })
   })
 })

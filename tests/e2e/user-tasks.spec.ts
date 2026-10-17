@@ -1,60 +1,40 @@
 // The site's two user tasks, done in a real browser at 390 and 1100 px (the two projects in
 // playwright.config.ts):
-//   task 1: find a workshop by topic and level, then follow a topic to its other workshops;
-//   task 2: book a time slot for a practice room, including what happens when a user makes a mistake
-//           and when the connection drops while the booking is sent.
+//   task 1 (the primary task): book a practice room for a time slot, including what happens when a
+//           user makes a mistake and when the connection drops while the booking is sent;
+//   task 2: find the room that fits your group.
 import { expect, test, type Page } from '@playwright/test'
 import { runFixture } from './global-setup'
 import { BOOKING_CONFIRMATION, countBookings, MADE_UP_DATA_NOTICE, NOT_CONFIRMED, readFixture, useOwnAddress } from './helpers'
 
-test.describe('task 1: find a workshop by topic and level', () => {
-  test('filter by topic and level, open a workshop, follow its topic to the other side, and come back to the same filters', async ({ page }) => {
-    await page.goto('/workshops')
-    await expect(page.getByRole('heading', { level: 1, name: 'Workshops' })).toBeVisible()
-
-    await page.getByLabel('Topic').selectOption({ label: 'Reading music' })
-    await page.getByLabel('Level').selectOption({ label: 'Beginner' })
-    await page.getByRole('button', { name: 'Apply filters' }).click()
-
-    // The filters are in the address, so the list can be shared and Back finds it again.
-    await expect(page).toHaveURL(/\/workshops\?topic=reading-music&level=beginner#results$/)
-    const results = page.locator('#results')
-    await expect(results.getByRole('link', { name: 'Read music from scratch' })).toBeVisible()
-    await expect(results.getByRole('link', { name: 'Sight-sing a new piece' })).toHaveCount(0)
-
-    await results.getByRole('link', { name: 'Read music from scratch' }).click()
-    await expect(page.getByRole('heading', { level: 1, name: 'Read music from scratch' })).toBeVisible()
-
-    // The topic leads to its own page, which lists the workshops from the other side of the link.
-    await page.getByRole('main').getByRole('link', { name: 'Reading music' }).click()
-    await expect(page).toHaveURL(/\/topics\/reading-music$/)
-    await expect(page.getByRole('heading', { level: 1, name: 'Reading music' })).toBeVisible()
-    await expect(page.getByRole('main').getByRole('link', { name: 'Read music from scratch' })).toBeVisible()
-    await expect(page.getByRole('main').getByRole('link', { name: 'Sight-sing a new piece' })).toBeVisible()
-
-    // The browser's Back button, then the workshop page's own way back: the filters are still chosen.
-    await page.goBack()
-    await expect(page.getByRole('heading', { level: 1, name: 'Read music from scratch' })).toBeVisible()
-    await page.getByRole('link', { name: 'Back to the filtered workshops' }).click()
-    await expect(page).toHaveURL(/\/workshops\?topic=reading-music&level=beginner/)
-    await expect(page.getByLabel('Topic')).toHaveValue('reading-music')
-    await expect(page.getByLabel('Level')).toHaveValue('beginner')
-    await expect(page.locator('#results').getByRole('link', { name: 'Read music from scratch' })).toBeVisible()
+test.describe('task 2: find the room that fits your group', () => {
+  test('open the rooms, compare their size and equipment, open one, and come back', async ({ page }) => {
+    await page.goto('/rooms')
+    await expect(page.getByRole('heading', { level: 1, name: 'Rooms' })).toBeVisible()
+    const studio = page.getByRole('main').getByRole('link', { name: 'The Studio' })
+    await expect(studio).toBeVisible()
+    await studio.click()
+    await expect(page).toHaveURL(/\/rooms\/the-studio$/)
+    await expect(page.getByRole('heading', { level: 1, name: 'The Studio' })).toBeVisible()
+    await expect(page.getByText('Up to 25 people').first()).toBeVisible()
+    await expect(page.getByRole('main').getByText('Upright piano').first()).toBeVisible()
+    await page.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('link', { name: 'Rooms' }).click()
+    await expect(page).toHaveURL(/\/rooms$/)
   })
 })
 
-test.describe('task 2: book a time slot for a practice room', () => {
+test.describe('task 1: book a practice room for a time slot', () => {
   test.beforeEach(async ({ page }, testInfo) => {
     await useOwnAddress(page, testInfo)
   })
 
-  // Opens the test clinic from the clinic list, as a user would.
+  // Opens the test room from the rooms list, as a user would.
   async function openClinic(page: Page) {
-    const { clinic } = readFixture()
-    await page.goto('/clinics')
-    await page.getByRole('main').getByRole('link', { name: clinic.name }).first().click()
-    await expect(page).toHaveURL(new RegExp(`/clinics/${clinic.slug}$`))
-    await expect(page.getByRole('heading', { level: 1, name: clinic.name })).toBeVisible()
+    const { room } = readFixture()
+    await page.goto('/rooms')
+    await page.getByRole('main').getByRole('link', { name: room.name }).first().click()
+    await expect(page).toHaveURL(new RegExp(`/rooms/${room.slug}$`))
+    await expect(page.getByRole('heading', { level: 1, name: room.name })).toBeVisible()
   }
 
   async function fillIn(page: Page) {
@@ -71,7 +51,7 @@ test.describe('task 2: book a time slot for a practice room', () => {
     await fillIn(page)
     await page.getByRole('button', { name: 'Book this slot' }).click()
 
-    await expect(page).toHaveURL(/\/clinics\/e2e-check-clinic\/booked\?ref=\d+\.[0-9a-f]{32}$/)
+    await expect(page).toHaveURL(/\/rooms\/e2e-check-room\/booked\?ref=\d+\.[0-9a-f]{32}$/)
     await expect(page.getByRole('heading', { level: 1, name: 'Booking saved' })).toBeVisible()
     await expect(page.getByRole('status').filter({ hasText: 'Your booking is saved.' })).toContainText(BOOKING_CONFIRMATION)
     await expect(page.getByText(BOOKING_CONFIRMATION, { exact: true })).toBeVisible()
@@ -94,7 +74,7 @@ test.describe('task 2: book a time slot for a practice room', () => {
     await expect(page.getByLabel('Your name')).toHaveValue('Test Person')
     await expect(page.getByLabel('Your e-mail address')).toHaveValue('not-an-address')
     await expect(page.getByLabel('Note')).toHaveValue('The back brake squeaks.')
-    await expect(page).toHaveURL(/\/clinics\/e2e-check-clinic$/)
+    await expect(page).toHaveURL(/\/rooms\/e2e-check-room$/)
   })
 
   test('the connection drops before the booking reaches the server: "Not confirmed", everything kept; sending again books once', async ({ page, request }) => {
@@ -103,9 +83,9 @@ test.describe('task 2: book a time slot for a practice room', () => {
     await page.getByLabel('Note').fill('Sent while offline.')
     const requestId = await requestIdOf(page)
 
-    // The booking form's send is a POST to the clinic page's own address: make it fail as a dropped
+    // The booking form's send is a POST to the room page's own address: make it fail as a dropped
     // connection would.
-    await page.route('**/clinics/e2e-check-clinic', (route) => (route.request().method() === 'POST' ? route.abort('internetdisconnected') : route.fallback()))
+    await page.route('**/rooms/e2e-check-room', (route) => (route.request().method() === 'POST' ? route.abort('internetdisconnected') : route.fallback()))
     await page.getByRole('button', { name: 'Book this slot' }).click()
 
     const box = page.getByRole('alert').filter({ hasText: 'Not confirmed' })
@@ -120,7 +100,7 @@ test.describe('task 2: book a time slot for a practice room', () => {
     expect(await countBookings(request, requestId)).toBe(0)
 
     // The connection is back: the same press books it, once.
-    await page.unroute('**/clinics/e2e-check-clinic')
+    await page.unroute('**/rooms/e2e-check-room')
     await page.getByRole('button', { name: 'Book this slot' }).click()
     await expect(page).toHaveURL(/\/booked\?ref=/)
     await expect(page.getByText(BOOKING_CONFIRMATION, { exact: true })).toBeVisible()
@@ -133,7 +113,7 @@ test.describe('task 2: book a time slot for a practice room', () => {
     const requestId = await requestIdOf(page)
 
     // The request reaches the server, which saves the booking; its answer never reaches the browser.
-    await page.route('**/clinics/e2e-check-clinic', async (route) => {
+    await page.route('**/rooms/e2e-check-room', async (route) => {
       if (route.request().method() !== 'POST') return route.fallback()
       await route.fetch()
       await route.abort('connectionreset')
@@ -143,28 +123,28 @@ test.describe('task 2: book a time slot for a practice room', () => {
     expect(await countBookings(request, requestId)).toBe(1)
     expect(await requestIdOf(page)).toBe(requestId)
 
-    await page.unroute('**/clinics/e2e-check-clinic')
+    await page.unroute('**/rooms/e2e-check-room')
     await page.getByRole('button', { name: 'Book this slot' }).click()
     await expect(page).toHaveURL(/\/booked\?ref=/)
     await expect(page.getByText(BOOKING_CONFIRMATION, { exact: true })).toBeVisible()
     expect(await countBookings(request, requestId)).toBe(1)
   })
 
-  test('the database fails while the clinic is shown: the error page says so, and "Try again" shows the clinic once it works', async ({ page }) => {
-    const { clinic } = readFixture()
-    // The clinics table is renamed for a moment (fixture.ts break): every read of a clinic fails.
+  test('the database fails while the room is shown: the error page says so, and "Try again" shows the room once it works', async ({ page }) => {
+    const { room } = readFixture()
+    // The rooms table is renamed for a moment (fixture.ts break): every read of a room fails.
     runFixture('break')
     try {
-      const response = await page.goto(`/clinics/${clinic.slug}`)
+      const response = await page.goto(`/rooms/${room.slug}`)
       expect(response?.status()).toBe(500)
       await expect(page.getByRole('heading', { level: 1, name: 'This page could not be shown' })).toBeVisible()
-      await expect(page.getByRole('main').getByRole('link', { name: 'Book a room' })).toBeVisible()
+      await expect(page.getByRole('main').getByRole('link', { name: 'All rooms' })).toBeVisible()
     } finally {
       runFixture('mend')
     }
     // "Try again" asks the server again (Next.js's retry), so the page now works without a reload.
     await page.getByRole('button', { name: 'Try again' }).click()
-    await expect(page.getByRole('heading', { level: 1, name: clinic.name })).toBeVisible()
-    await expect(page).toHaveURL(new RegExp(`/clinics/${clinic.slug}$`))
+    await expect(page.getByRole('heading', { level: 1, name: room.name })).toBeVisible()
+    await expect(page).toHaveURL(new RegExp(`/rooms/${room.slug}$`))
   })
 })

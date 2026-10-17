@@ -24,21 +24,21 @@ export async function saveBooking(_previous: BookingResult | null, formData: For
   // The logged-in member (members' area only), from the log-in cookie: never from the form.
   const member = (await signedInMember(payload, requestHeaders))?.id
   const result = await createBooking(formData, { payload, ip: clientKey(requestHeaders), now: new Date(), member })
-  const clinic = String(formData.get('clinic') ?? '')
+  const room = String(formData.get('room') ?? '')
   if (!result.ok) {
     // The chosen slot filled up (someone else just took the last place), was deleted, or has started
-    // since the page was shown: read the clinic page again, so the form comes back with every slot as
-    // it is now ("Full", or gone from the list). Only for a clinic that exists: the slug comes from the
+    // since the page was shown: read the room page again, so the form comes back with every slot as
+    // it is now ("Booked", or gone from the list). Only for a room that exists: the slug comes from the
     // form, and anyone can change what a form sends.
     const slotChanged =
       result.message === FULL_MESSAGE || result.message === SLOT_GONE_MESSAGE || result.errors?.timeSlot === STARTED_MESSAGE
-    if (slotChanged && (await payload.count({ collection: 'clinics', where: { slug: { equals: clinic } } })).totalDocs > 0) {
-      revalidatePath(`/clinics/${encodeURIComponent(clinic)}`)
+    if (slotChanged && (await payload.count({ collection: 'rooms', where: { slug: { equals: room } } })).totalDocs > 0) {
+      revalidatePath(`/rooms/${encodeURIComponent(room)}`)
     }
     return result
   }
 
   // Saved. The confirmation page's address carries the booking's number with a signature
   // (receipt.ts), so the page can show this booking, and only this one.
-  redirect(`/clinics/${encodeURIComponent(clinic)}/booked?ref=${bookingRef(result.bookingId)}`)
+  redirect(`/rooms/${encodeURIComponent(room)}/booked?ref=${bookingRef(result.bookingId)}`)
 }

@@ -60,7 +60,7 @@ const folder = mkdtempSync(path.join(tmpdir(), 'bw-starter-seed-runner-'))
 // example `vitest run -t ...`): Vitest skips a describe block's own afterAll when all its tests are
 // skipped.
 afterAll(() => rmSync(folder, { recursive: true, force: true }))
-const clean = ['bookings', 'timeSlots', 'clinics', 'workshops', 'topics', 'repairs', 'pages', 'media', 'users']
+const clean = ['bookings', 'timeSlots', 'rooms', 'features', 'pages', 'media', 'users']
 const admin = { FIRST_ADMIN_EMAIL: 'seed-runner@campuscycle.example', FIRST_ADMIN_PASSWORD: 'test-password-0123456789' }
 
 describe('the seed runner (scripts/seed.mjs)', () => {
@@ -76,7 +76,8 @@ describe('the seed runner (scripts/seed.mjs)', () => {
     await resetSiteFacts()
     const first = await runRunner({ DATABASE_URL: process.env.TEST_DATABASE_URL, ...admin }, folder)
     expect(first.status, first.stderr).toBe(0)
-    expect(first.stdout.split(/\r?\n/)).toContain('SEED: created 21, kept 0')
+    // 6 pictures, 8 pieces of equipment, 4 rooms, 216 time slots (eight weeks), 4 pages and the Site facts.
+    expect(first.stdout.split(/\r?\n/)).toContain('SEED: created 239, kept 0')
     expect(seedVerified(first)).toBe(true)
     // Its images went to the runner's own folder, not into the project.
     expect(readdirSync(path.join(folder, 'media'))).toHaveLength(6)
@@ -93,7 +94,7 @@ describe('the seed runner (scripts/seed.mjs)', () => {
 
     // --again adds back only what is missing: here nothing.
     const again = await runRunner({ DATABASE_URL: process.env.TEST_DATABASE_URL, ...admin }, folder, undefined, ['--again'])
-    expect(again.stdout).toMatch(/SEED: created 0, kept 21 \(--again/)
+    expect(again.stdout).toMatch(/SEED: created 0, kept 27 \(--again/)
     expect(seedVerified(again)).toBe(true)
   }, 120_000)
 

@@ -22,7 +22,7 @@ import HomePage from '../../src/app/(site)/page'
 import PlainPage, { generateMetadata } from '../../src/app/(site)/[slug]/page'
 import DeeperAddress from '../../src/app/(site)/[slug]/[...rest]/page'
 import ContactPage, { generateMetadata as contactMetadata } from '../../src/app/(site)/contact/page'
-import ClinicsPage from '../../src/app/(site)/clinics/page'
+import RoomsPage from '../../src/app/(site)/rooms/page'
 import NotFound from '../../src/app/(site)/not-found'
 import { Header } from '../../src/components/site/Header'
 import { Footer } from '../../src/components/site/Footer'
@@ -31,7 +31,7 @@ import { tabTitle } from '../setup/title'
 // These tests delete every example record: never on a real database.
 refuseUnlessThrowAwayTestDatabase()
 
-const clean = ['bookings', 'timeSlots', 'clinics', 'workshops', 'topics', 'repairs', 'pages', 'media', 'users']
+const clean = ['bookings', 'timeSlots', 'rooms', 'features', 'pages', 'media', 'users']
 
 async function resetAll(p: Payload) {
   await resetCollections(clean)
@@ -64,20 +64,18 @@ describe('the public pages', () => {
   })
   afterAll(async () => resetAll(p))
 
-  it('home: the site name, the way to the workshops, and "opens soon" while there is no clinic', async () => {
+  it('home: the site name, the way to booking, and every room with its size, price and equipment', async () => {
     const page = html(await HomePage())
     expect(page).toContain('Riverside Voices')
-    expect(page).toContain('href="/workshops"')
-    expect(page).toContain('Room booking opens soon')
-    expect(page).not.toContain('href="/clinics/')
-    // Each workshop links to its own page, with its price and day from its record.
-    expect(page).toContain('href="/workshops/warm-up-your-voice"')
-    expect(page).toContain('EUR 12')
-    expect(page).toContain('Tuesday')
-    // The topics are quick links into the filtered workshop list.
-    expect(page).toContain('href="/workshops?topic=voice-and-breathing"')
+    expect(page).toContain('href="/rooms"')
+    // Each room links to its own page, with its size and price from its record, smallest first.
+    expect(page).toContain('href="/rooms/the-band-room"')
+    expect(page.indexOf('href="/rooms/the-band-room"')).toBeLessThan(page.indexOf('href="/rooms/the-hall"'))
+    expect(page).toContain('Up to 60 people')
+    expect(page).toContain('EUR 60 per time slot')
+    expect(page).toContain('Grand piano')
     // The pricing rule comes from the Site facts global.
-    expect(page).toContain('Sheet music and a pianist are included. Members of Riverside Voices pay half.')
+    expect(page).toContain('Nobody pays online: the choir sends an invoice after your rehearsal.')
   })
 
   it('one source per fact: a pricing rule changed in Site facts shows on the home page; a changed e-mail on Contact', async () => {
@@ -107,53 +105,20 @@ describe('the public pages', () => {
     const page = html(await ContactPage())
     expect(page).toContain('<h1')
     expect(page).toContain('Contact')
-    expect(page).toContain('Questions about a room, a booking or a workshop? Send us an e-mail.')
+    expect(page).toContain('Questions about a room or a booking? Send us an e-mail.')
     expect(page).toContain('There is no contact form on this site: send an e-mail instead.')
     expect(page).toMatch(/<dt[^>]*>E-mail<\/dt><dd[^>]*><a href="mailto:rooms@riversidevoices.example">rooms@riversidevoices.example<\/a><\/dd>/)
     expect(page).toMatch(/<dt[^>]*>Place<\/dt><dd[^>]*>Riverside Voices house, Quay Street 12, Riverside<\/dd>/)
     expect(await tabTitle(contactMetadata())).toBe('Contact · Riverside Voices')
   })
 
-  it('home: links to the newest clinic once one exists', async () => {
-    const older = await p.create({
-      collection: 'clinics',
-      data: {
-        name: 'Spring repair clinic',
-        slug: 'spring-repair-clinic',
-        day: 'Saturday',
-        startTime: '15:00',
-        endTime: '17:00',
-        summary: 'An older clinic.',
-      },
-    })
-    const clinic = await p.create({
-      collection: 'clinics',
-      data: {
-        name: 'Saturday repair clinic',
-        slug: 'saturday-repair-clinic',
-        day: 'Saturday',
-        startTime: '15:00',
-        endTime: '17:00',
-        summary: 'Bring your bicycle for a check or a small repair.',
-      },
-    })
-    try {
-      const page = html(await HomePage())
-      expect(page).toContain('href="/clinics/saturday-repair-clinic"')
-      expect(page).not.toContain('href="/clinics/spring-repair-clinic"')
-      expect(page).not.toContain('Room booking opens soon')
-      const list = html(await ClinicsPage())
-      expect(list).toContain('href="/clinics/saturday-repair-clinic"')
-      expect(list).toContain('Saturday repair clinic')
-    } finally {
-      await p.delete({ collection: 'clinics', id: clinic.id })
-      await p.delete({ collection: 'clinics', id: older.id })
-    }
-  })
-
-  it('/clinics: the truthful empty state while there is no clinic', async () => {
-    const list = html(await ClinicsPage())
-    expect(list).toContain('Room booking opens soon')
+  it('/rooms lists every room, smallest first, with the pricing rule', async () => {
+    const list = html(await RoomsPage())
+    expect(list).toContain('All rooms — 4 rooms')
+    const order = ['the-band-room', 'the-loft', 'the-studio', 'the-hall'].map((slug) => list.indexOf(`href="/rooms/${slug}"`))
+    expect(order.every((at) => at > -1)).toBe(true)
+    expect([...order].sort((x, y) => x - y)).toEqual(order)
+    expect(list).toContain('Each price is for one two-hour time slot')
   })
 
   it('/about shows the about page record, with a title for the browser tab', async () => {
@@ -201,17 +166,17 @@ describe('the public pages', () => {
     expect(await digestOf(Promise.resolve().then(() => DeeperAddress()))).toBe('NEXT_HTTP_ERROR_FALLBACK;404')
   })
 
-  it('the 404 page offers a way back to Home and to the workshops', () => {
+  it('the 404 page offers a way back to Home and to the rooms', () => {
     const page = html(<NotFound />)
     expect(page).toContain('href="/"')
-    expect(page).toContain('href="/workshops"')
+    expect(page).toContain('href="/rooms"')
   })
 
   it('the footer reads nothing from the database: no e-mail address or place, but a link to Contact', () => {
     const footer = html(<Footer />)
     expect(footer).not.toMatch(/[\w.+-]+@[\w-]+\.[\w.-]+/)
     expect(footer).not.toContain('mailto:')
-    expect(footer).not.toContain('Workshop B')
+    expect(footer).not.toContain('Quay Street')
     expect(footer).toContain('href="/contact"')
     expect(footer).toContain('href="/privacy"')
   })
@@ -224,10 +189,10 @@ describe('the public pages', () => {
     expect(header).toContain('aria-label="Main"')
     expect(header).toMatch(/<a[^>]*aria-current="page"[^>]*href="\/about"|<a[^>]*href="\/about"[^>]*aria-current="page"/)
     expect(header.match(/aria-current=/g)).toHaveLength(1)
-    // The repair clinic's own pages count as being in the "Repair clinic" part of the site.
-    where.pathname = '/clinics/saturday-repair-clinic'
-    const inClinic = html(await Header())
-    expect(inClinic).toMatch(/<a[^>]*href="\/clinics"[^>]*aria-current="true"|<a[^>]*aria-current="true"[^>]*href="\/clinics"/)
+    // A room's own page counts as being in the "Rooms" part of the site.
+    where.pathname = '/rooms/the-loft'
+    const inRoom = html(await Header())
+    expect(inRoom).toMatch(/<a[^>]*href="\/rooms"[^>]*aria-current="true"|<a[^>]*aria-current="true"[^>]*href="\/rooms"/)
     expect(html(await Header())).toContain('Skip to main content')
   })
 })

@@ -78,7 +78,9 @@ describe('the markers a course exercise points at', () => {
     expect(lines[marker + 1]).toMatch(/^const TAGLINE = '/)
   })
 
-  it('the clinic page keeps the W5 line where the summary is shown, and the price list above the booking form', () => {
+  // Our site has no clinic page, no repairs and no W6 repair choice (we book rooms: docs/decisions/live-content.md),
+  // so the W5 and W6 places these pin exist only in the starter itself: they run only for the template.
+  it.runIf(process.env.STARTER_TEMPLATE === '1')('the clinic page keeps the W5 line where the summary is shown, and the price list above the booking form', () => {
     const source = read('src/app/(site)/clinics/[slug]/page.tsx')
     const lines = source.split(/\r?\n/)
     // A learner adds their list on the line AFTER this comment; the comment and the summary stay.
@@ -100,7 +102,9 @@ describe('the markers a course exercise points at', () => {
     expect(source.indexOf('<BookingForm')).toBeGreaterThan(guard + prices.length)
   })
 
-  it('BookingForm.tsx keeps the W6 repair choice commented out, with the name only and the exact price comment on the label line', () => {
+  // Our site has no clinic page, no repairs and no W6 repair choice (we book rooms: docs/decisions/live-content.md),
+  // so the W5 and W6 places these pin exist only in the starter itself: they run only for the template.
+  it.runIf(process.env.STARTER_TEMPLATE === '1')('BookingForm.tsx keeps the W6 repair choice commented out, with the name only and the exact price comment on the label line', () => {
     const source = read('src/components/site/BookingForm.tsx')
     const lines = source.split(/\r?\n/)
     // After W6 (a learner's copy): switched on as the README says, so the form shows the choice.
@@ -125,7 +129,9 @@ describe('the markers a course exercise points at', () => {
     expect(read('src/lib/format.ts')).toMatch(/^export function formatPrice\(/m)
   })
 
-  it('createBooking.ts keeps the W6 repairs line commented out, next to the whitelist', () => {
+  // Our site has no clinic page, no repairs and no W6 repair choice (we book rooms: docs/decisions/live-content.md),
+  // so the W5 and W6 places these pin exist only in the starter itself: they run only for the template.
+  it.runIf(process.env.STARTER_TEMPLATE === '1')('createBooking.ts keeps the W6 repairs line commented out, next to the whitelist', () => {
     const source = read('src/tasks/book-slot/createBooking.ts')
     // After W6 (a learner's copy): both lines switched on, under the same W6 comment.
     if (/^\s*const repairs = formData\.getAll\('repairs'\)/m.test(source)) {

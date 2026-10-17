@@ -1,6 +1,6 @@
 // What GET /api/course-check answers (src/app/api/course-check/route.ts), as agreed with the course's
 // checkers in docs/COURSE-CHECK-CONTRACT.md. The rules without the database are in courseCheck.ts.
-import { getPayload, type Payload, type Where } from 'payload'
+import { getPayload, type CollectionSlug, type Payload, type Where } from 'payload'
 import config from '@/payload.config'
 import { allowRequest, clientKey } from '@/tasks/book-slot/guards'
 import {
@@ -70,8 +70,15 @@ export async function courseCheckResponse(request: Request, options: { payload?:
  * public "What to bring" list. answer() builds the body from exactly three keys.
  */
 export async function findAnswer(payload: Payload, code: string | null): Promise<CourseCheckAnswer> {
-  const clinicFields = payload.collections.clinics.config.flattenedFields as readonly FieldShape[]
-  const bookingFields = payload.collections.bookings.config.flattenedFields as readonly FieldShape[]
+  // Read by name, not through the generated types: our site has no clinics collection (we book rooms
+  // instead, docs/decisions/live-content.md), and the contract's answer for a site without clinics is
+  // "no clinic, no list" (interpretation 11). Without clinics there is no warm-up booking to find either.
+  const collections = payload.collections as Partial<Record<string, { config: { flattenedFields: unknown } }>>
+  const clinics = collections.clinics
+  const bookings = collections.bookings
+  if (!clinics || !bookings) return answer(false, null, false)
+  const clinicFields = clinics.config.flattenedFields as readonly FieldShape[]
+  const bookingFields = bookings.config.flattenedFields as readonly FieldShape[]
 
   const clinic = await newestClinic(payload, code)
   const booking = hasRepairsRelation(bookingFields) ? await bookingWithTwoRepairs(payload, code) : false
@@ -90,7 +97,7 @@ async function newestClinic(payload: Payload, code: string | null): Promise<Reco
   const where: Where = code === null ? {} : { summary: { like: code } }
   for (let page = 1; ; page++) {
     const result = await payload.find({
-      collection: 'clinics',
+      collection: 'clinics' as CollectionSlug,
       where,
       select: select as never,
       sort: ['-updatedAt', '-id'],

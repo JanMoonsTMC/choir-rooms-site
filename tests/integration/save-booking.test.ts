@@ -1,11 +1,12 @@
 // The booking form's server function (saveBooking.ts) on the test database: it opens the confirmation
-// page after a save, and after a problem with the chosen time it has the clinic page read again, so the
+// page after a save, and after a problem with the chosen time it has the room page read again, so the
 // form shows every slot's places as they are now.
 import { randomUUID } from 'node:crypto'
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Payload } from 'payload'
 import { getTestPayload, resetCollections } from '../setup/payload'
 import { refuseUnlessThrowAwayTestDatabase } from '../setup/safety'
+import { roomData, slotData } from '../setup/rooms'
 
 // Outside a running Next.js server there is no request: the test gives the headers, and records which
 // pages saveBooking asks to read again.
@@ -22,7 +23,7 @@ vi.mock('../../src/tasks/book-slot/createBooking', async (importOriginal) => {
 import { saveBooking } from '../../src/tasks/book-slot/saveBooking'
 
 refuseUnlessThrowAwayTestDatabase()
-const clean = ['bookings', 'timeSlots', 'clinics', 'throttle']
+const clean = ['bookings', 'timeSlots', 'rooms', 'throttle']
 
 describe('saveBooking', () => {
   let p: Payload
@@ -30,7 +31,7 @@ describe('saveBooking', () => {
 
   const form = (fields: Record<string, string> = {}) => {
     const data = new FormData()
-    const all = { clinic: 'test-clinic', requestId: randomUUID(), name: 'Test Person', email: 'test@campuscycle.example', timeSlot: String(slotId), ...fields }
+    const all = { room: 'test-room', requestId: randomUUID(), name: 'Test Person', email: 'test@riversidevoices.example', timeSlot: String(slotId), ...fields }
     for (const [name, value] of Object.entries(all)) data.append(name, value)
     return data
   }
@@ -50,21 +51,21 @@ describe('saveBooking', () => {
   beforeEach(async () => {
     revalidated.length = 0
     await resetCollections(clean)
-    const clinic = await p.create({ collection: 'clinics', data: { name: 'Test clinic', slug: 'test-clinic', day: 'Saturday', startTime: '15:00', endTime: '17:00', summary: 'Test instance.' } })
-    slotId = (await p.create({ collection: 'timeSlots', data: { clinic: clinic.id, startsAt: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString(), places: 1 } })).id
+    const room = await p.create({ collection: 'rooms', data: roomData })
+    slotId = (await p.create({ collection: 'timeSlots', data: slotData(room.id, new Date(Date.now() + 6 * 24 * 60 * 60 * 1000), 1) })).id
   })
   afterAll(() => resetCollections(clean))
 
   it('opens the signed confirmation page after a save', async () => {
-    expect(await digestOf(saveBooking(null, form()))).toMatch(/^NEXT_REDIRECT;replace;\/clinics\/test-clinic\/booked\?ref=\d+\.[0-9a-f]{32};307;/)
+    expect(await digestOf(saveBooking(null, form()))).toMatch(/^NEXT_REDIRECT;replace;\/rooms\/test-room\/booked\?ref=\d+\.[0-9a-f]{32};307;/)
     expect(revalidated).toEqual([])
   })
 
-  it('after "This slot is full" it has the clinic page read again, and nothing stays chosen', async () => {
+  it('after "This slot is full" it has the room page read again, and nothing stays chosen', async () => {
     await digestOf(saveBooking(null, form()))
     const result = await saveBooking(null, form({ name: 'Second Person' }))
     expect(result).toMatchObject({ ok: false, message: 'This slot is full. Choose another time.', values: { timeSlot: '', name: 'Second Person' } })
-    expect(revalidated).toEqual(['/clinics/test-clinic'])
+    expect(revalidated).toEqual(['/rooms/test-room'])
   })
 
   it('a problem with another field, or "choose a time", reads nothing again', async () => {
@@ -73,33 +74,33 @@ describe('saveBooking', () => {
     expect(revalidated).toEqual([])
   })
 
-  it('after "This time has already started" it has the clinic page read again, so that time leaves the list', async () => {
-    const clinic = (await p.find({ collection: 'clinics', where: { slug: { equals: 'test-clinic' } } })).docs[0]
-    const started = await p.create({ collection: 'timeSlots', data: { clinic: clinic.id, startsAt: new Date(Date.now() - 60 * 1000).toISOString(), places: 2 } })
+  it('after "This time has already started" it has the room page read again, so that time leaves the list', async () => {
+    const room = (await p.find({ collection: 'rooms', where: { slug: { equals: 'test-room' } } })).docs[0]
+    const started = await p.create({ collection: 'timeSlots', data: slotData(room.id, new Date(Date.now() - 60 * 1000), 2) })
     const result = await saveBooking(null, form({ timeSlot: String(started.id) }))
     expect(result).toMatchObject({ ok: false, field: 'timeSlot', errors: { timeSlot: 'This time has already started. Choose a later time.' } })
-    expect(revalidated).toEqual(['/clinics/test-clinic'])
+    expect(revalidated).toEqual(['/rooms/test-room'])
   })
 
-  it('a "full" answer for a form that names a clinic which does not exist reads nothing again', async () => {
+  it('a "full" answer for a form that names a room which does not exist reads nothing again', async () => {
     const full = 'This slot is full. Choose another time.'
     answer.result = { ok: false, message: full, field: 'timeSlot', errors: { timeSlot: full }, values: { timeSlot: '', name: '', email: '', note: '' } }
     try {
-      expect(await saveBooking(null, form({ clinic: 'no-such-clinic' }))).toMatchObject({ message: full })
+      expect(await saveBooking(null, form({ room: 'no-such-room' }))).toMatchObject({ message: full })
       expect(revalidated).toEqual([])
-      // The same answer for a real clinic does read its page again.
+      // The same answer for a real room does read its page again.
       await saveBooking(null, form())
-      expect(revalidated).toEqual(['/clinics/test-clinic'])
+      expect(revalidated).toEqual(['/rooms/test-room'])
     } finally {
       answer.result = undefined
     }
   })
 
-  it('an "already started" answer for a form that names a clinic which does not exist reads nothing again', async () => {
+  it('an "already started" answer for a form that names a room which does not exist reads nothing again', async () => {
     const started = 'This time has already started. Choose a later time.'
     answer.result = { ok: false, message: 'Your booking was not saved. Check the field marked below.', field: 'timeSlot', errors: { timeSlot: started }, values: { timeSlot: '1', name: '', email: '', note: '' } }
     try {
-      await saveBooking(null, form({ clinic: 'no-such-clinic' }))
+      await saveBooking(null, form({ room: 'no-such-room' }))
       expect(revalidated).toEqual([])
     } finally {
       answer.result = undefined

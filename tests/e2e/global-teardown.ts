@@ -1,4 +1,4 @@
-// Runs once after the browser checks: removes the test clinic, its time slots and every booking the
+// Runs once after the browser checks: removes the test room, its time slots and every booking the
 // checks made in them.
 import { runFixture } from './global-setup'
 

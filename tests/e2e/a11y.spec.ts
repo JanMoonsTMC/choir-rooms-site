@@ -5,16 +5,13 @@ import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 import { readFixture } from './helpers'
 
-// The test clinic's pages are known only once the global set-up has made it, so those two paths are
+// The test room's pages are known only once the global set-up has made it, so those two paths are
 // read inside the check (readFixture), not here.
 const pages = [
   { name: 'home', path: '/' },
-  { name: 'workshops', path: '/workshops' },
-  { name: 'workshops, filtered', path: '/workshops?topic=reading-music&level=beginner' },
-  { name: 'a workshop', path: '/workshops/read-music-from-scratch' },
-  { name: 'a topic', path: '/topics/reading-music' },
-  { name: 'clinics', path: '/clinics' },
-  { name: 'the clinic', path: () => `/clinics/${readFixture().clinic.slug}` },
+  { name: 'rooms', path: '/rooms' },
+  { name: 'a room', path: '/rooms/the-studio' },
+  { name: 'the test room, with its booking form', path: () => `/rooms/${readFixture().room.slug}` },
   { name: 'the confirmation', path: () => readFixture().confirmation },
   { name: 'about', path: '/about' },
   { name: 'privacy', path: '/privacy' },
@@ -53,7 +50,7 @@ test('page not found, without JavaScript: a 404, and today the empty page Next.j
   const context = await browser.newContext({ javaScriptEnabled: false })
   try {
     const page = await context.newPage()
-    for (const path of ['/no-such-page', '/workshops/no-such-workshop', '/a/b/c']) {
+    for (const path of ['/no-such-page', '/rooms/no-such-room', '/a/b/c']) {
       expect((await page.goto(path))?.status(), path).toBe(404)
       expect(await page.locator('html').getAttribute('id'), path).toBe('__next_error__')
       expect((await page.locator('body').innerText()).trim(), path).toBe('')

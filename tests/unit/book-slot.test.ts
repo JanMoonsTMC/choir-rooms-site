@@ -56,10 +56,18 @@ describe("a slot's time and places, as users read them", () => {
     expect(formatSlotTime(new Date('2026-10-31T15:30:00Z'))).toBe('Saturday 31 October, 16:30')
   })
 
-  it('says how many places are left in words, and "Full" for none', () => {
-    expect(placesLabel(2)).toBe('2 places left')
-    expect(placesLabel(1)).toBe('1 place left')
-    expect(placesLabel(0)).toBe('Full')
-    expect(placesLabel(-1)).toBe('Full')
+  it('a slot with an end reads "start–end", in Brussels time', () => {
+    expect(formatSlotTime('2026-10-20T17:00:00Z', '2026-10-20T19:00:00Z')).toBe('Tuesday 20 October, 19:00–21:00')
+    // After summer time ends, the same Brussels time is an hour later in UTC.
+    expect(formatSlotTime('2026-11-03T18:00:00Z', '2026-11-03T20:00:00Z')).toBe('Tuesday 3 November, 19:00–21:00')
+  })
+
+  it('says "Free" or "Booked" for a one-group slot, and how many places are left when it has more', () => {
+    expect(placesLabel(1)).toBe('Free')
+    expect(placesLabel(0)).toBe('Booked')
+    expect(placesLabel(-1)).toBe('Booked')
+    expect(placesLabel(2, 3)).toBe('2 places left')
+    expect(placesLabel(1, 3)).toBe('1 place left')
+    expect(placesLabel(0, 3)).toBe('Booked')
   })
 })

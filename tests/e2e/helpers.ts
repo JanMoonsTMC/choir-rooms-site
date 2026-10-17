@@ -1,4 +1,4 @@
-// Shared by the browser checks: where the site is, the test clinic, and a few helpers.
+// Shared by the browser checks: where the site is, the test room, and a few helpers.
 import { createHash } from 'node:crypto'
 import type { APIRequestContext, Page, TestInfo } from '@playwright/test'
 import type { Fixture } from './fixture'
@@ -16,7 +16,7 @@ export const NOT_CONFIRMED = [
 ]
 
 export function readFixture(): Fixture {
-  if (!process.env.E2E_FIXTURE) throw new Error('No test clinic: run the checks with npm run check (its global set-up makes one).')
+  if (!process.env.E2E_FIXTURE) throw new Error('No test room: run the checks with npm run check (its global set-up makes one).')
   return JSON.parse(process.env.E2E_FIXTURE) as Fixture
 }
 
