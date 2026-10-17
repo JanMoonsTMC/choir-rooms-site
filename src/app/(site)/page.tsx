@@ -34,6 +34,8 @@ export default async function HomePage() {
       limit: 50,
     })
   ).docs
+  // The equipment, as quick links into the filtered rooms list.
+  const features = (await payload.find({ collection: 'features', sort: 'name', depth: 0, joins: false, limit: 50 })).docs
   // The facts several pages share, such as the pricing rule (src/globals/SiteFacts.ts).
   const facts = await payload.findGlobal({ slug: 'site-facts', depth: 0 })
 
@@ -45,11 +47,27 @@ export default async function HomePage() {
         image={imageFrom(picture)}
         actions={
           <>
-            <ButtonLink href="/rooms" size="lg">Book a room</ButtonLink>
+            <ButtonLink href="/rooms" variant="accent" size="lg">Find and book a room</ButtonLink>
             <ButtonLink href="/about" variant="secondary" size="lg">How booking works</ButtonLink>
           </>
         }
       />
+
+      {features.length > 0 && (
+        <section aria-labelledby="need" className="grid gap-4">
+          <h2 id="need" className="text-2xl">What does your group need?</h2>
+          <ul className="flex flex-wrap gap-2">
+            {features.map((feature) => (
+              <li key={feature.id}>
+                {/* min-h-11: 44 px high, a target a finger can hit easily. */}
+                <ButtonLink href={`/rooms?feature=${feature.slug}#results`} variant="secondary" size="sm" className="min-h-11 rounded-full">
+                  {feature.name}
+                </ButtonLink>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section aria-labelledby="rooms" className="grid gap-block">
         <div className="flex flex-wrap items-baseline justify-between gap-3">
@@ -59,7 +77,7 @@ export default async function HomePage() {
         {rooms.length === 0 ? (
           <p>The rooms will be listed here soon.</p>
         ) : (
-          <ul className="grid gap-block lg:grid-cols-2">
+          <ul className="grid gap-block sm:grid-cols-2">
             {rooms.map((room) => (
               <li key={room.id} className="grid">
                 <RoomCard room={room} />

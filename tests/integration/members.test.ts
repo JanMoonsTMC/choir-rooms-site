@@ -230,11 +230,11 @@ describe("the members' area", () => {
       expect(await digestOf(signIn(null, loginForm('a@riversidevoices.example', PASSWORD)))).toBe('NEXT_HTTP_ERROR_FALLBACK;404')
       expect(await digestOf(signOut())).toBe('NEXT_HTTP_ERROR_FALLBACK;404')
 
-      // The menu is exactly the four links it always had.
+      // The menu is exactly the five links it always had.
       const menu = renderToString(await Header())
       expect(menu).not.toContain('My bookings')
       expect(menu).not.toContain('/account')
-      expect(menu.match(/<li>/g)).toHaveLength(4)
+      expect(menu.match(/<li>/g)).toHaveLength(5)
 
       const members = p.collections.members.config
       const hidden = members.admin.hidden as (args: { user: unknown }) => boolean
@@ -538,10 +538,10 @@ describe("the members' area", () => {
     it('shows "Log in" to nobody in particular, and the member with a way out once they are logged in', async () => {
       const { a } = await twoMembers()
 
-      // Nobody logged in: a fifth link that leads to the log-in page, and no sign of an account.
+      // Nobody logged in: a sixth link that leads to the log-in page, and no sign of an account.
       const out = text(renderToString(await Header()))
       expect(out).toMatch(/<a[^>]*href="\/account\/login"[^>]*>Log in<\/a>/)
-      expect(out.match(/<li>/g)).toHaveLength(5)
+      expect(out.match(/<li>/g)).toHaveLength(6)
       expect(out).not.toContain('Log out')
       expect(out).not.toContain('My bookings')
 
@@ -549,7 +549,7 @@ describe("the members' area", () => {
       await digestOf(signIn(null, loginForm(a.email, PASSWORD)))
       const inside = text(renderToString(await Header()))
       expect(inside).toMatch(/<a[^>]*href="\/account"[^>]*>My bookings<\/a>/)
-      expect(inside.match(/<li>/g)).toHaveLength(5)
+      expect(inside.match(/<li>/g)).toHaveLength(6)
       expect(inside).toContain('Member A')
       expect(inside).toMatch(/<button[^>]*type="submit"[^>]*>Log out<\/button>/)
       // As tall as the menu's links (44 px, min-h-11), so it is as easy to hit on a phone.

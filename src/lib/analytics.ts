@@ -1,7 +1,7 @@
 // What this is: one small helper, track(), that tells an analytics tool "a user just did this step".
 // The site calls it at the two key steps of its user tasks:
-//   - 'filter_used': the workshop filters were applied (src/app/(site)/workshops/page.tsx);
-//   - 'booking_saved': a booking was saved (src/app/(site)/clinics/[slug]/booked/page.tsx).
+//   - 'filter_used': the room filters were applied (src/app/(site)/rooms/page.tsx);
+//   - 'booking_saved': a booking was saved (src/app/(site)/rooms/[slug]/booked/page.tsx).
 //
 // NEXT_PUBLIC_ANALYTICS names the analytics tool (see .env.example). While it is not set, nothing is
 // sent and nothing is stored on the user's device. Only the value `vercel` is built in:
