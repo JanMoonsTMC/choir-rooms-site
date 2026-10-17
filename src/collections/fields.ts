@@ -3,12 +3,12 @@
 import type { Field, NumberFieldSingleValidation, TextFieldSingleValidation } from 'payload'
 import { text } from 'payload/shared'
 
-// Lowercase letters and digits, in groups joined by single hyphens: "repair-a-puncture", "gears-2".
+// Lowercase letters and digits, in groups joined by single hyphens: "warm-up-your-voice", "room-2".
 export const SLUG_FORMAT = /^[a-z0-9]+(-[a-z0-9]+)*$/
 
 const slugFormat: TextFieldSingleValidation = (value, options) => {
   if (value && !SLUG_FORMAT.test(value)) {
-    return 'Use only lowercase letters, digits and hyphens, for example repair-a-puncture.'
+    return 'Use only lowercase letters, digits and hyphens, for example warm-up-your-voice.'
   }
   // Payload's own text check still runs, so an empty slug still gets the usual "required" message.
   return text(value, options)
@@ -23,7 +23,7 @@ export const slug: Field = {
   index: true,
   validate: slugFormat,
   admin: {
-    description: 'The last part of the web address, for example repair-a-puncture. Use lowercase letters, digits and hyphens.',
+    description: 'The last part of the web address, for example warm-up-your-voice. Use lowercase letters, digits and hyphens.',
   },
 }
 
@@ -50,7 +50,7 @@ export const price: Field = {
   min: 0,
 }
 
-// Places and group sizes count people or bicycles, so 1.5 or 0 makes no sense.
+// Places and group sizes count groups or people, so 1.5 or 0 makes no sense.
 export const positiveInteger: NumberFieldSingleValidation = (value) => {
   if (Number.isInteger(value) && Number(value) > 0) {
     return true

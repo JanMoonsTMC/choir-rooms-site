@@ -13,7 +13,7 @@ import { ButtonLink } from '@/components/site/ButtonLink'
 import { Notice } from '@/components/site/Notice'
 import { PageTitle } from '@/components/site/PageTitle'
 import { TrackStep } from '@/components/site/TrackStep'
-import { BOOKING_CONFIRMATION } from '@/content/campus-cycle'
+import { BOOKING_CONFIRMATION } from '@/content/riverside-voices'
 import { formatSlotTime } from '@/lib/format'
 import { membersAreaOn, signedInMember } from '@/lib/membersArea'
 import config from '@/payload.config'
@@ -52,8 +52,8 @@ export default async function BookedPage({ params, searchParams }: Props) {
         <PageTitle title="Booking confirmation" tone="yellow" />
         <Notice tone="warning" label="Please note" className="max-w-3xl">
           <p className="font-heading text-xl font-extrabold">We can&apos;t show this booking confirmation.</p>
-          <p>The link may be incomplete or out of date. The clinic&apos;s page shows its times and how many places each one has left.</p>
-          <ButtonLink href={`/clinics/${clinic.slug}`} variant="secondary" className="mt-2 w-fit">Back to the clinic</ButtonLink>
+          <p>The link may be incomplete or out of date. The booking page shows its times and how many places each one has left.</p>
+          <ButtonLink href={`/clinics/${clinic.slug}`} variant="secondary" className="mt-2 w-fit">Back to booking</ButtonLink>
         </Notice>
       </div>
     )
@@ -80,7 +80,7 @@ export default async function BookedPage({ params, searchParams }: Props) {
       <PageTitle title="Booking saved" />
       <div className="grid max-w-3xl gap-block">
         <Notice tone="success" label="Saved" role="status">
-          {/* "Your booking is saved." and the made-up-data notice: src/content/campus-cycle.ts. */}
+          {/* "Your booking is saved." and the made-up-data notice: src/content/riverside-voices.ts. */}
           <p className="font-semibold">{BOOKING_CONFIRMATION}</p>
           {inAccount && (
             <p>
@@ -91,7 +91,7 @@ export default async function BookedPage({ params, searchParams }: Props) {
         <section aria-labelledby="booking" className="framed grid gap-4 p-6 offset-mint">
           <h2 id="booking" className="text-xl">Your booking</h2>
           <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2">
-            <dt className="text-ink-soft">Clinic</dt>
+            <dt className="text-ink-soft">Booked at</dt>
             <dd className="min-w-0 font-semibold [overflow-wrap:anywhere]">{clinic.name}</dd>
             <dt className="text-ink-soft">Time</dt>
             <dd className="font-semibold">{formatSlotTime(slot.startsAt)}</dd>
@@ -104,7 +104,7 @@ export default async function BookedPage({ params, searchParams }: Props) {
           </dl>
         </section>
         <div className="flex flex-wrap gap-3">
-          <ButtonLink href={`/clinics/${clinic.slug}`} variant="secondary">Back to the clinic</ButtonLink>
+          <ButtonLink href={`/clinics/${clinic.slug}`} variant="secondary">Back to booking</ButtonLink>
           <ButtonLink href="/" variant="quiet">Home</ButtonLink>
         </div>
       </div>

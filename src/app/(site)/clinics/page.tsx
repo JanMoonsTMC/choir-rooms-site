@@ -14,11 +14,11 @@ export const dynamic = 'force-dynamic'
 
 // The clinic's picture, from the media library (the seed uploads it). To use another one, upload it
 // in /admin and put its file name here.
-const CLINIC_IMAGE = 'clinic-tools'
+const CLINIC_IMAGE = 'practice-rooms'
 
 export const metadata: Metadata = {
-  title: 'Repair clinic',
-  description: 'Book a time slot at the Campus Cycle repair clinic and bring your bicycle for a check or a repair.',
+  title: 'Book a room',
+  description: 'Book a two-hour time slot in one of the Riverside Voices practice rooms for your choir, band or theatre group.',
 }
 
 export default async function ClinicsPage() {
@@ -30,15 +30,15 @@ export default async function ClinicsPage() {
   return (
     <div className="pb-6">
       <PageTitle
-        title="Repair clinic"
-        intro="Bring your bicycle to the clinic for a check or a repair. Book a time slot first, so we are ready for you."
+        title="Book a practice room"
+        intro="Choose a time slot and book a practice room for your choir, band or theatre group."
         image={imageFrom(picture)}
       />
       {clinics.length === 0 ? (
         <Notice tone="warning" label="Not open yet" className="max-w-3xl">
-          <p className="font-heading text-xl font-extrabold">The repair clinic opens soon</p>
-          <p>When it opens, you can book a time slot on this page and bring your bicycle for a check or a repair.</p>
-          <p>Until then, you can learn to do it yourself in a workshop.</p>
+          <p className="font-heading text-xl font-extrabold">Room booking opens soon</p>
+          <p>When it opens, you can book a two-hour time slot for your group on this page.</p>
+          <p>Until then, you can join one of our workshops for singers.</p>
           <ButtonLink href="/workshops" variant="secondary" className="mt-2 w-fit">Find a workshop</ButtonLink>
         </Notice>
       ) : (

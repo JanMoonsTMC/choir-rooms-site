@@ -46,7 +46,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   let title = 'Workshops'
   if (found.workshops.length === 0) title = 'No workshops match these filters'
   else if (topic || level) title = filterSummary(level, found.topic?.name ?? null, found.workshops.length)
-  return { title, description: 'Find a bicycle maintenance workshop by topic and level.' }
+  return { title, description: 'Find a workshop for singers by topic and level.' }
 }
 
 export default async function WorkshopsPage({ searchParams }: Props) {
@@ -66,7 +66,7 @@ export default async function WorkshopsPage({ searchParams }: Props) {
       )}
       <PageTitle
         title="Workshops"
-        intro="Short maintenance workshops for your own bicycle, in small groups. Choose a topic and a level, or look through them all."
+        intro="Short workshops for singers, in small groups. Choose a topic and a level, or look through them all."
         tone="purple"
       />
       <div className="grid gap-block">

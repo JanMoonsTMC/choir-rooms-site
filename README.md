@@ -1,8 +1,28 @@
-# Campus Cycle: the course starter
+# Riverside Voices: practice rooms for choirs, bands and theatre groups
 
-Campus Cycle is a small, complete website for a made-up bicycle repair service at a college. It is
-the starter of the course "Building better websites": you make your own copy, put it online, and
-learn by changing it. Later you can turn your copy into a site about your own topic.
+Riverside Voices is a made-up city choir with its own rehearsal house. It rents its practice rooms to
+other groups, and this site lets them do that online:
+
+- **Book a practice room for a time slot** (our primary task): choose a room, a free two-hour slot,
+  fill in your group's details and get a confirmation.
+- **Find the room that fits your group**: filter the rooms by group size and by the equipment you
+  need, and compare them.
+
+It is our team project for the course "Building better websites", built by Test A and Test B. The live
+site is <https://choir-rooms-site.vercel.app>. What we decided and why is in `docs/`: the
+[brief](docs/brief.md), the [requirements](docs/requirements.md), the
+[team agreement](docs/team-agreement.md) and the [decision records](docs/decisions/README.md).
+
+We started from the course's starter website. The rest of this README is the starter's own, kept
+because it still explains how the code works.
+
+---
+
+## The starter we built on
+
+The starter is a small, complete website for a made-up service. It is the starter of the course
+"Building better websites": you make your own copy, put it online, and learn by changing it. Later you
+can turn your copy into a site about your own topic, as we did.
 
 **What you get:**
 
@@ -31,7 +51,7 @@ Blob through Vercel. Each provider lists its free limits on its pricing page.
 Five steps, all in your browser. [The first-hour guide](docs/guides/first-hour.md) shows every click,
 with what you should see after each one.
 
-1. **Use this template** on GitHub: a repository of your own, named `campuscycle-<your name>`.
+1. **Use this template** on GitHub: a repository of your own, named after your project.
 2. **Import it into Vercel** as a project with the same name, with three settings: `PAYLOAD_SECRET`,
    `FIRST_ADMIN_EMAIL` and `FIRST_ADMIN_PASSWORD`. The first build stops with "NOT CONFIGURED YET":
    that is expected.
@@ -61,7 +81,7 @@ In short (the [local set-up guide](docs/guides/local-setup.md) explains each ste
 | `src/app/(site)` | The public pages, one folder per address |
 | `src/components/site` | The parts the pages are made of: header, hero, cards, filters, booking form, … |
 | `src/tasks/find-workshop`, `src/tasks/book-slot` | The two example user tasks, each with a README on how it works and how to adapt it |
-| `src/content/campus-cycle.ts` | The example's facts: workshops, topics, prices, the clinic's hours |
+| `src/content/riverside-voices.ts` | Our example's facts: the workshops, topics and prices |
 | `src/seed` | The example content and its photos, added once to a new database |
 | `src/app/(site)/globals.css` | The design tokens: every colour, font, size and space, in one place |
 | `src/migrations` | The migrations: every change to the database's tables, in order |

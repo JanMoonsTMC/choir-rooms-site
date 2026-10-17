@@ -10,9 +10,9 @@ import { readFixture } from './helpers'
 const pages = [
   { name: 'home', path: '/' },
   { name: 'workshops', path: '/workshops' },
-  { name: 'workshops, filtered', path: '/workshops?topic=brakes-and-gears&level=beginner' },
-  { name: 'a workshop', path: '/workshops/adjust-your-brakes' },
-  { name: 'a topic', path: '/topics/brakes-and-gears' },
+  { name: 'workshops, filtered', path: '/workshops?topic=reading-music&level=beginner' },
+  { name: 'a workshop', path: '/workshops/read-music-from-scratch' },
+  { name: 'a topic', path: '/topics/reading-music' },
   { name: 'clinics', path: '/clinics' },
   { name: 'the clinic', path: () => `/clinics/${readFixture().clinic.slug}` },
   { name: 'the confirmation', path: () => readFixture().confirmation },

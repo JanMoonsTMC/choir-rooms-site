@@ -1,7 +1,7 @@
 // The site's two user tasks, done in a real browser at 390 and 1100 px (the two projects in
 // playwright.config.ts):
 //   task 1: find a workshop by topic and level, then follow a topic to its other workshops;
-//   task 2: book a time slot at the repair clinic, including what happens when a user makes a mistake
+//   task 2: book a time slot for a practice room, including what happens when a user makes a mistake
 //           and when the connection drops while the booking is sent.
 import { expect, test, type Page } from '@playwright/test'
 import { runFixture } from './global-setup'
@@ -12,38 +12,38 @@ test.describe('task 1: find a workshop by topic and level', () => {
     await page.goto('/workshops')
     await expect(page.getByRole('heading', { level: 1, name: 'Workshops' })).toBeVisible()
 
-    await page.getByLabel('Topic').selectOption({ label: 'Brakes and gears' })
+    await page.getByLabel('Topic').selectOption({ label: 'Reading music' })
     await page.getByLabel('Level').selectOption({ label: 'Beginner' })
     await page.getByRole('button', { name: 'Apply filters' }).click()
 
     // The filters are in the address, so the list can be shared and Back finds it again.
-    await expect(page).toHaveURL(/\/workshops\?topic=brakes-and-gears&level=beginner#results$/)
+    await expect(page).toHaveURL(/\/workshops\?topic=reading-music&level=beginner#results$/)
     const results = page.locator('#results')
-    await expect(results.getByRole('link', { name: 'Adjust your brakes' })).toBeVisible()
-    await expect(results.getByRole('link', { name: 'Service a gear system' })).toHaveCount(0)
+    await expect(results.getByRole('link', { name: 'Read music from scratch' })).toBeVisible()
+    await expect(results.getByRole('link', { name: 'Sight-sing a new piece' })).toHaveCount(0)
 
-    await results.getByRole('link', { name: 'Adjust your brakes' }).click()
-    await expect(page.getByRole('heading', { level: 1, name: 'Adjust your brakes' })).toBeVisible()
+    await results.getByRole('link', { name: 'Read music from scratch' }).click()
+    await expect(page.getByRole('heading', { level: 1, name: 'Read music from scratch' })).toBeVisible()
 
     // The topic leads to its own page, which lists the workshops from the other side of the link.
-    await page.getByRole('main').getByRole('link', { name: 'Brakes and gears' }).click()
-    await expect(page).toHaveURL(/\/topics\/brakes-and-gears$/)
-    await expect(page.getByRole('heading', { level: 1, name: 'Brakes and gears' })).toBeVisible()
-    await expect(page.getByRole('main').getByRole('link', { name: 'Adjust your brakes' })).toBeVisible()
-    await expect(page.getByRole('main').getByRole('link', { name: 'Service a gear system' })).toBeVisible()
+    await page.getByRole('main').getByRole('link', { name: 'Reading music' }).click()
+    await expect(page).toHaveURL(/\/topics\/reading-music$/)
+    await expect(page.getByRole('heading', { level: 1, name: 'Reading music' })).toBeVisible()
+    await expect(page.getByRole('main').getByRole('link', { name: 'Read music from scratch' })).toBeVisible()
+    await expect(page.getByRole('main').getByRole('link', { name: 'Sight-sing a new piece' })).toBeVisible()
 
     // The browser's Back button, then the workshop page's own way back: the filters are still chosen.
     await page.goBack()
-    await expect(page.getByRole('heading', { level: 1, name: 'Adjust your brakes' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Read music from scratch' })).toBeVisible()
     await page.getByRole('link', { name: 'Back to the filtered workshops' }).click()
-    await expect(page).toHaveURL(/\/workshops\?topic=brakes-and-gears&level=beginner/)
-    await expect(page.getByLabel('Topic')).toHaveValue('brakes-and-gears')
+    await expect(page).toHaveURL(/\/workshops\?topic=reading-music&level=beginner/)
+    await expect(page.getByLabel('Topic')).toHaveValue('reading-music')
     await expect(page.getByLabel('Level')).toHaveValue('beginner')
-    await expect(page.locator('#results').getByRole('link', { name: 'Adjust your brakes' })).toBeVisible()
+    await expect(page.locator('#results').getByRole('link', { name: 'Read music from scratch' })).toBeVisible()
   })
 })
 
-test.describe('task 2: book a time slot at the repair clinic', () => {
+test.describe('task 2: book a time slot for a practice room', () => {
   test.beforeEach(async ({ page }, testInfo) => {
     await useOwnAddress(page, testInfo)
   })
@@ -158,7 +158,7 @@ test.describe('task 2: book a time slot at the repair clinic', () => {
       const response = await page.goto(`/clinics/${clinic.slug}`)
       expect(response?.status()).toBe(500)
       await expect(page.getByRole('heading', { level: 1, name: 'This page could not be shown' })).toBeVisible()
-      await expect(page.getByRole('link', { name: 'All repair clinics' })).toBeVisible()
+      await expect(page.getByRole('main').getByRole('link', { name: 'Book a room' })).toBeVisible()
     } finally {
       runFixture('mend')
     }

@@ -1,7 +1,7 @@
 {
   "name": "bw-starter-app",
   "version": "1.0.0",
-  "description": "Campus Cycle: the Next.js 16 + Payload 3 course starter students copy.",
+  "description": "Riverside Voices: practice rooms for choirs, bands and theatre groups, built on the course starter (Next.js 16 + Payload 3).",
   "license": "MIT",
   "type": "module",
   "engines": {
