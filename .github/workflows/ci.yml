@@ -7,7 +7,7 @@
 #   migrations     the migrations apply, no migration is missing, removals are explained
 #   browser-checks the built site in a real browser at 390 and 1100 px, with axe (npm run check)
 #   ai-note        the pull request's AI note is filled in (pull requests only)
-#   leftovers      the Campus Cycle example is replaced (off until you switch it on)
+#   leftovers      the starter's example is replaced (switched on: see the job below)
 name: CI
 
 on:
@@ -277,11 +277,12 @@ jobs:
           PR_BODY: ${{ github.event.pull_request.body }}
         run: node scripts/ci/ai-note.mjs
 
-  # Has the project replaced the Campus Cycle example (scripts/ci/leftovers.mjs)? Off until you switch
-  # it on: on GitHub, Settings → Secrets and variables → Actions → Variables, add
-  # CAMPUS_CYCLE_LEFTOVERS with the value fail.
+  # Has the project replaced the starter's example (scripts/ci/leftovers.mjs)? We switched it on for good
+  # once our site had its own name and content: it now runs on every pull request and every push to
+  # main. To switch it off again: on GitHub, Settings → Secrets and variables → Actions → Variables, add
+  # CAMPUS_CYCLE_LEFTOVERS with the value off.
   leftovers:
-    if: vars.CAMPUS_CYCLE_LEFTOVERS == 'fail'
+    if: vars.CAMPUS_CYCLE_LEFTOVERS != 'off'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -47,8 +47,8 @@ describe('.github/workflows/ci.yml', () => {
     for (const line of uses) expect(line).toMatch(/^\s+PR_BODY: \$\{\{ github\.event\.pull_request\.body \}\}$/)
   })
 
-  it('runs ai-note only for pull requests, and leftovers only when switched on', () => {
+  it('runs ai-note only for pull requests, and leftovers always unless switched off', () => {
     expect(ci).toMatch(/ {2}ai-note:\n {4}if: github\.event_name == 'pull_request'/)
-    expect(ci).toMatch(/ {2}leftovers:\n {4}if: vars\.CAMPUS_CYCLE_LEFTOVERS == 'fail'/)
+    expect(ci).toMatch(/ {2}leftovers:\n {4}if: vars\.CAMPUS_CYCLE_LEFTOVERS != 'off'/)
   })
 })
