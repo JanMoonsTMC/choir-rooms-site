@@ -1,4 +1,4 @@
-// The seed: puts the Campus Cycle example content into a new site's database, so the site has real
+// The seed: puts the Riverside Voices example content into a new site's database, so the site has real
 // workshops, topics, prices, pages and images to show from its very first day.
 //
 // It adds the example content ONCE PER DATABASE. After a run that finished without an error, it notes
@@ -17,11 +17,11 @@
 // The first editor account (from FIRST_ADMIN_EMAIL and FIRST_ADMIN_PASSWORD) is a separate step that
 // runs first, on every run: it is created only when no editor exists yet (src/seed/run.ts).
 //
-// It creates no clinic, no time slots and no bookings: a later exercise in the course asks you to add
-// the clinic yourself in /admin.
+// It creates no room booking, no time slots and no bookings: an editor adds the room booking in
+// /admin, with its time slots.
 //
 // To replace the example with your own content:
-// - before your first deploy: change the facts in src/content/campus-cycle.ts and the page texts
+// - before your first deploy: change the facts in src/content/riverside-voices.ts and the page texts
 //   below; after it, edit the records in /admin instead (the seed does not run again);
 // - each workshop needs a line in SUMMARIES, its text in DESCRIPTIONS and a photo <slug>.jpg listed
 //   in IMAGES (the photo itself goes in src/seed/images, with its source in SOURCES.md there);
@@ -30,183 +30,141 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { CollectionSlug, Payload, Where } from 'payload'
-import {
-  CAMPUS_CYCLE,
-  MADE_UP_DATA_NOTICE,
-  type CampusCycleWorkshop,
-} from '../content/campus-cycle'
+import { MADE_UP_DATA_NOTICE, RIVERSIDE_VOICES, type ExampleWorkshop } from '../content/riverside-voices'
 import { PlainError } from '../lib/plainError'
 import { richText } from './richText'
 
-// true: a new site starts with the Campus Cycle example. Set it to false before your first deploy to
+// true: a new site starts with the Riverside Voices example. Set it to false before your first deploy to
 // start from an empty site (only the first editor is created) and add your own content in /admin. After
 // your first deploy, changing it changes nothing: delete the example records in /admin instead (they
 // do not come back).
 export const ADD_EXAMPLE_CONTENT = true
 
-// The photos live next to this file, in src/seed/images (their sources and licences: SOURCES.md there).
+// The pictures live next to this file, in src/seed/images (where they come from: SOURCES.md there).
 const IMAGES_FOLDER = fileURLToPath(new URL('./images/', import.meta.url))
 
-// Each workshop's photo is named after its slug. The alt text describes the photo for people who cannot
-// see it (a screen reader reads it out), so it says what is in the picture, not just "a photo".
+// Each workshop's picture is named after its slug. The alt text describes the picture for people who
+// cannot see it (a screen reader reads it out), so it says what is in the picture, not just "a picture".
 const IMAGES = [
   {
-    filename: 'repair-a-puncture.jpg',
-    alt: 'A puncture repair kit: three tyre levers, patches and a tube of glue',
+    filename: 'warm-up-your-voice.jpg',
+    alt: 'Drawing of a singer’s microphone in a yellow circle, with a music note and staff lines',
   },
   {
-    filename: 'adjust-your-brakes.jpg',
-    alt: 'Close-up of a silver bicycle caliper brake with its two black brake pads',
+    filename: 'read-music-from-scratch.jpg',
+    alt: 'Drawing of an open book in a green circle, with two music notes and staff lines',
   },
   {
-    filename: 'service-a-gear-system.jpg',
-    alt: 'The back wheel of a bicycle with a red frame: the stack of gear sprockets, the chain and the derailleur that moves it',
+    filename: 'sight-sing-a-new-piece.jpg',
+    alt: 'Drawing of two music notes in a pink circle, with an open book and staff lines',
   },
   {
-    filename: 'true-a-wheel.jpg',
-    alt: 'A bicycle wheel clamped in a truing stand on a workbench, in front of a wall of tools',
+    filename: 'breathe-for-long-phrases.jpg',
+    alt: 'Drawing of three gusts of wind in a green circle, with a microphone and staff lines',
   },
   // The home page's picture.
   {
-    filename: 'workshop-tools.jpg',
-    alt: 'A workshop wall full of bicycle tools: spanners, pliers and other tools hanging above a workbench',
+    filename: 'rehearsal-house.jpg',
+    alt: 'Drawing of a house in a yellow circle, with a music note and staff lines',
   },
-  // The clinic page's picture: the clinic itself is not in the seed, but its photo is ready for it.
+  // The room booking page's picture: the booking is not in the seed, but its picture is ready for it.
   {
-    filename: 'clinic-tools.jpg',
-    alt: 'Bicycle repair tools laid out on a table: an adjustable spanner, two tyre levers, Allen keys, sockets, a screwdriver and a patch kit',
+    filename: 'practice-rooms.jpg',
+    alt: 'Drawing of a calendar with a clock in a pink circle, with a music keyboard and staff lines',
   },
 ] as const
 
-// Most of these licences ask that wherever the photo is used, it names the photo, the photographer and
-// the licence, with links where that is possible. The about page ends with these lines (the same facts
-// as src/seed/images/SOURCES.md).
-const CC_BY_SA_3 = {
-  licence: 'CC BY-SA 3.0',
-  licenceUrl: 'https://creativecommons.org/licenses/by-sa/3.0/',
+// The pictures are drawings our team made from Lucide icons. The Lucide licence (ISC) asks that its
+// notice goes with the icons; the about page ends with this line (the same facts as
+// src/seed/images/SOURCES.md).
+const PICTURE_CREDITS = {
+  icons: { text: 'Lucide icons', url: 'https://lucide.dev' },
+  licence: { text: 'ISC licence', url: 'https://lucide.dev/license' },
 }
-const CC_BY_SA_4 = {
-  licence: 'CC BY-SA 4.0',
-  licenceUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
-}
-const CC0 = { licence: 'CC0 (public domain)', licenceUrl: 'https://creativecommons.org/publicdomain/zero/1.0/' }
-const PHOTO_CREDITS = [
-  {
-    title: 'Puncture-repaire-kit.jpg',
-    page: 'https://commons.wikimedia.org/wiki/File:Puncture-repaire-kit.jpg',
-    photographer: 'Björn Appel',
-    ...CC_BY_SA_3,
-  },
-  {
-    title: 'Bicycle caliper brake 1.jpg',
-    page: 'https://commons.wikimedia.org/wiki/File:Bicycle_caliper_brake_1.jpg',
-    photographer: 'Troy Sankey',
-    ...CC_BY_SA_4,
-  },
-  {
-    title: 'Rearbikegears.jpg',
-    page: 'https://commons.wikimedia.org/wiki/File:Rearbikegears.jpg',
-    photographer: 'Thegreenj',
-    ...CC_BY_SA_3,
-  },
-  {
-    title: 'Bicycle wheel truing stand.jpg',
-    page: 'https://commons.wikimedia.org/wiki/File:Bicycle_wheel_truing_stand.jpg',
-    photographer: 'Foxtod',
-    ...CC0,
-  },
-  {
-    title: 'Bicycle repair tools, Bicycle Kitchen, Los Angeles.jpg',
-    page: 'https://commons.wikimedia.org/wiki/File:Bicycle_repair_tools,_Bicycle_Kitchen,_Los_Angeles.jpg',
-    photographer: 'Downtowngal',
-    ...CC_BY_SA_4,
-  },
-  {
-    title: 'BicycleRepairTools.JPG',
-    page: 'https://commons.wikimedia.org/wiki/File:BicycleRepairTools.JPG',
-    photographer: 'Gengiskanhg',
-    ...CC_BY_SA_3,
-  },
-]
 
 // What each workshop teaches, in one sentence: shown in lists and at the top of the workshop's page.
 // Not its level: the level is a field, and the lists show it next to this sentence from there.
-const SUMMARIES: Record<CampusCycleWorkshop['slug'], string> = {
-  'repair-a-puncture': 'Learn to find and mend a puncture.',
-  'adjust-your-brakes': 'Learn to adjust your brakes.',
-  'service-a-gear-system': 'Learn to service a gear system.',
-  'true-a-wheel': 'Learn to true a wheel: make a wheel that wobbles run straight again.',
+const SUMMARIES: Record<ExampleWorkshop['slug'], string> = {
+  'warm-up-your-voice': 'Learn a short warm-up you can do before every rehearsal.',
+  'read-music-from-scratch': 'Learn to follow your own part in a choir score.',
+  'sight-sing-a-new-piece': 'Learn to sing a new piece from the page, without hearing it first.',
+  'breathe-for-long-phrases': 'Learn to breathe so that a long phrase stays steady to the end.',
 }
 
 // What you learn and do in each workshop, in a few sentences: the workshop's description. Prose only:
 // no day, time, place, group size, price or level, and not the pricing rule. Those are fields of the
 // workshop or of the Site facts global, and the workshop's page shows them from there. Typed here as
 // well, a copy would stay behind, out of date, when an editor changed the field in /admin.
-const DESCRIPTIONS: Record<CampusCycleWorkshop['slug'], string[]> = {
-  'repair-a-puncture': [
-    'You learn to take the wheel out of the bicycle, lift the tyre off with tyre levers and find the hole in the inner tube.',
-    'Then you patch the hole, fit the tube and the tyre again and put the wheel back in.',
+const DESCRIPTIONS: Record<ExampleWorkshop['slug'], string[]> = {
+  'warm-up-your-voice': [
+    'You learn a warm-up that wakes up your body, your breath and your voice, step by step.',
+    'Then you sing a few short rounds together, so you hear how much easier the first song becomes.',
   ],
-  'adjust-your-brakes': [
-    'You learn to check how worn your brake pads are, line them up with the rim and set the brake cable, so that the brakes grip firmly when you pull the lever.',
+  'read-music-from-scratch': [
+    'You learn to find your own line in a choir score, to count the beats and to see whether the notes go up or down, so you can follow along from the first rehearsal.',
   ],
-  'service-a-gear-system': [
-    'You learn to clean the chain and the gear sprockets, and to adjust the derailleur, the part that moves the chain, so that the chain shifts cleanly from one gear to the next.',
+  'sight-sing-a-new-piece': [
+    'You learn to look through a new piece before you sing it: the key, the rhythm and the hard places. Then you sing it together from the page.',
   ],
-  'true-a-wheel': [
-    'A wheel wobbles when its spokes pull unevenly. You learn to find the wobble in a truing stand, then tighten and loosen the spokes until the wheel runs straight again.',
+  'breathe-for-long-phrases': [
+    'A long phrase runs out of breath when you breathe high and fast. You learn to breathe low and slowly, and to spend your breath evenly to the end of the phrase.',
   ],
 }
 
-function workshopDescription(workshop: CampusCycleWorkshop) {
+function workshopDescription(workshop: ExampleWorkshop) {
   return richText(DESCRIPTIONS[workshop.slug].map((paragraph) => ({ paragraph })))
 }
 
 const PAGES = [
   {
-    title: 'Campus Cycle',
+    title: 'Riverside Voices',
     slug: 'home',
-    // No word about the clinic here: it is not in the seed, and until you add it the home page says
-    // "The repair clinic opens soon".
+    // No word about booking a room here: the room booking is not in the seed, and until an editor adds
+    // it the home page says "Room booking opens soon".
     intro:
-      'Campus Cycle is the bicycle repair service at the college. Learn to look after your own bicycle in a short maintenance workshop.',
-    // No body: everything else on the home page comes from its own record: the workshops, the clinic,
-    // and the pricing rule from the Site facts global.
+      'Riverside Voices is a city choir with its own rehearsal house on Quay Street. We share it: other choirs, bands and theatre groups rehearse in our rooms, and singers join our short workshops.',
+    // No body: everything else on the home page comes from its own record: the workshops, the room
+    // booking, and the pricing rule from the Site facts global.
   },
   {
-    title: 'About Campus Cycle',
+    title: 'About Riverside Voices',
     slug: 'about',
-    intro: 'Who we are, how the workshops work and where to find us.',
+    intro: 'Who we are, why we share our rehearsal house and where to find us.',
     body: richText([
       {
         paragraph:
-          'Campus Cycle is a fictional bicycle repair service at a college. Two staff members run it. It also offers short maintenance workshops.',
+          'Riverside Voices is a fictional city choir of about forty-five singers. We rehearse on Thursday evenings in our own house on Quay Street.',
+      },
+      { heading: 'Why we share our rooms' },
+      {
+        paragraph:
+          'The house has more rooms than one choir needs. The rest of the week, other choirs, bands and theatre groups rehearse there, and their rent keeps the heating on for everyone.',
       },
       { heading: 'The workshops' },
       // No numbers here: each workshop's own page shows its facts from its record.
       {
         paragraph:
-          "Workshops are short and in small groups. Each workshop's page gives its day, price and group size.",
+          "Our singers also run short workshops in small groups, for anyone who sings. Each workshop's page gives its day, price and group size.",
       },
       { heading: 'Where to find us' },
       // A link, not the address: the Contact page shows the place from the Site facts global.
       { paragraph: ['See the ', { text: 'Contact page', url: '/contact' }, '.'] },
-      { heading: 'Photo credits' },
-      { paragraph: 'The photos on this site come from Wikimedia Commons:' },
+      { heading: 'Picture credits' },
       {
-        list: PHOTO_CREDITS.map((credit) => [
-          { text: credit.title, url: credit.page },
-          ` by ${credit.photographer}, licence `,
-          { text: credit.licence, url: credit.licenceUrl },
-        ]),
+        paragraph: [
+          'The pictures on this site are drawings our team made from ',
+          PICTURE_CREDITS.icons,
+          ', shared under the ',
+          PICTURE_CREDITS.licence,
+          '.',
+        ],
       },
-      { paragraph: 'Each photo was resized from the original and is shared under its own licence, as listed.' },
     ]),
   },
   {
     title: 'Contact',
     slug: 'contact',
-    intro: 'Questions about a workshop or the repair clinic? Send us an e-mail.',
+    intro: 'Questions about a room, a booking or a workshop? Send us an e-mail.',
     // Prose only: the Contact page shows the e-mail address and the place from the Site facts global.
     body: richText([
       { paragraph: 'There is no contact form on this site: send an e-mail instead.' },
@@ -226,7 +184,7 @@ const PAGES = [
       { heading: 'What the booking form saves' },
       {
         paragraph:
-          'When you book a time slot, the site saves your name, your e-mail address, the time slot you chose and your note, if you wrote one. It saves them to hold your place.',
+          'When you book a time slot, the site saves your name, your e-mail address, the time slot you chose and your note, if you wrote one. It saves them to hold the room for your group.',
       },
       { heading: 'Who can see it' },
       {
@@ -264,12 +222,12 @@ function idOf(ids: Map<string, number>, key: string): number {
   const id = ids.get(key)
   if (id === undefined)
     throw new PlainError(
-      `The seed has no record called "${key}": check src/content/campus-cycle.ts.`,
+      `The seed has no record called "${key}": check src/content/riverside-voices.ts.`,
     )
   return id
 }
 
-function imageOf(ids: Map<string, number>, workshop: CampusCycleWorkshop): number {
+function imageOf(ids: Map<string, number>, workshop: ExampleWorkshop): number {
   const id = ids.get(`${workshop.slug}.jpg`)
   if (id === undefined) {
     throw new PlainError(
@@ -280,8 +238,8 @@ function imageOf(ids: Map<string, number>, workshop: CampusCycleWorkshop): numbe
 }
 
 // Is `stored` the file `wanted`, perhaps under a number Payload added? When a file with the same name
-// is already in the upload folder, Payload saves the new one as repair-a-puncture-1.jpg (then -2, …),
-// and that is still the puncture photo.
+// is already in the upload folder, Payload saves the new one as warm-up-your-voice-1.jpg (then -2, …),
+// and that is still the warm-up picture.
 function sameImage(stored: string | null | undefined, wanted: string): boolean {
   if (!stored) return false
   const { name, ext } = path.parse(wanted)
@@ -290,7 +248,7 @@ function sameImage(stored: string | null | undefined, wanted: string): boolean {
 }
 
 /**
- * Adds the Campus Cycle example content that is missing, and leaves everything that exists alone.
+ * Adds the Riverside Voices example content that is missing, and leaves everything that exists alone.
  * Returns how many records it created and how many it found already there.
  *
  * `env` is where it looks for VERCEL and BLOB_READ_WRITE_TOKEN (normally process.env; a test can pass
@@ -368,7 +326,7 @@ export async function seed(
 
   // 3. The topics: the workshops link to them too.
   const topicIds = new Map<string, number>()
-  for (const topic of CAMPUS_CYCLE.topics) {
+  for (const topic of RIVERSIDE_VOICES.topics) {
     const id = await keepOrCreate(await findOne('topics', { slug: { equals: topic.slug } }), () =>
       payload.create({ collection: 'topics', data: { ...topic }, overrideAccess: true }),
     )
@@ -376,7 +334,7 @@ export async function seed(
   }
 
   // 4. The workshops, each with its topics (the many-to-many) and its image.
-  for (const workshop of CAMPUS_CYCLE.workshops) {
+  for (const workshop of RIVERSIDE_VOICES.workshops) {
     await keepOrCreate(await findOne('workshops', { slug: { equals: workshop.slug } }), () =>
       payload.create({
         collection: 'workshops',
@@ -391,7 +349,7 @@ export async function seed(
           // Only the gear workshop has a latest end ("ends by 15:00"): a limit, not an end time.
           ...('latestEnd' in workshop ? { latestEnd: workshop.latestEnd } : {}),
           price: workshop.price,
-          groupSize: CAMPUS_CYCLE.groupSize,
+          groupSize: RIVERSIDE_VOICES.groupSize,
           summary: SUMMARIES[workshop.slug],
           description: workshopDescription(workshop),
           image: imageOf(imageIds, workshop),
@@ -402,8 +360,8 @@ export async function seed(
     )
   }
 
-  // 5. The clinic's price list.
-  for (const repair of CAMPUS_CYCLE.repairs) {
+  // 5. The room booking's price list.
+  for (const repair of RIVERSIDE_VOICES.repairs) {
     await keepOrCreate(await findOne('repairs', { name: { equals: repair.name } }), () =>
       payload.create({ collection: 'repairs', data: { ...repair }, overrideAccess: true }),
     )
@@ -424,7 +382,7 @@ export async function seed(
   } else {
     await payload.updateGlobal({
       slug: 'site-facts',
-      data: { pricingRule: CAMPUS_CYCLE.pricingRule, place: CAMPUS_CYCLE.place, email: CAMPUS_CYCLE.email },
+      data: { pricingRule: RIVERSIDE_VOICES.pricingRule, place: RIVERSIDE_VOICES.place, email: RIVERSIDE_VOICES.email },
       overrideAccess: true,
     })
     result.created += 1

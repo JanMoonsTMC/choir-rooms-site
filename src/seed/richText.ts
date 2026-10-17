@@ -8,7 +8,7 @@
 //
 //   richText([
 //     { heading: 'Where' },
-//     { paragraph: 'Workshop B, Student Centre.' },
+//     { paragraph: 'Quay Street 12, Riverside.' },
 //     { list: ['Tools', 'A tutor'] },
 //     { paragraph: ['Read ', { text: 'the licence', url: 'https://creativecommons.org/licenses/by-sa/4.0/' }, '.'] },
 //   ])

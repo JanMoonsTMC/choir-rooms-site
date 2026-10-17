@@ -26,7 +26,7 @@ import { SlotPicker, type SlotChoice } from '@/components/site/SlotPicker'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { MADE_UP_DATA_NOTICE } from '@/content/campus-cycle'
+import { MADE_UP_DATA_NOTICE } from '@/content/riverside-voices'
 import type { Repair } from '@/payload-types'
 import type { BookingField, BookingResult, BookingValues } from '@/tasks/book-slot/createBooking'
 import { saveBooking } from '@/tasks/book-slot/saveBooking'
@@ -169,7 +169,7 @@ export function BookingForm(props: BookingFormProps) {
           <Label htmlFor="note">
             Note <span className="font-normal text-ink-soft">(optional)</span>
           </Label>
-          <p id="note-hint" className="text-ink-soft">For example, what is wrong with your bicycle. At most 500 characters.</p>
+          <p id="note-hint" className="text-ink-soft">For example, what your group needs set up. At most 500 characters.</p>
           <Textarea
             id="note"
             name="note"

@@ -66,18 +66,18 @@ describe('the public pages', () => {
 
   it('home: the site name, the way to the workshops, and "opens soon" while there is no clinic', async () => {
     const page = html(await HomePage())
-    expect(page).toContain('Campus Cycle')
+    expect(page).toContain('Riverside Voices')
     expect(page).toContain('href="/workshops"')
-    expect(page).toContain('The repair clinic opens soon')
+    expect(page).toContain('Room booking opens soon')
     expect(page).not.toContain('href="/clinics/')
     // Each workshop links to its own page, with its price and day from its record.
-    expect(page).toContain('href="/workshops/repair-a-puncture"')
-    expect(page).toContain('EUR 15')
+    expect(page).toContain('href="/workshops/warm-up-your-voice"')
+    expect(page).toContain('EUR 12')
     expect(page).toContain('Tuesday')
     // The topics are quick links into the filtered workshop list.
-    expect(page).toContain('href="/workshops?topic=tyres-and-wheels"')
+    expect(page).toContain('href="/workshops?topic=voice-and-breathing"')
     // The pricing rule comes from the Site facts global.
-    expect(page).toContain('Bring your own parts and pay EUR 5 less per bicycle.')
+    expect(page).toContain('Sheet music and a pianist are included. Members of Riverside Voices pay half.')
   })
 
   it('one source per fact: a pricing rule changed in Site facts shows on the home page; a changed e-mail on Contact', async () => {
@@ -107,11 +107,11 @@ describe('the public pages', () => {
     const page = html(await ContactPage())
     expect(page).toContain('<h1')
     expect(page).toContain('Contact')
-    expect(page).toContain('Questions about a workshop or the repair clinic? Send us an e-mail.')
+    expect(page).toContain('Questions about a room, a booking or a workshop? Send us an e-mail.')
     expect(page).toContain('There is no contact form on this site: send an e-mail instead.')
-    expect(page).toMatch(/<dt[^>]*>E-mail<\/dt><dd[^>]*><a href="mailto:hello@campuscycle.example">hello@campuscycle.example<\/a><\/dd>/)
-    expect(page).toMatch(/<dt[^>]*>Place<\/dt><dd[^>]*>Workshop B, Student Centre<\/dd>/)
-    expect(await tabTitle(contactMetadata())).toBe('Contact · Campus Cycle')
+    expect(page).toMatch(/<dt[^>]*>E-mail<\/dt><dd[^>]*><a href="mailto:rooms@riversidevoices.example">rooms@riversidevoices.example<\/a><\/dd>/)
+    expect(page).toMatch(/<dt[^>]*>Place<\/dt><dd[^>]*>Riverside Voices house, Quay Street 12, Riverside<\/dd>/)
+    expect(await tabTitle(contactMetadata())).toBe('Contact · Riverside Voices')
   })
 
   it('home: links to the newest clinic once one exists', async () => {
@@ -141,7 +141,7 @@ describe('the public pages', () => {
       const page = html(await HomePage())
       expect(page).toContain('href="/clinics/saturday-repair-clinic"')
       expect(page).not.toContain('href="/clinics/spring-repair-clinic"')
-      expect(page).not.toContain('The repair clinic opens soon')
+      expect(page).not.toContain('Room booking opens soon')
       const list = html(await ClinicsPage())
       expect(list).toContain('href="/clinics/saturday-repair-clinic"')
       expect(list).toContain('Saturday repair clinic')
@@ -153,14 +153,14 @@ describe('the public pages', () => {
 
   it('/clinics: the truthful empty state while there is no clinic', async () => {
     const list = html(await ClinicsPage())
-    expect(list).toContain('The repair clinic opens soon')
+    expect(list).toContain('Room booking opens soon')
   })
 
   it('/about shows the about page record, with a title for the browser tab', async () => {
     const page = html(await PlainPage(params('about')))
-    expect(page).toContain('About Campus Cycle')
-    expect(page).toContain('Photo credits')
-    expect(await tabTitle(generateMetadata(params('about')))).toBe('About Campus Cycle · Campus Cycle')
+    expect(page).toContain('About Riverside Voices')
+    expect(page).toContain('Picture credits')
+    expect(await tabTitle(generateMetadata(params('about')))).toBe('About Riverside Voices · Riverside Voices')
   })
 
   it('an unknown page calls notFound(); /home is sent to / (the home page has its own address)', async () => {

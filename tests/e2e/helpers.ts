@@ -6,7 +6,7 @@ import type { Fixture } from './fixture'
 // The site under test: a production build (next build, then next start) with the seed.
 export const BASE_URL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3100'
 
-// The words the checks expect, exactly as the site shows them (src/content/campus-cycle.ts and the
+// The words the checks expect, exactly as the site shows them (src/content/riverside-voices.ts and the
 // booking form). Module 10's booking chapter quotes them too.
 export const MADE_UP_DATA_NOTICE = 'This is a practice project: use made-up details; no one will contact you.'
 export const BOOKING_CONFIRMATION = `Your booking is saved. ${MADE_UP_DATA_NOTICE}`

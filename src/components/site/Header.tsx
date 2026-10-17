@@ -2,16 +2,16 @@
 // menu straight to the page), the site's name, which always leads home, and the main menu (MainNav).
 // It does not stick to the top while scrolling, so it never covers what the user is reading.
 //
-// What to change for your own site: the little bicycle mark (any lucide-react icon:
-// https://lucide.dev/icons). The site's name is SITE_NAME in src/content/campus-cycle.ts; the menu's
+// What to change for your own site: the little music mark (any lucide-react icon:
+// https://lucide.dev/icons). The site's name is SITE_NAME in src/content/riverside-voices.ts; the menu's
 // links are in MainNav.tsx.
 import { headers } from 'next/headers'
 import Link from 'next/link'
-import { Bike } from 'lucide-react'
+import { Music } from 'lucide-react'
 import { getPayload } from 'payload'
 import { signOut } from '@/app/(site)/account/actions'
 import { Button } from '@/components/ui/button'
-import { SITE_NAME } from '@/content/campus-cycle'
+import { SITE_NAME } from '@/content/riverside-voices'
 import { membersAreaOn, signedInMember } from '@/lib/membersArea'
 import config from '@/payload.config'
 import { MainNav } from './MainNav'
@@ -52,7 +52,7 @@ export async function Header() {
             className="flex min-h-11 items-center gap-3 font-heading text-xl font-black text-ink no-underline"
           >
             <span className="framed grid size-10 place-items-center rounded-control bg-yellow-tint [--offset-size:3px]">
-              <Bike aria-hidden="true" className="size-6" strokeWidth={2.25} />
+              <Music aria-hidden="true" className="size-6" strokeWidth={2.25} />
             </span>
             {SITE_NAME}
           </Link>

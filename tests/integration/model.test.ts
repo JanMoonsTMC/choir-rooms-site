@@ -112,7 +112,7 @@ describe('the content model', () => {
   it('rejects a slug that is not lowercase letters, digits and hyphens, and explains a duplicate', async () => {
     const p = await getTestPayload()
     for (const slug of ['Repair a puncture', 'repair_a_puncture', 'Repair-A-Puncture', '-repair', 'repair-', 'repair--a']) {
-      await expect(p.create({ collection: 'topics', data: { name: 'Test', slug } })).rejects.toMatchObject({ data: { errors: [{ path: 'slug', message: 'Use only lowercase letters, digits and hyphens, for example repair-a-puncture.' }] } })
+      await expect(p.create({ collection: 'topics', data: { name: 'Test', slug } })).rejects.toMatchObject({ data: { errors: [{ path: 'slug', message: 'Use only lowercase letters, digits and hyphens, for example warm-up-your-voice.' }] } })
     }
     await p.create({ collection: 'topics', data: { name: 'Test', slug: 'repair-a-puncture-2' } })
     await expect(p.create({ collection: 'topics', data: { name: 'Test', slug: 'repair-a-puncture-2' } })).rejects.toThrow('Another record already uses this slug. Choose a different one.')

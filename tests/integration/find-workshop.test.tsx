@@ -62,9 +62,9 @@ describe('example task 1: find a workshop by topic and level', () => {
 
   it('/workshops lists every workshop, with a plain GET form whose fields have visible labels', async () => {
     const { html, title } = await list()
-    expect(listed(html)).toEqual(['adjust-your-brakes', 'repair-a-puncture', 'service-a-gear-system', 'true-a-wheel'])
+    expect(listed(html)).toEqual(['breathe-for-long-phrases', 'read-music-from-scratch', 'sight-sing-a-new-piece', 'warm-up-your-voice'])
     expect(html).toContain('Showing all workshops — 4 workshops')
-    expect(title).toBe('Workshops · Campus Cycle')
+    expect(title).toBe('Workshops · Riverside Voices')
     // A plain form: it works without JavaScript, and its choices end up in the address.
     // #results: after Apply filters the browser scrolls to the results, so a phone user sees them
     // straight away instead of the top of the page again.
@@ -85,22 +85,22 @@ describe('example task 1: find a workshop by topic and level', () => {
     expect(html).toMatch(/<div class="grid gap-2"><span[^>]*>Topics<\/span><ul class="flex flex-wrap/)
   })
 
-  it('?topic=brakes-and-gears&level=beginner lists only Adjust your brakes, and says so in words and in the tab title', async () => {
-    const { html, title } = await list({ topic: 'brakes-and-gears', level: 'beginner' })
-    expect(listed(html)).toEqual(['adjust-your-brakes'])
-    expect(html).toContain('Showing beginner workshops about Brakes and gears — 1 workshop')
-    expect(title).toBe('Showing beginner workshops about Brakes and gears — 1 workshop · Campus Cycle')
+  it('?topic=reading-music&level=beginner lists only Read music from scratch, and says so in words and in the tab title', async () => {
+    const { html, title } = await list({ topic: 'reading-music', level: 'beginner' })
+    expect(listed(html)).toEqual(['read-music-from-scratch'])
+    expect(html).toContain('Showing beginner workshops about Reading music — 1 workshop')
+    expect(title).toBe('Showing beginner workshops about Reading music — 1 workshop · Riverside Voices')
     // The form shows the chosen filters, and offers to clear them.
-    expect(html).toMatch(/<option[^>]*value="brakes-and-gears" selected="">Brakes and gears<\/option>/)
+    expect(html).toMatch(/<option[^>]*value="reading-music" selected="">Reading music<\/option>/)
     expect(html).toMatch(/<option[^>]*value="beginner" selected="">Beginner<\/option>/)
     expect(html).toMatch(/href="\/workshops"[^>]*>Clear filters</)
     // The card's link carries the filters forward, for the workshop page's Back link.
-    expect(html).toContain('href="/workshops/adjust-your-brakes?topic=brakes-and-gears&amp;level=beginner"')
+    expect(html).toContain('href="/workshops/read-music-from-scratch?topic=reading-music&amp;level=beginner"')
   })
 
   it('an empty value is no filter: "All topics" sends ?topic=', async () => {
     const { html } = await list({ topic: '', level: 'beginner' })
-    expect(listed(html)).toEqual(['adjust-your-brakes', 'repair-a-puncture'])
+    expect(listed(html)).toEqual(['read-music-from-scratch', 'warm-up-your-voice'])
     expect(html).toContain('Showing beginner workshops — 2 workshops')
   })
 
@@ -108,8 +108,8 @@ describe('example task 1: find a workshop by topic and level', () => {
     const steps = async (query: Query) => trackSteps(await WorkshopsPage({ searchParams: Promise.resolve(query) }))
     expect(await steps({})).toEqual([])
     expect(await steps({ topic: '' })).toEqual([])
-    expect(await steps({ topic: 'brakes-and-gears', level: 'beginner' })).toEqual([
-      { event: 'filter_used', props: { topic: 'brakes-and-gears', level: 'beginner' }, once: '?topic=brakes-and-gears&level=beginner' },
+    expect(await steps({ topic: 'reading-music', level: 'beginner' })).toEqual([
+      { event: 'filter_used', props: { topic: 'reading-music', level: 'beginner' }, once: '?topic=reading-music&level=beginner' },
     ])
     expect(await steps({ level: 'intermediate' })).toEqual([{ event: 'filter_used', props: { topic: '', level: 'intermediate' }, once: '?level=intermediate' }])
     // Whatever someone typed into the address is never sent: an unknown topic goes as ''. (`once` stays
@@ -118,8 +118,8 @@ describe('example task 1: find a workshop by topic and level', () => {
   })
 
   it('each filter works on its own too', async () => {
-    expect(listed((await list({ topic: 'tyres-and-wheels' })).html)).toEqual(['repair-a-puncture', 'true-a-wheel'])
-    expect(listed((await list({ level: 'intermediate' })).html)).toEqual(['service-a-gear-system', 'true-a-wheel'])
+    expect(listed((await list({ topic: 'voice-and-breathing' })).html)).toEqual(['breathe-for-long-phrases', 'warm-up-your-voice'])
+    expect(listed((await list({ level: 'intermediate' })).html)).toEqual(['breathe-for-long-phrases', 'sight-sing-a-new-piece'])
   })
 
   it('?topic=unknown&level=expert: "No workshops match these filters" and a Clear filters link, not a crash or a 404', async () => {
@@ -128,58 +128,58 @@ describe('example task 1: find a workshop by topic and level', () => {
     expect(html).toContain('No workshops match these filters')
     expect(html).toContain('This site has no topic called &quot;unknown&quot;. The link may be out of date.')
     expect(html).toMatch(/href="\/workshops"[^>]*>Clear filters</)
-    expect(title).toBe('No workshops match these filters · Campus Cycle')
+    expect(title).toBe('No workshops match these filters · Riverside Voices')
   })
 
   it('an odd address is left out, never a crash: a repeated topic, a script, parts that are not filters', async () => {
-    expect(listed((await list({ topic: ['tyres-and-wheels', 'brakes-and-gears'] })).html)).toEqual(['repair-a-puncture', 'true-a-wheel'])
+    expect(listed((await list({ topic: ['voice-and-breathing', 'reading-music'] })).html)).toEqual(['breathe-for-long-phrases', 'warm-up-your-voice'])
     const { html } = await list({ topic: '<script>alert(1)</script>', utm_source: 'mail' })
     expect(listed(html)).toHaveLength(4)
     expect(html).not.toContain('<script>alert(1)')
   })
 
-  it('/workshops/true-a-wheel shows its facts from its own fields and the Site facts global, and links to its topic', async () => {
-    const html = await workshop('true-a-wheel')
+  it('/workshops/breathe-for-long-phrases shows its facts from its own fields and the Site facts global, and links to its topic', async () => {
+    const html = await workshop('breathe-for-long-phrases')
     expect(html).toContain('<h1')
-    expect(html).toContain('True a wheel')
-    expect(html).toContain('Thursday from 19:00')
-    expect(html).toContain('EUR 25')
+    expect(html).toContain('Breathe for long phrases')
+    expect(html).toContain('Wednesday from 19:00')
+    expect(html).toContain('EUR 18')
     expect(html).toContain('Intermediate')
-    expect(html).toContain('At most 6 people')
+    expect(html).toContain('At most 12 people')
     // Shared facts, from the global (one source per fact).
-    expect(html).toContain('Workshop B, Student Centre')
-    expect(html).toContain('Bring your own parts and pay EUR 5 less per bicycle.')
+    expect(html).toContain('Riverside Voices house, Quay Street 12, Riverside')
+    expect(html).toContain('Sheet music and a pianist are included. Members of Riverside Voices pay half.')
     // Its description, in words.
-    expect(html).toContain('truing stand')
+    expect(html).toContain('breathe low')
     // Its topic, linked to the topic's page.
-    expect(html).toMatch(/href="\/topics\/tyres-and-wheels"[^>]*>Tyres and wheels</)
+    expect(html).toMatch(/href="\/topics\/voice-and-breathing"[^>]*>Voice and breathing</)
     // Its parent, without a made-up path through a topic.
-    expect(html).toMatch(/<nav aria-label="Breadcrumb"[^>]*>.*href="\/workshops"[^>]*>Workshops<.*aria-current="page"[^>]*>True a wheel</)
-    expect(await tabTitle(workshopMetadata({ params: Promise.resolve({ slug: 'true-a-wheel' }), searchParams: Promise.resolve({}) }))).toBe('True a wheel · Campus Cycle')
+    expect(html).toMatch(/<nav aria-label="Breadcrumb"[^>]*>.*href="\/workshops"[^>]*>Workshops<.*aria-current="page"[^>]*>Breathe for long phrases</)
+    expect(await tabTitle(workshopMetadata({ params: Promise.resolve({ slug: 'breathe-for-long-phrases' }), searchParams: Promise.resolve({}) }))).toBe('Breathe for long phrases · Riverside Voices')
   })
 
-  it('the gear workshop says when it ends at the latest, from its latestEnd field', async () => {
-    const html = await workshop('service-a-gear-system')
+  it('the sight-singing workshop says when it ends at the latest, from its latestEnd field', async () => {
+    const html = await workshop('sight-sing-a-new-piece')
     // Non-breaking spaces keep "ends by 15:00" on one line.
     expect(html).toContain('Saturday from 13:00, ends\u00a0by\u00a015:00')
-    await p.update({ collection: 'workshops', where: { slug: { equals: 'service-a-gear-system' } }, data: { latestEnd: '14:30' }, overrideAccess: true })
+    await p.update({ collection: 'workshops', where: { slug: { equals: 'sight-sing-a-new-piece' } }, data: { latestEnd: '14:30' }, overrideAccess: true })
     try {
-      const changed = await workshop('service-a-gear-system')
+      const changed = await workshop('sight-sing-a-new-piece')
       expect(changed).toContain('ends\u00a0by\u00a014:30')
       expect(changed).not.toContain('15:00')
     } finally {
-      await p.update({ collection: 'workshops', where: { slug: { equals: 'service-a-gear-system' } }, data: { latestEnd: '15:00' }, overrideAccess: true })
+      await p.update({ collection: 'workshops', where: { slug: { equals: 'sight-sing-a-new-piece' } }, data: { latestEnd: '15:00' }, overrideAccess: true })
     }
   })
 
   it('the Back link keeps the filters the user came with', async () => {
-    const filtered = await workshop('adjust-your-brakes', { topic: 'brakes-and-gears', level: 'beginner' })
-    expect(filtered).toMatch(/href="\/workshops\?topic=brakes-and-gears&amp;level=beginner"[^>]*>Back to the filtered workshops</)
-    expect(filtered).toMatch(/aria-label="Breadcrumb"[^>]*>.*href="\/workshops\?topic=brakes-and-gears&amp;level=beginner"[^>]*>Workshops</)
-    const plain = await workshop('adjust-your-brakes')
+    const filtered = await workshop('read-music-from-scratch', { topic: 'reading-music', level: 'beginner' })
+    expect(filtered).toMatch(/href="\/workshops\?topic=reading-music&amp;level=beginner"[^>]*>Back to the filtered workshops</)
+    expect(filtered).toMatch(/aria-label="Breadcrumb"[^>]*>.*href="\/workshops\?topic=reading-music&amp;level=beginner"[^>]*>Workshops</)
+    const plain = await workshop('read-music-from-scratch')
     expect(plain).toMatch(/href="\/workshops"[^>]*>Back to all workshops</)
     // A filter the site does not know is not carried back.
-    expect(await workshop('adjust-your-brakes', { level: 'expert' })).toMatch(/href="\/workshops"[^>]*>Back to all workshops</)
+    expect(await workshop('read-music-from-scratch', { level: 'expert' })).toMatch(/href="\/workshops"[^>]*>Back to all workshops</)
   })
 
   it('an unknown workshop or topic address gives the 404 page', async () => {
@@ -187,32 +187,32 @@ describe('example task 1: find a workshop by topic and level', () => {
     expect(await digestOf(topic('no-such-topic'))).toBe('NEXT_HTTP_ERROR_FALLBACK;404')
   })
 
-  it('/topics/tyres-and-wheels lists Repair a puncture and True a wheel: the reverse side of the many-to-many', async () => {
-    const html = await topic('tyres-and-wheels')
-    expect(listed(html)).toEqual(['repair-a-puncture', 'true-a-wheel'])
-    expect(html).toContain('Tyres and wheels')
-    expect(html).toContain('Fix a flat tyre')
+  it('/topics/voice-and-breathing lists Warm up your voice and Breathe for long phrases: the reverse side of the many-to-many', async () => {
+    const html = await topic('voice-and-breathing')
+    expect(listed(html)).toEqual(['breathe-for-long-phrases', 'warm-up-your-voice'])
+    expect(html).toContain('Voice and breathing')
+    expect(html).toContain('Warm up safely')
     // The cards are as complete as on /workshops: a picture with a description, and every topic of
-    // the workshop (Repair a puncture is also about Everyday maintenance).
+    // the workshop (Warm up your voice is also about Singing together).
     for (const alt of [...html.matchAll(/<img[^>]*alt="([^"]*)"/g)].map(([, text]) => text)) expect(alt.length).toBeGreaterThan(10)
     expect([...html.matchAll(/<img/g)]).toHaveLength(2)
     // In the join's order (oldest first), not in whatever order the second query returns.
-    expect([...html.matchAll(/<h3[^>]*><a[^>]*href="\/workshops\/([a-z0-9-]+)/g)].map(([, slug]) => slug)).toEqual(['repair-a-puncture', 'true-a-wheel'])
-    const puncture = html.slice(html.indexOf('href="/workshops/repair-a-puncture'), html.indexOf('href="/workshops/true-a-wheel'))
-    expect(puncture).toContain('href="/topics/everyday-maintenance"')
-    expect(html).toContain('href="/workshops?topic=tyres-and-wheels"')
-    expect(await tabTitle(topicMetadata({ params: Promise.resolve({ slug: 'tyres-and-wheels' }) }))).toBe('Tyres and wheels · Workshops · Campus Cycle')
-    expect(listed(await topic('everyday-maintenance'))).toEqual(['adjust-your-brakes', 'repair-a-puncture'])
+    expect([...html.matchAll(/<h3[^>]*><a[^>]*href="\/workshops\/([a-z0-9-]+)/g)].map(([, slug]) => slug)).toEqual(['warm-up-your-voice', 'breathe-for-long-phrases'])
+    const puncture = html.slice(html.indexOf('href="/workshops/warm-up-your-voice'), html.indexOf('href="/workshops/breathe-for-long-phrases'))
+    expect(puncture).toContain('href="/topics/singing-together"')
+    expect(html).toContain('href="/workshops?topic=voice-and-breathing"')
+    expect(await tabTitle(topicMetadata({ params: Promise.resolve({ slug: 'voice-and-breathing' }) }))).toBe('Voice and breathing · Workshops · Riverside Voices')
+    expect(listed(await topic('singing-together'))).toEqual(['read-music-from-scratch', 'warm-up-your-voice'])
   })
 
   it('one edit in /admin shows in the list, on the workshop page and on the topic page', async () => {
-    await p.update({ collection: 'workshops', where: { slug: { equals: 'true-a-wheel' } }, data: { price: 27 }, overrideAccess: true })
+    await p.update({ collection: 'workshops', where: { slug: { equals: 'breathe-for-long-phrases' } }, data: { price: 20 }, overrideAccess: true })
     try {
-      expect((await list()).html).toContain('EUR 27')
-      expect(await workshop('true-a-wheel')).toContain('EUR 27')
-      expect(await topic('tyres-and-wheels')).toContain('EUR 27')
+      expect((await list()).html).toContain('EUR 20')
+      expect(await workshop('breathe-for-long-phrases')).toContain('EUR 20')
+      expect(await topic('voice-and-breathing')).toContain('EUR 20')
     } finally {
-      await p.update({ collection: 'workshops', where: { slug: { equals: 'true-a-wheel' } }, data: { price: 25 }, overrideAccess: true })
+      await p.update({ collection: 'workshops', where: { slug: { equals: 'breathe-for-long-phrases' } }, data: { price: 18 }, overrideAccess: true })
     }
   })
 
@@ -224,11 +224,11 @@ describe('example task 1: find a workshop by topic and level', () => {
         data: { place: 'Room 12 (changed by an editor)', pricingRule: 'Parts cost extra (changed by an editor).' },
         overrideAccess: true,
       })
-      const html = await workshop('repair-a-puncture')
+      const html = await workshop('warm-up-your-voice')
       expect(html).toContain('Room 12 (changed by an editor)')
       expect(html).toContain('Parts cost extra (changed by an editor).')
-      expect(html).not.toContain('Workshop B, Student Centre')
-      expect(html).not.toContain('Bring your own parts')
+      expect(html).not.toContain('Quay Street 12')
+      expect(html).not.toContain('Members of Riverside Voices pay half')
     } finally {
       await p.updateGlobal({ slug: 'site-facts', data: { place: before.place, pricingRule: before.pricingRule }, overrideAccess: true })
     }

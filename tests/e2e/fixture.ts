@@ -54,12 +54,12 @@ async function create(payload: Payload): Promise<Fixture> {
   const clinic = await payload.create({
     collection: 'clinics',
     data: {
-      name: 'Test repair clinic',
+      name: 'Test practice rooms',
       slug: CLINIC_SLUG,
       day: 'Saturday',
       startTime: '15:00',
       endTime: '17:00',
-      summary: 'A test clinic for the browser checks. Bring your bicycle.',
+      summary: 'A test booking page for the browser checks. Bring your group.',
     },
   })
   const first = futureSaturday()

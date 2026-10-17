@@ -4,7 +4,7 @@ import { afterAll, afterEach, beforeEach, describe, expect, it, vi, type MockIns
 import { convertLexicalToHTML } from '@payloadcms/richtext-lexical/html'
 import type { SerializedEditorState } from '@payloadcms/richtext-lexical/lexical'
 import type { Payload } from 'payload'
-import { BOOKING_CONFIRMATION, CAMPUS_CYCLE, MADE_UP_DATA_NOTICE } from '../../src/content/campus-cycle'
+import { BOOKING_CONFIRMATION, RIVERSIDE_VOICES, MADE_UP_DATA_NOTICE } from '../../src/content/riverside-voices'
 import { exampleWasAdded } from '../../src/seed/exampleFlag'
 import { runSeed } from '../../src/seed/run'
 import { NO_BLOB_STORE_MESSAGE, seed } from '../../src/seed/seed'
@@ -35,31 +35,31 @@ async function resetAll() {
   emptyUploadFolder(await getTestPayload())
 }
 
-// The facts, copied by hand from the Campus Cycle fact sheet (the course's CAMPUS-CYCLE-FACTS.md), and
-// on purpose NOT imported from src/content/campus-cycle.ts: if that file drifts from the fact sheet,
+// The facts, copied by hand from our fact sheet (docs/brief.md and our decision records), and
+// on purpose NOT imported from src/content/riverside-voices.ts: if that file drifts from the fact sheet,
 // the seeded site drifts with it, and only an independent copy notices.
 const FACT_SHEET = {
   workshops: [
-    // latestEnd: the gear workshop has no end time, but ends by 15:00 (the clinic needs the room).
-    { title: 'Repair a puncture', level: 'beginner', day: 'Tuesday', startTime: '18:30', endTime: '20:00', latestEnd: null, price: 15 },
-    { title: 'Adjust your brakes', level: 'beginner', day: 'Saturday', startTime: '10:00', endTime: null, latestEnd: null, price: 15 },
-    { title: 'Service a gear system', level: 'intermediate', day: 'Saturday', startTime: '13:00', endTime: null, latestEnd: '15:00', price: 25 },
-    { title: 'True a wheel', level: 'intermediate', day: 'Thursday', startTime: '19:00', endTime: null, latestEnd: null, price: 25 },
+    // latestEnd: the sight-singing workshop has no end time, but ends by 15:00 (a group has the room).
+    { title: 'Warm up your voice', level: 'beginner', day: 'Tuesday', startTime: '19:00', endTime: '20:30', latestEnd: null, price: 12 },
+    { title: 'Read music from scratch', level: 'beginner', day: 'Saturday', startTime: '10:00', endTime: null, latestEnd: null, price: 12 },
+    { title: 'Sight-sing a new piece', level: 'intermediate', day: 'Saturday', startTime: '13:00', endTime: null, latestEnd: '15:00', price: 18 },
+    { title: 'Breathe for long phrases', level: 'intermediate', day: 'Wednesday', startTime: '19:00', endTime: null, latestEnd: null, price: 18 },
   ],
-  groupSize: 6,
+  groupSize: 12,
   topics: [
-    { name: 'Tyres and wheels', slug: 'tyres-and-wheels', workshops: ['Repair a puncture', 'True a wheel'] },
-    { name: 'Brakes and gears', slug: 'brakes-and-gears', workshops: ['Adjust your brakes', 'Service a gear system'] },
-    { name: 'Everyday maintenance', slug: 'everyday-maintenance', workshops: ['Repair a puncture', 'Adjust your brakes'] },
+    { name: 'Voice and breathing', slug: 'voice-and-breathing', workshops: ['Warm up your voice', 'Breathe for long phrases'] },
+    { name: 'Reading music', slug: 'reading-music', workshops: ['Read music from scratch', 'Sight-sing a new piece'] },
+    { name: 'Singing together', slug: 'singing-together', workshops: ['Warm up your voice', 'Read music from scratch'] },
   ],
   repairs: [
-    { name: 'Check', price: 10 },
-    { name: 'Each small repair', price: 5 },
-    { name: 'Full service', price: 45 },
+    { name: 'The Loft, up to 12 people', price: 20 },
+    { name: 'The Studio, up to 25 people', price: 35 },
+    { name: 'The Hall, up to 60 people', price: 60 },
   ],
-  pricingRule: 'Tools, a tutor and standard parts are included. Bring your own parts and pay EUR 5 less per bicycle.',
-  place: 'Workshop B, Student Centre',
-  email: 'hello@campuscycle.example',
+  pricingRule: 'Sheet music and a pianist are included. Members of Riverside Voices pay half.',
+  place: 'Riverside Voices house, Quay Street 12, Riverside',
+  email: 'rooms@riversidevoices.example',
 }
 
 const count = async (p: Payload, collection: 'workshops' | 'topics' | 'repairs' | 'pages' | 'media' | 'users') =>
@@ -82,7 +82,7 @@ async function bySlug<T extends 'pages' | 'workshops' | 'topics'>(p: Payload, co
   return found.docs[0]
 }
 
-describe('the Campus Cycle seed', () => {
+describe('the Riverside Voices seed', () => {
   beforeEach(resetAll)
   afterAll(resetAll)
 
@@ -98,19 +98,19 @@ describe('the Campus Cycle seed', () => {
     expect(counts).toEqual({ workshops: 4, topics: 3, repairs: 3, pages: 4, media: 6, clinics: 0, timeSlots: 0, bookings: 0 })
     // The upload folder holds each image once: the second run uploaded nothing.
     expect(readdirSync(uploadFolder(p)).sort()).toEqual([
-      'adjust-your-brakes.jpg',
-      'clinic-tools.jpg',
-      'repair-a-puncture.jpg',
-      'service-a-gear-system.jpg',
-      'true-a-wheel.jpg',
-      'workshop-tools.jpg',
+      'breathe-for-long-phrases.jpg',
+      'practice-rooms.jpg',
+      'read-music-from-scratch.jpg',
+      'rehearsal-house.jpg',
+      'sight-sing-a-new-piece.jpg',
+      'warm-up-your-voice.jpg',
     ])
   })
 
-  it('stores the workshops exactly as in CAMPUS_CYCLE; only the puncture workshop has an end time', async () => {
+  it('stores the workshops exactly as in RIVERSIDE_VOICES; only the warm-up workshop has an end time', async () => {
     const p = await getTestPayload()
     await seed(p)
-    for (const fact of CAMPUS_CYCLE.workshops) {
+    for (const fact of RIVERSIDE_VOICES.workshops) {
       const workshop = await bySlug(p, 'workshops', fact.slug)
       expect(workshop).toMatchObject({
         title: fact.title,
@@ -118,33 +118,33 @@ describe('the Campus Cycle seed', () => {
         day: fact.day,
         startTime: fact.startTime,
         price: fact.price,
-        groupSize: CAMPUS_CYCLE.groupSize,
+        groupSize: RIVERSIDE_VOICES.groupSize,
       })
       expect(workshop.endTime ?? null).toBe('endTime' in fact ? fact.endTime : null)
       expect(workshop.latestEnd ?? null).toBe('latestEnd' in fact ? fact.latestEnd : null)
       expect(workshop.summary.length).toBeGreaterThan(20)
       // A description in words (what you learn and do); its facts are fields, tested above.
       expect(html(workshop.description).length).toBeGreaterThan(80)
-      // Its own photo, with a real description for people who cannot see it.
+      // Its own picture, with a real description for people who cannot see it.
       expect(workshop.image).toMatchObject({ filename: `${fact.slug}.jpg` })
       expect(typeof workshop.image === 'object' && workshop.image?.alt.length).toBeGreaterThan(20)
     }
     const withEndTime = await p.find({ collection: 'workshops', where: { endTime: { exists: true } } })
-    expect(withEndTime.docs.map((workshop) => workshop.slug)).toEqual(['repair-a-puncture'])
+    expect(withEndTime.docs.map((workshop) => workshop.slug)).toEqual(['warm-up-your-voice'])
     const withLatestEnd = await p.find({ collection: 'workshops', where: { latestEnd: { exists: true } } })
-    expect(withLatestEnd.docs.map((workshop) => workshop.slug)).toEqual(['service-a-gear-system'])
+    expect(withLatestEnd.docs.map((workshop) => workshop.slug)).toEqual(['sight-sing-a-new-piece'])
     // Never an invented end time in the text either: the only times are the stated ones (and the
-    // gear workshop's "by 15:00" limit, in its latestEnd field).
+    // sight-singing workshop's "by 15:00" limit, in its latestEnd field).
     for (const workshop of (await p.find({ collection: 'workshops', limit: 10 })).docs) {
       const { startTime, endTime, latestEnd, summary, description } = workshop
       const times = JSON.stringify({ startTime, endTime, latestEnd, summary, description }).match(/\b\d{2}:\d{2}\b/g) ?? []
       expect(new Set(times), workshop.slug).toEqual(
         new Set(
           {
-            'repair-a-puncture': ['18:30', '20:00'],
-            'adjust-your-brakes': ['10:00'],
-            'service-a-gear-system': ['13:00', '15:00'],
-            'true-a-wheel': ['19:00'],
+            'warm-up-your-voice': ['19:00', '20:30'],
+            'read-music-from-scratch': ['10:00'],
+            'sight-sing-a-new-piece': ['13:00', '15:00'],
+            'breathe-for-long-phrases': ['19:00'],
           }[workshop.slug],
         ),
       )
@@ -154,43 +154,43 @@ describe('the Campus Cycle seed', () => {
   it('links topics and workshops in both directions, as the fact sheet assigns them', async () => {
     const p = await getTestPayload()
     await seed(p)
-    for (const topic of CAMPUS_CYCLE.topics) {
+    for (const topic of RIVERSIDE_VOICES.topics) {
       const stored = await bySlug(p, 'topics', topic.slug)
       expect(stored).toMatchObject({ name: topic.name, description: topic.description })
       // The reverse side (the join on topics) shows the workshops whose "topics" name this topic.
       const reverse = (stored.workshops?.docs ?? []).map((workshop) => (typeof workshop === 'object' ? workshop.slug : workshop))
-      const expected = CAMPUS_CYCLE.workshops.filter((workshop) => (workshop.topics as readonly string[]).includes(topic.slug))
+      const expected = RIVERSIDE_VOICES.workshops.filter((workshop) => (workshop.topics as readonly string[]).includes(topic.slug))
       expect(reverse.sort()).toEqual(expected.map((workshop) => workshop.slug).sort())
       expect(reverse).toHaveLength(2)
     }
-    for (const slug of ['repair-a-puncture', 'adjust-your-brakes']) {
+    for (const slug of ['warm-up-your-voice', 'read-music-from-scratch']) {
       expect((await bySlug(p, 'workshops', slug)).topics, slug).toHaveLength(2)
     }
   })
 
-  it('stores the three repair prices and the images', async () => {
+  it('stores the three room prices and the images', async () => {
     const p = await getTestPayload()
     await seed(p)
     const repairs = await p.find({ collection: 'repairs', sort: 'price' })
     expect(repairs.docs.map(({ name, price }) => ({ name, price }))).toEqual([
-      { name: 'Each small repair', price: 5 },
-      { name: 'Check', price: 10 },
-      { name: 'Full service', price: 45 },
+      { name: 'The Loft, up to 12 people', price: 20 },
+      { name: 'The Studio, up to 25 people', price: 35 },
+      { name: 'The Hall, up to 60 people', price: 60 },
     ])
     // No description: the price list shows each repair's name and price from their own fields.
     for (const repair of repairs.docs) expect(repair.description ?? '', repair.name).toBe('')
-    for (const filename of ['workshop-tools.jpg', 'clinic-tools.jpg']) {
+    for (const filename of ['rehearsal-house.jpg', 'practice-rooms.jpg']) {
       const media = await p.find({ collection: 'media', where: { filename: { equals: filename } } })
       expect(media.docs, filename).toHaveLength(1)
       expect(media.docs[0].alt.length).toBeGreaterThan(20)
     }
   })
 
-  it('writes the four pages: the privacy page has the made-up-data notice, the about page the photo credits', async () => {
+  it('writes the four pages: the privacy page has the made-up-data notice, the about page the picture credits', async () => {
     const p = await getTestPayload()
     await seed(p)
     const home = await bySlug(p, 'pages', 'home')
-    expect(home.title).toBe('Campus Cycle')
+    expect(home.title).toBe('Riverside Voices')
     expect(home.intro).toBeTruthy()
     const privacy = html((await bySlug(p, 'pages', 'privacy')).body)
     expect(privacy).toContain(MADE_UP_DATA_NOTICE)
@@ -201,12 +201,10 @@ describe('the Campus Cycle seed', () => {
     expect(pages.length).toBeGreaterThanOrEqual(4)
     expect(JSON.stringify(pages)).not.toMatch(/student project/i)
     const about = html((await bySlug(p, 'pages', 'about')).body)
-    expect(about).toContain('<h2>Photo credits</h2>')
-    // Three of the licences (CC BY-SA) require that the photographer and the licence are named.
-    for (const credit of ['Björn Appel', 'Troy Sankey', 'Thegreenj', 'Foxtod', 'Downtowngal', 'Gengiskanhg']) {
-      expect(about).toContain(credit)
-    }
-    for (const licence of ['CC BY-SA 3.0', 'CC BY-SA 4.0', 'CC0 (public domain)']) expect(about).toContain(licence)
+    expect(about).toContain('<h2>Picture credits</h2>')
+    // The Lucide licence (ISC) asks that its notice goes with the icons our drawings use.
+    expect(about).toContain('<a href="https://lucide.dev">Lucide icons</a>')
+    expect(about).toContain('<a href="https://lucide.dev/license">ISC licence</a>')
     // "Where to find us" sends the reader to the Contact page, which shows the place.
     expect(about).toContain('<a href="/contact">Contact page</a>')
     // The home page has no text of its own below the intro: everything else on it comes from records.
@@ -217,12 +215,12 @@ describe('the Campus Cycle seed', () => {
   it('never overwrites a record an editor has changed', async () => {
     const p = await getTestPayload()
     await seed(p)
-    const workshop = await bySlug(p, 'workshops', 'true-a-wheel')
+    const workshop = await bySlug(p, 'workshops', 'breathe-for-long-phrases')
     const page = await bySlug(p, 'pages', 'about')
-    await p.update({ collection: 'workshops', id: workshop.id, data: { title: 'True a wheel (changed by an editor)' } })
+    await p.update({ collection: 'workshops', id: workshop.id, data: { title: 'Breathe (changed by an editor)' } })
     await p.update({ collection: 'pages', id: page.id, data: { intro: 'An intro an editor wrote.' } })
     expect(await seed(p)).toEqual({ created: 0, skipped: ALL_RECORDS })
-    expect((await bySlug(p, 'workshops', 'true-a-wheel')).title).toBe('True a wheel (changed by an editor)')
+    expect((await bySlug(p, 'workshops', 'breathe-for-long-phrases')).title).toBe('Breathe (changed by an editor)')
     expect((await bySlug(p, 'pages', 'about')).intro).toBe('An intro an editor wrote.')
   })
 })
@@ -277,7 +275,7 @@ describe('the seeded content agrees with the fact sheet', () => {
   it('one source per fact: no workshop or repair description or page text repeats a price, the group size, the place, the e-mail or the pricing rule', async () => {
     const p = await getTestPayload()
     await seed(p)
-    // Written out here, not taken from src/content/campus-cycle.ts, so the test does not share a
+    // Written out here, not taken from src/content/riverside-voices.ts, so the test does not share a
     // mistake with the seed. Any price at all ("EUR 15", "15 EUR", "€15", "25 euro"), not only today's
     // ones, and any group size ("groups of 6").
     const repeatedFacts = [
@@ -285,14 +283,14 @@ describe('the seeded content agrees with the fact sheet', () => {
       /\d+\s*EUR\b/i,
       /€\s*\d/,
       /\d+\s*euros?\b/i,
-      /at most 6 people/i,
-      /\b6 people\b/i,
+      /at most 12 people/i,
+      /\b12 people\b/i,
       /groups? of \d/i,
-      /Workshop B, Student Centre/,
-      /campuscycle\.example/i,
-      /hello@/i,
-      /Bring your own parts and pay/,
-      /Tools, a tutor and standard parts are included/,
+      /Quay Street 12/,
+      /riversidevoices\.example/i,
+      /rooms@/i,
+      /Members of Riverside Voices pay half/,
+      /Sheet music and a pianist are included/,
     ]
     const texts: [string, string][] = []
     for (const workshop of (await p.find({ collection: 'workshops', limit: 10 })).docs) {
@@ -316,7 +314,7 @@ describe('the seeded content agrees with the fact sheet', () => {
       for (const fact of repeatedFacts) expect(text, `${name} repeats ${fact}`).not.toMatch(fact)
     }
     // The workshop descriptions and summaries say no day, time or level either: those are fields too
-    // (the gear workshop's "ends by 15:00" as well: its latestEnd field).
+    // (the sight-singing workshop's "ends by 15:00" as well: its latestEnd field).
     for (const [name, text] of texts.filter(([name]) => name.startsWith('workshop'))) {
       expect(text, name).not.toMatch(/Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday/)
       expect(text, name).not.toMatch(/beginner|intermediate/i)
@@ -336,9 +334,9 @@ describe('the seeded content agrees with the fact sheet', () => {
     const p = await getTestPayload()
     await seed(p)
     const home = await bySlug(p, 'pages', 'home')
-    // The clinic is not in the seed (the home page says "The repair clinic opens soon"), so the
+    // The room booking is not in the seed (the home page says "Room booking opens soon"), so the
     // home page's own text does not promise it.
-    expect(home.intro).not.toMatch(/clinic/i)
+    expect(home.intro).not.toMatch(/book/i)
     const contact = await bySlug(p, 'pages', 'contact')
     expect(contact.intro).not.toContain('come by')
     expect(html(contact.body)).toContain(
@@ -353,28 +351,19 @@ describe('the seeded content agrees with the fact sheet', () => {
     expect(privacy).toContain('The address itself is not stored.')
     expect(privacy).toContain('If you have an account on this site, you can also see your own bookings after you log in.')
     const summaries = (await p.find({ collection: 'workshops', limit: 10 })).docs.map((workshop) => workshop.summary)
-    expect(summaries).toContain('Learn to find and mend a puncture.')
-    for (const summary of summaries) expect(summary).not.toMatch(/done simple repairs before/)
-    // "bicycle repair", never "bicycle-repair", in every page.
+    expect(summaries).toContain('Learn to follow your own part in a choir score.')
+    // Nothing left of the example the starter came with, in any page.
     for (const page of (await p.find({ collection: 'pages', limit: 10 })).docs) {
-      expect(JSON.stringify(page), page.slug).not.toContain('bicycle-repair')
+      expect(JSON.stringify(page), page.slug).not.toMatch(/bicycle|campus/i)
     }
   })
 
-  it('the photo credits link each photo to its Commons page and each licence to its text', async () => {
+  it('the picture credits name the icons our drawings use and link their licence', async () => {
     const p = await getTestPayload()
     await seed(p)
     const about = html((await bySlug(p, 'pages', 'about')).body)
-    for (const url of [
-      'https://creativecommons.org/licenses/by-sa/3.0/',
-      'https://creativecommons.org/licenses/by-sa/4.0/',
-      'https://creativecommons.org/publicdomain/zero/1.0/',
-    ]) {
-      expect(about).toContain(`<a href="${url}">`)
-    }
-    expect(about).toContain('<a href="https://commons.wikimedia.org/wiki/File:Puncture-repaire-kit.jpg">')
-    expect(about.match(/<a href="https:\/\/commons\.wikimedia\.org\/wiki\/File:/g)).toHaveLength(6)
-    expect(about).toContain('Each photo was resized from the original and is shared under its own licence, as listed.')
+    expect(about).toContain('The pictures on this site are drawings our team made from')
+    expect(about.match(/<a href="https:\/\/lucide\.dev[^"]*">/g)).toHaveLength(2)
   })
 })
 
@@ -405,12 +394,12 @@ describe('the images are found by their base name', () => {
   it('media records deleted but files kept: re-added once as name-1.jpg, then found again, never doubled', async () => {
     const p = await getTestPayload()
     await seed(p)
-    // The records go, the files stay on disk: Payload then saves a new upload as repair-a-puncture-1.jpg.
+    // The records go, the files stay on disk: Payload then saves a new upload as warm-up-your-voice-1.jpg.
     await resetCollections(['media'])
     expect((await seed(p)).created).toBe(6)
     const renamed = (await p.find({ collection: 'media', limit: 10 })).docs.map((media) => media.filename)
-    expect(renamed).toContain('repair-a-puncture-1.jpg')
-    // The next run finds repair-a-puncture-1.jpg as the puncture photo, and adds nothing.
+    expect(renamed).toContain('warm-up-your-voice-1.jpg')
+    // The next run finds warm-up-your-voice-1.jpg as the warm-up picture, and adds nothing.
     expect(await seed(p)).toEqual({ created: 0, skipped: ALL_RECORDS })
     expect(await count(p, 'media')).toBe(6)
   })
@@ -422,7 +411,7 @@ describe('runSeed: the example content is added once per database', () => {
   let log: MockInstance<typeof console.log>
   beforeEach(async () => {
     await resetAll()
-    process.env.FIRST_ADMIN_EMAIL = 'seed-test@campuscycle.example'
+    process.env.FIRST_ADMIN_EMAIL = 'seed-test@riversidevoices.example'
     process.env.FIRST_ADMIN_PASSWORD = 'test-password-0123456789'
     log = vi.spyOn(console, 'log').mockImplementation(() => {})
   })
@@ -441,8 +430,8 @@ describe('runSeed: the example content is added once per database', () => {
     const p = await getTestPayload()
     expect(await runSeed(p, { env: {} })).toMatchObject({ example: 'added', created: ALL_RECORDS })
     expect(await exampleWasAdded(p)).toBe(true)
-    const wheel = await bySlug(p, 'workshops', 'true-a-wheel')
-    await p.delete({ collection: 'workshops', id: wheel.id, overrideAccess: true })
+    const breathe = await bySlug(p, 'workshops', 'breathe-for-long-phrases')
+    await p.delete({ collection: 'workshops', id: breathe.id, overrideAccess: true })
     const about = await bySlug(p, 'pages', 'about')
     await p.update({ collection: 'pages', id: about.id, data: { slug: 'about-us' }, overrideAccess: true })
 
@@ -466,14 +455,14 @@ describe('runSeed: the example content is added once per database', () => {
   it('--again adds back a deleted example record, overwrites nothing and leaves the flag set', async () => {
     const p = await getTestPayload()
     await runSeed(p, { env: {} })
-    const wheel = await bySlug(p, 'workshops', 'true-a-wheel')
-    await p.delete({ collection: 'workshops', id: wheel.id, overrideAccess: true })
-    const brakes = await bySlug(p, 'workshops', 'adjust-your-brakes')
-    await p.update({ collection: 'workshops', id: brakes.id, data: { title: 'Brakes (changed by an editor)' }, overrideAccess: true })
+    const breathe = await bySlug(p, 'workshops', 'breathe-for-long-phrases')
+    await p.delete({ collection: 'workshops', id: breathe.id, overrideAccess: true })
+    const reading = await bySlug(p, 'workshops', 'read-music-from-scratch')
+    await p.update({ collection: 'workshops', id: reading.id, data: { title: 'Reading (changed by an editor)' }, overrideAccess: true })
 
     expect(await runSeed(p, { again: true, env: {} })).toMatchObject({ example: 'added', created: 1, skipped: ALL_RECORDS - 1 })
     expect(await count(p, 'workshops')).toBe(4)
-    expect((await bySlug(p, 'workshops', 'adjust-your-brakes')).title).toBe('Brakes (changed by an editor)')
+    expect((await bySlug(p, 'workshops', 'read-music-from-scratch')).title).toBe('Reading (changed by an editor)')
     expect(await exampleWasAdded(p)).toBe(true)
     expect(logged().at(-1)).toMatch(/^SEED: created 1, kept 20 \(--again/)
   })
@@ -499,8 +488,8 @@ describe('runSeed: the example content is added once per database', () => {
     // deleted.
     await seed(p)
     expect(await exampleWasAdded(p)).toBe(false)
-    const wheel = await bySlug(p, 'workshops', 'true-a-wheel')
-    await p.delete({ collection: 'workshops', id: wheel.id, overrideAccess: true })
+    const breathe = await bySlug(p, 'workshops', 'breathe-for-long-phrases')
+    await p.delete({ collection: 'workshops', id: breathe.id, overrideAccess: true })
 
     expect(await runSeed(p, { env: {} })).toMatchObject({ example: 'added', created: 1, skipped: ALL_RECORDS - 1 })
     expect(await count(p, 'workshops')).toBe(4)

@@ -52,13 +52,13 @@ describe("the clinic pages' last safety net (error.tsx)", () => {
     return props.onClick ?? findClick(props.children)
   }
 
-  it('says what happened in plain words, offers Try again and a way to all repair clinics', () => {
+  it('says what happened in plain words, offers Try again and a way to the room booking page', () => {
     const page = ClinicError({ error: new Error('secret detail'), retry: () => undefined })
     const html = text(renderToString(page))
     expect(html).toMatch(/<h1[^>]*>This page could not be shown<\/h1>/)
-    expect(html).toContain('Something went wrong while showing this page. Try again, or go back to all repair clinics.')
+    expect(html).toContain('Something went wrong while showing this page. Try again, or go back to the room booking page.')
     expect(html).toMatch(/<button[^>]*>Try again<\/button>/)
-    expect(html).toMatch(/<a[^>]*href="\/clinics"[^>]*>All repair clinics<\/a>/)
+    expect(html).toMatch(/<a[^>]*href="\/clinics"[^>]*>Book a room<\/a>/)
     expect(html).not.toContain('secret detail')
   })
 

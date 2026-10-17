@@ -394,7 +394,7 @@ describe('example task 2: book a clinic slot', () => {
       // Never anything from a booking: no name, no e-mail address, no note.
       expect(html).not.toMatch(/Private Booker|private@campuscycle|Private note|Test Person|test@campuscycle/)
       expect(html).not.toMatch(/student project/i)
-      expect(await tabTitle(clinicMetadata({ params: Promise.resolve({ slug: 'test-clinic' }) }))).toBe('Test clinic · Campus Cycle')
+      expect(await tabTitle(clinicMetadata({ params: Promise.resolve({ slug: 'test-clinic' }) }))).toBe('Test clinic · Riverside Voices')
     })
 
     it('the clinic page says so when there are no future slots, and when every slot is full', async () => {
