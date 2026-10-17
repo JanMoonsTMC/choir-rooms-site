@@ -37,6 +37,8 @@ type BookingFormProps = {
   room: string
   // How many people the room holds: the group size field's hint says it, and the server checks it.
   capacity: number
+  // The address of the next two weeks' time slots, shown under the list (SlotPicker), when there are any.
+  laterHref?: string
   slots: SlotChoice[]
   // A random code the room page makes for this one form (see requestId in src/collections/Bookings.ts).
   requestId: string
@@ -76,7 +78,7 @@ async function sendBooking(previous: BookingResult | null, formData: FormData): 
 }
 
 export function BookingForm(props: BookingFormProps) {
-  const { room, capacity, slots, requestId, member } = props
+  const { room, capacity, slots, requestId, member, laterHref } = props
   // state: null at first, then the answer of the last send (only failures come back: a saved booking
   // opens the confirmation page instead).
   const [state, formAction] = useActionState(sendBooking, null)
@@ -121,7 +123,7 @@ export function BookingForm(props: BookingFormProps) {
         <input type="hidden" name="room" value={room} />
         <input type="hidden" name="requestId" value={requestId} />
 
-        <SlotPicker slots={slots} selected={values.timeSlot} error={errors.timeSlot} />
+        <SlotPicker slots={slots} selected={values.timeSlot} error={errors.timeSlot} laterHref={laterHref} />
 
         <div className="grid gap-2">
           <Label htmlFor="groupName">

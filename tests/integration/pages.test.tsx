@@ -72,7 +72,7 @@ describe('the public pages', () => {
     expect(page).toContain('href="/rooms/the-band-room"')
     expect(page.indexOf('href="/rooms/the-band-room"')).toBeLessThan(page.indexOf('href="/rooms/the-hall"'))
     expect(page).toContain('Up to 60 people')
-    expect(page).toContain('EUR 60 per time slot')
+    expect(page).toContain('EUR 60 per two-hour slot')
     expect(page).toContain('Grand piano')
     // The pricing rule comes from the Site facts global.
     expect(page).toContain('Nobody pays online: the choir sends an invoice after your rehearsal.')

@@ -401,7 +401,7 @@ describe('our primary task: book a practice room for a time slot', () => {
       expect(html).toContain('<h1')
       expect(html).toContain('Test room')
       expect(html).toContain('Up to 12 people')
-      expect(html).toContain('EUR 20 per time slot')
+      expect(html).toContain('EUR 20 per two-hour slot')
       expect(html).toContain('Ground floor')
       expect(html).toContain('Test instance: bring your own music stands.')
       // Each slot with its day, start and end, in Brussels time, and whether it is free.
@@ -454,6 +454,8 @@ describe('our primary task: book a practice room for a time slot', () => {
       expect(first).toContain('Time slots in the next two weeks.')
       expect(first).toMatch(/href="\/rooms\/test-room\?people=12&from=2#book"[^>]*>Later time slots</)
       expect(first).not.toContain('Earlier time slots')
+      // The same link under the list of slots too (test round 1, finding 1).
+      expect(first.match(/>Later time slots</g)).toHaveLength(2)
       const second = await page({ people: '12', from: '2' })
       expect(second).toContain(`value="${later.id}"`)
       expect(second).not.toContain(`value="${now.id}"`)
@@ -489,6 +491,9 @@ describe('our primary task: book a practice room for a time slot', () => {
       expect(html).toContain('Test room')
       // 08:00 UTC is 10:00 in Brussels on 9 October (summer time).
       expect(html).toContain('Saturday 9 October, 10:00–12:00')
+      // What happens next (test round 1, finding 3): paying later, and how to change or cancel.
+      expect(html).toContain('You pay nothing now.')
+      expect(html).toMatch(/To change or cancel this booking.*href="\/contact"/s)
       expect(html).not.toMatch(/Private Booker|private@riversidevoices/)
       expect(html).not.toContain(CANT_SHOW)
     })

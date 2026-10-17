@@ -103,6 +103,17 @@ export default async function BookedPage({ params, searchParams }: Props) {
             )}
           </dl>
         </section>
+        {/* What happens next: in our test round 1, two of three people asked how to pay and how to cancel
+            once the booking was saved (docs/test-report.md, finding 3). */}
+        <section aria-labelledby="next" className="grid gap-3">
+          <h2 id="next" className="text-xl">What happens next</h2>
+          <ul className="grid max-w-(--container-reading) list-disc gap-2 pl-5">
+            <li>You pay nothing now. The choir invoices the price of the time slot after your rehearsal; this practice site sends nothing.</li>
+            <li>
+              To change or cancel this booking, e-mail us with your group and the time: see the <Link href="/contact">Contact page</Link>.
+            </li>
+          </ul>
+        </section>
         <div className="flex flex-wrap gap-3">
           <ButtonLink href={`/rooms/${room.slug}`} variant="secondary">{`Back to ${room.name}`}</ButtonLink>
           <ButtonLink href="/" variant="quiet">Home</ButtonLink>
