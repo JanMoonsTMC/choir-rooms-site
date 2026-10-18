@@ -67,7 +67,7 @@ describe('our second task: find the room that fits your group', () => {
     expect(html.indexOf('href="/rooms/the-band-room"')).toBeLessThan(html.indexOf('href="/rooms/the-hall"'))
     expect(html).toContain('All rooms — 4 rooms')
     expect(title).toBe('Rooms · Riverside Voices')
-    for (const fact of ['Up to 8 people', 'Up to 60 people', 'EUR 35 per time slot', 'Grand piano']) expect(html).toContain(fact)
+    for (const fact of ['Up to 8 people', 'Up to 60 people', 'EUR 35 per two-hour slot', 'Grand piano']) expect(html).toContain(fact)
     expect(html).toMatch(/<form[^>]*action="\/rooms#results"[^>]*method="get"/)
     expect(html).toMatch(/<label[^>]*for="filter-people"[^>]*>Group size<\/label>/)
     expect(html).toMatch(/<label[^>]*for="filter-feature"[^>]*>Equipment<\/label>/)
@@ -157,9 +157,9 @@ describe('our second task: find the room that fits your group', () => {
   it('one edit in /admin shows in the list, on the room page and on the equipment page', async () => {
     await p.update({ collection: 'rooms', where: { slug: { equals: 'the-loft' } }, data: { price: 22 }, overrideAccess: true })
     try {
-      expect((await list()).html).toContain('EUR 22 per time slot')
-      expect(await room('the-loft')).toContain('EUR 22 per time slot')
-      expect(await feature('upright-piano')).toContain('EUR 22 per time slot')
+      expect((await list()).html).toContain('EUR 22 per two-hour slot')
+      expect(await room('the-loft')).toContain('EUR 22 per two-hour slot')
+      expect(await feature('upright-piano')).toContain('EUR 22 per two-hour slot')
     } finally {
       await p.update({ collection: 'rooms', where: { slug: { equals: 'the-loft' } }, data: { price: 20 }, overrideAccess: true })
     }

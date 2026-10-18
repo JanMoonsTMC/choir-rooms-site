@@ -21,7 +21,7 @@ export function RoomCard({ room, query = '', headingLevel = 'h3' }: RoomCardProp
         <dt className="text-ink-soft">Size</dt>
         <dd className="font-semibold">{capacityLabel(room.capacity)}</dd>
         <dt className="text-ink-soft">Price</dt>
-        <dd className="font-semibold">{`${formatPrice(room.price)} per time slot`}</dd>
+        <dd className="font-semibold">{`${formatPrice(room.price)} per two-hour slot`}</dd>
       </dl>
       <p>{room.summary}</p>
       <FeatureList features={room.features} />

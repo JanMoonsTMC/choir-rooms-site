@@ -146,7 +146,7 @@ export default async function RoomPage({ params, searchParams }: Props) {
             <dt className="text-ink-soft">Size</dt>
             <dd className="font-semibold">{capacityLabel(room.capacity)}</dd>
             <dt className="text-ink-soft">Price</dt>
-            <dd className="font-semibold">{`${formatPrice(room.price)} per time slot`}</dd>
+            <dd className="font-semibold">{`${formatPrice(room.price)} per two-hour slot`}</dd>
             <dt className="text-ink-soft">In the house</dt>
             <dd className="min-w-0 font-semibold [overflow-wrap:anywhere]">{room.location}</dd>
             {facts.place && (
@@ -203,7 +203,7 @@ export default async function RoomPage({ params, searchParams }: Props) {
             ) : (
               // The time slots are shown inside the form, by SlotPicker (src/components/site/SlotPicker.tsx).
               // requestId: a new random code for each form, so the same form sent twice saves one booking.
-              <BookingForm room={room.slug} capacity={room.capacity} slots={slots} requestId={randomUUID()} member={member && { name: member.name ?? '', email: member.email }} />
+              <BookingForm room={room.slug} capacity={room.capacity} laterHref={later ? weeksLink(from + SHOWN_WEEKS) : undefined} slots={slots} requestId={randomUUID()} member={member && { name: member.name ?? '', email: member.email }} />
             )}
           </section>
 
