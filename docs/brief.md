@@ -51,5 +51,6 @@ What you decided to leave out, so that nobody mistakes it for something forgotte
   `/admin`.
 - Repeating bookings (every Tuesday until June). A group books each week on its own.
 - Accounts for groups. The optional members' area of the starter stays switched off.
-- Photos of the rooms. The rooms are made up, so the site shows them without photos for now.
+- Photos of the rooms. The rooms are made up, so the site shows our own drawings of them instead.
+- A confirmation e-mail. The confirmation page and a calendar file (.ics) take its place.
 - A Dutch version of the site.
