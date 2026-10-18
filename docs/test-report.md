@@ -1,8 +1,8 @@
 # Test report
 
 What we learned by testing our site with its tasks and with tools. It is read by whoever decides whether
-the site can go live, and later by whoever improves it. Round 1 tested the primary task (book a room); round 2
-follows before the hand-over.
+the site can go live, and later by whoever improves it. Round 1 tested the primary task (book a room) and
+led to four fixes; round 2 tested the second task (find a room) on the finished site, before the hand-over.
 
 ## What was tested, and how
 
@@ -21,9 +21,23 @@ The task, as we wrote it down before we started:
 - **Tools**, on the same version: the browser checks with axe (`npm run check`, every page at 390 and
   1100 px) and Lighthouse 12.6.1 (mobile) on `/rooms/the-loft` and `/rooms`.
 
+### Round 2: find the room that fits your group (18 October 2026)
+
+The task, as we wrote it down before we started:
+
+> "You play in a band of five. You need a drum kit and amplifiers. Find the rooms that would work for
+> you, and say which one you would book and why. You do not have to book it."
+
+- **Version**: the finished site, built from our branch `final-integrations` (`npm run build`,
+  `npm start`): filters, equipment pages, the round-1 fixes, analytics and the calendar file.
+- **Who took part**: again nobody else was watched; as in round 1, each of us did the task ourselves in a
+  private window, at phone and at laptop width.
+- **Tools**: the browser checks with axe again (every page, both widths) and Lighthouse 12.6.1 (mobile)
+  on `/rooms?people=8&feature=drum-kit-and-amplifiers` and `/equipment/drum-kit-and-amplifiers`.
 
 ## What we saw
 
+### Round 1
 
 | # | Behaviour (what you saw) | Interpretation (what you think it means) | Uncertainty (what you are not sure of) |
 | --- | --- | --- | --- |
@@ -34,9 +48,19 @@ The task, as we wrote it down before we started:
 | 5 | For a group of eight, The Loft and The Studio showed at once on the room cards ("Up to … people"), without the filters. | The size on the card is enough for this task; the filters matter more for task 2. | Task 2 was not part of this round. |
 | 6 | Tools: axe found no serious or critical problem on any page at either width. Lighthouse (mobile) on `/rooms/the-loft`: performance 94, accessibility 100, best practices 96, SEO 100. It flagged the room's picture at the top as the largest element, loaded lazily (largest contentful paint 3.1 s), and a missing site icon (`/favicon.ico` 404 in the console). | The picture a phone shows first should load at once; the missing icon is a small, real error. | Measured on our own computer, not on Vercel's network. |
 
+### Round 2
+
+| # | Behaviour (what you saw) | Interpretation (what you think it means) | Uncertainty (what you are not sure of) |
+| --- | --- | --- | --- |
+| 7 | Both ways in reached The Band Room: **Equipment** in the filter, and "Drum kit and amplifiers" under "What does your group need?" on the home page, which opens the filtered list. | Both ways in work for a band. | Groups that need a piano may look for other words. |
+| 8 | **Group size** offers ranges ("Up to 8 people"); there is no box to type "5". | The ranges work, but a typed number could be quicker. | We did not see anyone hesitate; this is our own judgement. |
+| 9 | To compare The Studio and The Hall we opened them in two tabs. | Comparing two rooms is a need we do not support. | We do not know how often groups compare. |
+| 10 | On a phone, after **Show rooms**, the result line ("Rooms for up to 8 people with Drum kit and amplifiers — 1 room") shows without scrolling. | Opening the page at `#results` works as meant. | — |
+| 11 | Tools: axe found no serious or critical problem. Lighthouse (mobile): performance 97, accessibility 100, best practices 96, SEO 100 on both pages. Best practices lost points for one console error: the Web Analytics script (`/_vercel/insights/script.js`) answers 404 until Analytics is switched on in Vercel. | The site is fast and accessible; the one error goes away once Analytics is enabled in the Vercel dashboard. | Measured on our own computer; the live site's numbers may differ. |
 
 ## What we changed, and the retest
 
+### Round 1
 
 | Finding | Change | Retest and result |
 | --- | --- | --- |
@@ -48,10 +72,18 @@ The task, as we wrote it down before we started:
 
 All tests and browser checks (60) pass on the changed version.
 
+### Round 2
+
+We changed no code after round 2: the task worked both ways. Findings 8 and 9 are in `docs/handover.md`
+("Left out, and in which order") as the next things to build; finding 11 needs Analytics switched on in
+Vercel, which is a setting, not code (also in the hand-over).
 
 ## The release check
 
-Before the site goes live, each change passes:
+The release check for the hand-over, on 18 October 2026: every pull request's CI green (below), the
+browser checks and axe on the finished site (60 passed, no serious or critical problems), Lighthouse as in
+findings 6 and 11, and the live site checked after each merge. Before the site goes live, each change
+passes:
 
 - **CI on its pull request**: lint, types and the tests (`test`), the generated files (`types-fresh`), the
   migrations on an empty database with removals explained (`migrations`), the site in a real browser at
@@ -68,8 +100,8 @@ One improvement with its evidence: the room page's largest contentful paint went
 
 - **People who are not us**: nobody outside our team has done either task. Risk: we know the site, so we
   miss what a newcomer would stumble on. First thing to do with real users.
-- **Task 2 (find a room)**: planned for round 2. Risk: the filters' words ("Group size", "Equipment")
-  may not be what groups look for.
+- **Groups that need a piano or step-free access**: round 2 only tested a band that needs a drum kit.
+  Risk: other groups may look for their equipment under other words.
 - **A screen reader by hand** (NVDA or VoiceOver): only axe checked the markup. Risk: the order in which
   the booking form's problems are read out could still confuse.
 - **Booking on the live site**: we tested on our own build only, to keep the live bookings clean. Risk:

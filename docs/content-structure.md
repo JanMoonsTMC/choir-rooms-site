@@ -45,7 +45,8 @@ How they link:
 | Home | `/` | Rooms, a room, the filtered rooms list (equipment quick links), About |
 | Rooms (find a room) | `/rooms`, filtered: `/rooms?people=25&feature=upright-piano` | A room, an equipment page |
 | A room (book a room) | `/rooms/<slug>`, later weeks: `/rooms/<slug>?from=2` | Its equipment, the confirmation, back to the (filtered) rooms list |
-| Booking confirmation (not counted) | `/rooms/<slug>/booked?ref=…` | Back to the room, Home |
+| Booking confirmation (not counted) | `/rooms/<slug>/booked?ref=…` | The calendar file, Contact, back to the room, Home |
+| Calendar file (a download, not a page) | `/rooms/<slug>/booked/calendar?ref=…` | — |
 | Equipment | `/equipment` | An equipment page |
 | One piece of equipment | `/equipment/<slug>` | Its rooms, the rooms list filtered by it |
 | About | `/about` | Contact |
@@ -75,7 +76,8 @@ The main menu: **Home**, **Rooms**, **Equipment**, **About**, **Contact**. The f
    further weeks); fill in the group, the number of people, a contact name, an e-mail address and
    optionally a note; press **Book this slot**.
 4. Not saved: the box at the top lists each problem with a link to its field; everything typed stays.
-5. Saved: the confirmation shows the room, the time and the address.
+5. Saved: the confirmation shows the room, the time and the address, what happens next, and **Add to my
+   calendar** (a `.ics` file).
 
 **2. Find the room that fits your group.**
 
