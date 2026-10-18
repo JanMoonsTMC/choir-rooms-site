@@ -23,8 +23,9 @@ Each responsibility, with an owner named as a role, who can log in, and when it 
   live content came through migrations instead, see `docs/decisions/live-content.md`). Tested on our own
   computers every day of the project.
 - **The chat** (tawk.to): the holder of the tawk.to account reads and answers the messages in tawk.to's
-  dashboard, and changes the chat's look and greeting there. Last tested: not yet (the preview of pull
-  request #12 first, then the live site). A next owner makes their own tawk.to property and puts its widget address in
+  dashboard, and changes the chat's look and greeting there. Last tested: 18 October 2026 on the live
+  site: the button shows on `/` and `/rooms` and opens the chat window; no message sent, so nobody has yet
+  seen one arrive in the dashboard. A next owner makes their own tawk.to property and puts its widget address in
   `src/lib/chat.ts`; `NEXT_PUBLIC_CHAT` in `.env.production` switches the chat off (any value but `tawk`).
 - **What needs a developer**: a new field or collection (a migration), a new page, and any content
   change on the live site while nobody can log in to `/admin` (a data migration, as we did).
