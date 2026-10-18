@@ -62,9 +62,15 @@ The tawk.to chat window, on every public page.
 - **How we checked it**: the unit tests (`tests/unit/chat.test.ts`: the layout adds the chat only when
   the switch says `tawk`; the loader is tawk.to's snippet with our widget's address; every production build
   switches it on and the browser checks' Chrome cannot reach tawk.to) and the privacy migration's tests
-  (`tests/integration/live-content.test.ts`). In a browser: not yet (the preview of pull request #12
-  first, then the live site). That a message reaches the dashboard is for the account holder to check: we
-  have no login to tawk.to, so we will not see one arrive.
+  (`tests/integration/live-content.test.ts`), all green in CI on pull request #12. Its Vercel preview did
+  not build (it fails within a second, as the previews of #10 and #11 did), so the browser check was done
+  on the live site, on 18 October 2026, right after the merge (Chrome driven by a script, puppeteer,
+  headless, with an ordinary Chrome user agent, at 1100 px): the HTML of `/` and of `/rooms` as served holds
+  `embed.tawk.to/6ad4b263b2e7a834cef07781/1k57dhl5o`; each page then requested that address (200) and
+  showed the chat button in the bottom corner; pressing it opened the chat window ("Hi! How can we help?"
+  and a box "Type here and press enter"). The HTML of `/admin/login` holds no tawk.to address, and
+  `/privacy` shows "The chat window". We typed no message. That a message reaches the dashboard is for the
+  account holder to check: we have no login to tawk.to, so we have not seen one arrive.
 
 ## Why
 
