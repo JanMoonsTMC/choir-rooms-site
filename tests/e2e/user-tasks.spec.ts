@@ -59,6 +59,8 @@ test.describe('task 1: book a practice room for a time slot', () => {
 
   async function fillIn(page: Page) {
     await page.getByRole('radio').first().check()
+    await page.getByLabel('Group name').fill('Test choir')
+    await page.getByLabel('People in your group').fill('10')
     await page.getByLabel('Your name').fill('Test Person')
     await page.getByLabel('Your e-mail address').fill('test@example.com')
   }
@@ -79,9 +81,11 @@ test.describe('task 1: book a practice room for a time slot', () => {
 
   test('a mistake: the form says what is wrong, moves the focus there, and keeps what was typed', async ({ page }) => {
     await openClinic(page)
+    await page.getByLabel('Group name').fill('Test choir')
+    await page.getByLabel('People in your group').fill('10')
     await page.getByLabel('Your name').fill('Test Person')
     await page.getByLabel('Your e-mail address').fill('not-an-address')
-    await page.getByLabel('Note').fill('The back brake squeaks.')
+    await page.getByLabel('Note').fill('We need twelve chairs.')
     await page.getByRole('button', { name: 'Book this slot' }).click()
 
     const problem = page.getByRole('alert').filter({ hasText: 'Not saved' })
@@ -91,10 +95,22 @@ test.describe('task 1: book a practice room for a time slot', () => {
     // The keyboard focus moved to the box, so a screen reader reads it out.
     await expect(page.locator(':focus')).toContainText('Not saved')
     await expect(page.getByLabel('Your e-mail address')).toHaveAttribute('aria-invalid', 'true')
+    await expect(page.getByLabel('Group name')).toHaveValue('Test choir')
     await expect(page.getByLabel('Your name')).toHaveValue('Test Person')
     await expect(page.getByLabel('Your e-mail address')).toHaveValue('not-an-address')
-    await expect(page.getByLabel('Note')).toHaveValue('The back brake squeaks.')
+    await expect(page.getByLabel('Note')).toHaveValue('We need twelve chairs.')
     await expect(page).toHaveURL(/\/rooms\/e2e-check-room$/)
+  })
+
+  test('a group bigger than the room: not saved, and the group size field says how many the room holds', async ({ page }) => {
+    await openClinic(page)
+    await fillIn(page)
+    await page.getByLabel('People in your group').fill('40')
+    await page.getByRole('button', { name: 'Book this slot' }).click()
+    const problem = page.getByRole('alert').filter({ hasText: 'Not saved' })
+    await expect(problem.getByRole('link', { name: 'Test rehearsal room holds at most 30 people. Choose a bigger room for your group.' })).toBeVisible()
+    await expect(page.getByLabel('People in your group')).toHaveAttribute('aria-invalid', 'true')
+    await expect(page.getByLabel('People in your group')).toHaveValue('40')
   })
 
   test('the connection drops before the booking reaches the server: "Not confirmed", everything kept; sending again books once', async ({ page, request }) => {

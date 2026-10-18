@@ -139,6 +139,14 @@
               "count": 0
             },
             {
+              "selector": "label[for=\"groupName\"]",
+              "count": 1
+            },
+            {
+              "selector": "label[for=\"groupSize\"]",
+              "count": 1
+            },
+            {
               "selector": "label[for=\"name\"]",
               "count": 1
             },

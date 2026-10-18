@@ -68,7 +68,7 @@ describe('our primary task: book a practice room for a time slot', () => {
   // The form as the browser sends it: the fields the user filled in, plus the hidden ones.
   function form(fields: Record<string, string | string[]>) {
     const data = new FormData()
-    const all = { room: 'test-room', requestId: randomUUID(), name: 'Test Person', email: 'test@riversidevoices.example', note: '', ...fields }
+    const all = { room: 'test-room', requestId: randomUUID(), groupName: 'Test choir', groupSize: '10', name: 'Test Person', email: 'test@riversidevoices.example', note: '', ...fields }
     for (const [name, value] of Object.entries(all)) for (const one of [value].flat()) data.append(name, one)
     return data
   }
@@ -130,7 +130,7 @@ describe('our primary task: book a practice room for a time slot', () => {
 
     it('a filled trap field saves nothing and says only that the booking was not saved; a clean retry saves exactly once', async () => {
       const target = await slot(inDays(6))
-      const fields = { timeSlot: String(target.id), name: 'Test Person', email: 'test@riversidevoices.example', note: 'A note' }
+      const fields = { timeSlot: String(target.id), groupName: 'Test choir', groupSize: '10', name: 'Test Person', email: 'test@riversidevoices.example', note: 'A note' }
       const trapped = await book({ ...fields, extra: 'https://spam.example' })
       // Not ok: no saved state and no confirmation. The words never mention spam or the trap.
       expect(trapped).toEqual({ ok: false, message: NOT_SAVED, values: fields })
@@ -339,6 +339,44 @@ describe('our primary task: book a practice room for a time slot', () => {
     })
   })
 
+  describe('the group (R8)', () => {
+    it('saves the group and its size with the booking', async () => {
+      const target = await slot(inDays(6))
+      const result = await book({ timeSlot: String(target.id), groupName: '  The Quay Singers ', groupSize: '12' })
+      expect(result.ok).toBe(true)
+      expect((await rows())[0]).toMatchObject({ groupName: 'The Quay Singers', groupSize: 12 })
+    })
+
+    it('refuses a group bigger than the room, before anything is saved, and says how many the room holds', async () => {
+      const target = await slot(inDays(6))
+      const result = await book({ timeSlot: String(target.id), groupSize: '20' })
+      expect(result).toMatchObject({
+        ok: false,
+        field: 'groupSize',
+        errors: { groupSize: 'Test room holds at most 12 people. Choose a bigger room for your group.' },
+        values: { groupSize: '20' },
+      })
+      expect(await rows()).toHaveLength(0)
+      // The rate limit was not used: a typing mistake never counts.
+      expect((await p.count({ collection: 'throttle' })).totalDocs).toBe(0)
+    })
+
+    it('asks for a group name and a whole number of people', async () => {
+      const target = await slot(inDays(6))
+      for (const [groupSize, message] of [
+        ['', 'Enter how many people come.'],
+        ['ten', 'Enter how many people come as a whole number, like 12.'],
+        ['2.5', 'Enter how many people come as a whole number, like 12.'],
+        ['0', 'Enter how many people come as a whole number, like 12.'],
+      ]) {
+        const result = await book({ timeSlot: String(target.id), groupName: '', groupSize })
+        expect(result, groupSize).toMatchObject({ ok: false, field: 'groupName', errors: { groupName: "Enter your group's name.", groupSize: message } })
+      }
+      expect((await book({ timeSlot: String(target.id), groupName: 'x'.repeat(101) })).ok).toBe(false)
+      expect(await rows()).toHaveLength(0)
+    })
+  })
+
   describe('the pages', () => {
     const roomPage = async (slug = 'test-room') => text(renderToString(await RoomPage({ params: Promise.resolve({ slug }) })))
     const bookedPage = async (ref?: string, slug = 'test-room') =>
@@ -397,12 +435,42 @@ describe('our primary task: book a practice room for a time slot', () => {
     })
 
     it('the room page says so when there are no coming slots, and when every slot is booked', async () => {
-      expect(await roomPage()).toContain('This room has no free time slots in the next two weeks.')
+      expect(await roomPage()).toContain('This room has no time slots in the next two weeks.')
       const only = await slot(inDays(6), 1)
       await book({ timeSlot: String(only.id) })
       const html = await roomPage()
       expect(html).toContain('Every time slot in the next two weeks is booked.')
       expect(html).not.toContain('Book this slot')
+    })
+
+    it('shows two weeks of slots at a time, with links to the later and earlier ones (keeping the filters)', async () => {
+      const now = await slot(inDays(3), 1)
+      const later = await slot(inDays(17), 1)
+      const page = async (query: Record<string, string>) =>
+        text(renderToString(await RoomPage({ params: Promise.resolve({ slug: 'test-room' }), searchParams: Promise.resolve(query) })))
+      const first = await page({ people: '12' })
+      expect(first).toMatch(new RegExp(`name="timeSlot"[^>]*value="${now.id}"|value="${now.id}"[^>]*name="timeSlot"`))
+      expect(first).not.toContain(`value="${later.id}"`)
+      expect(first).toContain('Time slots in the next two weeks.')
+      expect(first).toMatch(/href="\/rooms\/test-room\?people=12&from=2#book"[^>]*>Later time slots</)
+      expect(first).not.toContain('Earlier time slots')
+      const second = await page({ people: '12', from: '2' })
+      expect(second).toContain(`value="${later.id}"`)
+      expect(second).not.toContain(`value="${now.id}"`)
+      expect(second).toContain('Time slots in weeks 3 and 4 from now.')
+      expect(second).toMatch(/href="\/rooms\/test-room\?people=12#book"[^>]*>Earlier time slots</)
+      expect(second).not.toContain('Later time slots')
+      // A ?from= the page does not offer is the first two weeks.
+      expect(await page({ from: '3' })).toContain('Time slots in the next two weeks.')
+    })
+
+    it('the form asks for the group and its size, and says how many people the room holds', async () => {
+      await slot(inDays(3), 1)
+      const html = await roomPage()
+      expect(html).toMatch(/<label[^>]*for="groupName"[^>]*>.*Group name.*\(required\)/s)
+      expect(html).toMatch(/<label[^>]*for="groupSize"[^>]*>.*People in your group.*\(required\)/s)
+      expect(html).toContain('This room holds up to 12 people.')
+      expect(html).toMatch(/<input[^>]*inputMode="numeric"[^>]*name="groupSize"|<input[^>]*name="groupSize"[^>]*inputMode="numeric"/i)
     })
 
     it('an unknown room gives the 404 page', async () => {

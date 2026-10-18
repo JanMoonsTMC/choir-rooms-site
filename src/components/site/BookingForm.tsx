@@ -1,9 +1,10 @@
 'use client'
 
-// What this is: a room's booking form: choose a time, give a name and an e-mail address, add a
-// note if you like, and press "Book this slot". It runs in the browser ('use client'), so it can show
-// "Saving your booking…" while the server works and point at the problems when a booking was not
-// saved. The checks and the save happen on the server: src/tasks/book-slot/ (see its README.md).
+// What this is: a room's booking form: choose a time, give your group's name and size, your name and
+// e-mail address, add a note if you like, and press "Book this slot". It runs in the browser
+// ('use client'), so it can show "Saving your booking…" while the server works and point at the
+// problems when a booking was not saved. The checks and the save happen on the server:
+// src/tasks/book-slot/ (see its README.md).
 //
 // What happens when the user presses the button:
 //   - the button says "Saving your booking…" and cannot be pressed again until the answer is back;
@@ -34,6 +35,8 @@ import { typedValues } from '@/tasks/book-slot/typedValues'
 type BookingFormProps = {
   // The room's slug: the server checks that the chosen time belongs to this room.
   room: string
+  // How many people the room holds: the group size field's hint says it, and the server checks it.
+  capacity: number
   slots: SlotChoice[]
   // A random code the room page makes for this one form (see requestId in src/collections/Bookings.ts).
   requestId: string
@@ -43,7 +46,7 @@ type BookingFormProps = {
   member?: { name: string; email: string } | null
 }
 
-const EMPTY: BookingValues = { timeSlot: '', name: '', email: '', note: '' }
+const EMPTY: BookingValues = { timeSlot: '', groupName: '', groupSize: '', name: '', email: '', note: '' }
 
 // What the user sent last time, for every part inside the form. The fields below get it directly; a
 // part in its own function can read it with useSentValues(), so it can show what the user had chosen
@@ -73,7 +76,7 @@ async function sendBooking(previous: BookingResult | null, formData: FormData): 
 }
 
 export function BookingForm(props: BookingFormProps) {
-  const { room, slots, requestId, member } = props
+  const { room, capacity, slots, requestId, member } = props
   // state: null at first, then the answer of the last send (only failures come back: a saved booking
   // opens the confirmation page instead).
   const [state, formAction] = useActionState(sendBooking, null)
@@ -119,6 +122,44 @@ export function BookingForm(props: BookingFormProps) {
         <input type="hidden" name="requestId" value={requestId} />
 
         <SlotPicker slots={slots} selected={values.timeSlot} error={errors.timeSlot} />
+
+        <div className="grid gap-2">
+          <Label htmlFor="groupName">
+            Group name <span className="font-normal text-ink-soft">(required)</span>
+          </Label>
+          <p id="groupName-hint" className="text-ink-soft">The name of your choir, band or theatre group.</p>
+          <Input
+            id="groupName"
+            name="groupName"
+            autoComplete="organization"
+            required
+            defaultValue={values.groupName}
+            className="scroll-mt-28"
+            {...problem('groupName')}
+            aria-describedby={errors.groupName ? 'groupName-hint groupName-error' : 'groupName-hint'}
+          />
+          {errors.groupName && <FieldError id="groupName-error">{errors.groupName}</FieldError>}
+        </div>
+
+        <div className="grid gap-2">
+          <Label htmlFor="groupSize">
+            People in your group <span className="font-normal text-ink-soft">(required)</span>
+          </Label>
+          <p id="groupSize-hint" className="text-ink-soft">{`This room holds up to ${capacity} people.`}</p>
+          {/* inputMode="numeric": a phone shows its number keys. type="text", not "number": a number field
+              changes its value when someone scrolls over it, and some browsers drop what it cannot read. */}
+          <Input
+            id="groupSize"
+            name="groupSize"
+            inputMode="numeric"
+            required
+            defaultValue={values.groupSize}
+            className="scroll-mt-28 sm:max-w-40"
+            {...problem('groupSize')}
+            aria-describedby={errors.groupSize ? 'groupSize-hint groupSize-error' : 'groupSize-hint'}
+          />
+          {errors.groupSize && <FieldError id="groupSize-error">{errors.groupSize}</FieldError>}
+        </div>
 
         <div className="grid gap-2">
           <Label htmlFor="name">
