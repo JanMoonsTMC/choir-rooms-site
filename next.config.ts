@@ -8,6 +8,10 @@ const dirname = path.dirname(__filename)
 
 const nextConfig: NextConfig = {
   images: {
+    // On a preview, Vercel asks for a log-in (deployment protection). Your browser has it; the image
+    // optimiser that resizes pictures on the server does not, so no picture would show. Previews send
+    // pictures as they are; production still resizes them.
+    unoptimized: process.env.VERCEL_ENV === 'preview',
     localPatterns: [
       {
         pathname: '/api/media/file/**',
