@@ -13,6 +13,9 @@ import { BASE_URL } from './tests/e2e/helpers'
 
 const inCI = Boolean(process.env.CI)
 
+// Chrome's own setting: these host names do not exist for this browser.
+export const TAWK_BLOCKED = '--host-resolver-rules=MAP tawk.to ~NOTFOUND, MAP *.tawk.to ~NOTFOUND'
+
 export default defineConfig({
   testDir: 'tests/e2e',
   globalSetup: './tests/e2e/global-setup.ts',
@@ -34,6 +37,11 @@ export default defineConfig({
     // Chromium that `npx playwright install --with-deps chromium` installs.
     ...(inCI ? {} : { channel: 'chrome' }),
     screenshot: 'only-on-failure',
+    // The production build has the tawk.to chat on (.env.production), so its pages try to load tawk.to's
+    // widget. The checks test our own pages: their browser cannot reach tawk.to at all, so a check never
+    // waits on tawk.to, and axe never audits tawk.to's widget, which we do not control
+    // (docs/decisions/integration.md). The page loads without the chat, as when tawk.to is down.
+    launchOptions: { args: [TAWK_BLOCKED] },
   },
   projects: [
     { name: 'phone-390', use: { ...devices['Desktop Chrome'], viewport: { width: 390, height: 844 } } },

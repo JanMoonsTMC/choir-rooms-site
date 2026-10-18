@@ -39,7 +39,9 @@ What must hold whatever is built.
 - No payments.
 - Free plans only.
 - One group per time slot: a room is never shared by two groups at the same time.
-- No accounts and no API keys for other services: anything we connect to must work without signing up.
+- No accounts of our own and no API keys for other services: anything we connect to must work without
+  us signing up. The one outside account, the tawk.to chat's, is the teacher's, made for this test project
+  (`docs/decisions/integration.md`).
 
 ## Not in this version
 
