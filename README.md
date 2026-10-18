@@ -59,7 +59,9 @@ In short (the [local set-up guide](docs/guides/local-setup.md) explains each ste
 
 The route `/api/course-check` answers the course's warm-up checks as fixed in
 [the course-check contract](docs/COURSE-CHECK-CONTRACT.md); our site has no clinic, so it answers "no
-clinic, no list, no booking". The hero keeps the course's warm-up marker
+clinic, no list, no booking". With `?include=team` it adds the team section the course reads for our team
+hand-ins: our collections, the rooms <-> equipment many-to-many, and the newest booking whose group name
+holds our team code (`src/course-check.config.ts`: bookings, `groupName`). The hero keeps the course's warm-up marker
 `// W4: put your own name in this tagline` above its tagline.
 
 ## Commands
