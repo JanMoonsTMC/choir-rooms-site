@@ -78,7 +78,7 @@ test.describe('task 1: book a practice room for a time slot', () => {
     await expect(page.getByRole('status').filter({ hasText: 'Your booking is saved.' })).toContainText(BOOKING_CONFIRMATION)
     await expect(page.getByText(BOOKING_CONFIRMATION, { exact: true })).toBeVisible()
 
-    // Our integration: the booking as a calendar file (R11).
+    // A feature of the booking task: the booking as a calendar file (R11, docs/decisions/calendar-file.md).
     const download = page.waitForEvent('download')
     await page.getByRole('link', { name: 'Add to my calendar' }).click()
     expect((await download).suggestedFilename()).toBe('riverside-voices-e2e-check-room.ics')
