@@ -40,3 +40,21 @@ export function track(event: AnalyticsEvent, props?: Record<string, string>): vo
     // Analytics must never break the page: if the tool fails, the user carries on as if nothing happened.
   }
 }
+
+/**
+ * What the page view sends to Vercel Web Analytics, without the confirmation link's booking reference:
+ * /rooms/the-loft/booked?ref=42.<signature> is sent as /rooms/the-loft/booked. The reference is not a
+ * name, but it opens one booking's confirmation, so it stays out of anyone's analytics
+ * (docs/decisions/analytics.md). Used by src/components/site/SiteAnalytics.tsx.
+ */
+export function withoutBookingRef<T extends { url: string }>(event: T): T | null {
+  try {
+    const url = new URL(event.url)
+    if (!url.searchParams.has('ref')) return event
+    url.searchParams.delete('ref')
+    return { ...event, url: url.toString() }
+  } catch {
+    // Not an address this function can read: send nothing rather than something unchecked.
+    return null
+  }
+}

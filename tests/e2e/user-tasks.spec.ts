@@ -77,6 +77,11 @@ test.describe('task 1: book a practice room for a time slot', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Booking saved' })).toBeVisible()
     await expect(page.getByRole('status').filter({ hasText: 'Your booking is saved.' })).toContainText(BOOKING_CONFIRMATION)
     await expect(page.getByText(BOOKING_CONFIRMATION, { exact: true })).toBeVisible()
+
+    // Our integration: the booking as a calendar file (R11).
+    const download = page.waitForEvent('download')
+    await page.getByRole('link', { name: 'Add to my calendar' }).click()
+    expect((await download).suggestedFilename()).toBe('riverside-voices-e2e-check-room.ics')
   })
 
   test('a mistake: the form says what is wrong, moves the focus there, and keeps what was typed', async ({ page }) => {

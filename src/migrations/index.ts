@@ -7,6 +7,7 @@ import * as migration_20261004_222941_members_area from './20261004_222941_membe
 import * as migration_20261017_224135_remove_old_time_slots from './20261017_224135_remove_old_time_slots';
 import * as migration_20261017_224211_rooms_and_equipment from './20261017_224211_rooms_and_equipment';
 import * as migration_20261017_224621_choir_content from './20261017_224621_choir_content';
+import * as migration_20261018_000041_privacy_analytics from './20261018_000041_privacy_analytics';
 
 export const migrations = [
   {
@@ -52,6 +53,11 @@ export const migrations = [
   {
     up: migration_20261017_224621_choir_content.up,
     down: migration_20261017_224621_choir_content.down,
-    name: '20261017_224621_choir_content'
+    name: '20261017_224621_choir_content',
+  },
+  {
+    up: migration_20261018_000041_privacy_analytics.up,
+    down: migration_20261018_000041_privacy_analytics.down,
+    name: '20261018_000041_privacy_analytics'
   },
 ];
