@@ -17,7 +17,7 @@ import { BOOKING_CONFIRMATION } from '@/content/riverside-voices'
 import { formatSlotTime } from '@/lib/format'
 import { membersAreaOn, signedInMember } from '@/lib/membersArea'
 import config from '@/payload.config'
-import { bookingIdFromRef } from '@/tasks/book-slot/receipt'
+import { bookingIdFromRef, bookingRef } from '@/tasks/book-slot/receipt'
 
 export const dynamic = 'force-dynamic'
 
@@ -103,7 +103,15 @@ export default async function BookedPage({ params, searchParams }: Props) {
             )}
           </dl>
         </section>
-        {/* What happens next: in our test round 1, two of three people asked how to pay and how to cancel
+        {/* Our integration (docs/decisions/integration.md): the booking as a calendar file, made by this
+            site itself. download: the browser saves it instead of showing its text. */}
+        <div className="grid gap-2">
+          <ButtonLink href={`/rooms/${room.slug}/booked/calendar?ref=${bookingRef(Number(id))}`} download className="w-fit" prefetch={false}>
+            Add to my calendar
+          </ButtonLink>
+          <p className="max-w-(--container-reading) text-ink-soft">A calendar file (.ics) for your calendar app, with the room, the time and the address. It holds nothing about you.</p>
+        </div>
+                {/* What happens next: in our test round 1, two of three people asked how to pay and how to cancel
             once the booking was saved (docs/test-report.md, finding 3). */}
         <section aria-labelledby="next" className="grid gap-3">
           <h2 id="next" className="text-xl">What happens next</h2>

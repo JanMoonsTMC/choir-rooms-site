@@ -12,13 +12,14 @@ vi.mock('@vercel/analytics', () => ({ track: vercel.track }))
 // For the site layout's test: Vercel's page-view component as a stand-in that can be recognised, and
 // the layout's other parts replaced by nothing (they need a database and Next.js's font loader).
 vi.mock('@vercel/analytics/next', () => ({ Analytics: function VercelAnalytics() { return null } }))
+vi.mock('@/components/site/SiteAnalytics', () => ({ SiteAnalytics: function SiteAnalytics() { return null } }))
 vi.mock('next/font/google', () => ({ Fraunces: () => ({ variable: 'font-heading' }), Source_Sans_3: () => ({ variable: 'font-body' }) }))
 vi.mock('@/components/site/Header', () => ({ Header: () => null }))
 vi.mock('@/components/site/Footer', () => ({ Footer: () => null }))
 
-import { Analytics } from '@vercel/analytics/next'
+import { SiteAnalytics } from '@/components/site/SiteAnalytics'
 import SiteLayout from '../../src/app/(site)/layout'
-import { analyticsOn, track } from '../../src/lib/analytics'
+import { analyticsOn, track, withoutBookingRef } from '../../src/lib/analytics'
 import { TrackStep } from '../../src/components/site/TrackStep'
 
 // React's act() only waits for effects when it is told this is a test.
@@ -154,7 +155,7 @@ describe('the site layout', () => {
   afterEach(() => vi.unstubAllEnvs())
 
   // The layout's elements, without rendering them, so the test sees which components it uses.
-  const usesAnalytics = () => JSON.stringify(SiteLayout({ children: null }), (_key, value) => (value === Analytics ? 'ANALYTICS' : value)).includes('ANALYTICS')
+  const usesAnalytics = () => JSON.stringify(SiteLayout({ children: null }), (_key, value) => (value === SiteAnalytics ? 'ANALYTICS' : value)).includes('ANALYTICS')
 
   it("adds Vercel's page views only when NEXT_PUBLIC_ANALYTICS is vercel", () => {
     vi.stubEnv('NEXT_PUBLIC_ANALYTICS', undefined)
@@ -163,5 +164,20 @@ describe('the site layout', () => {
     expect(usesAnalytics()).toBe(false)
     vi.stubEnv('NEXT_PUBLIC_ANALYTICS', 'vercel')
     expect(usesAnalytics()).toBe(true)
+  })
+})
+
+describe('withoutBookingRef: the page view sent to Vercel Web Analytics', () => {
+  it('leaves out a confirmation link\'s booking reference, and keeps everything else', () => {
+    expect(withoutBookingRef({ type: 'pageview', url: 'https://choir-rooms-site.vercel.app/rooms/the-loft/booked?ref=42.0123456789abcdef0123456789abcdef' })).toEqual({
+      type: 'pageview',
+      url: 'https://choir-rooms-site.vercel.app/rooms/the-loft/booked',
+    })
+    const filtered = { type: 'pageview' as const, url: 'https://choir-rooms-site.vercel.app/rooms?people=12&feature=upright-piano' }
+    expect(withoutBookingRef(filtered)).toBe(filtered)
+  })
+
+  it('sends nothing for an address it cannot read', () => {
+    expect(withoutBookingRef({ type: 'pageview', url: 'not an address' })).toBeNull()
   })
 })
