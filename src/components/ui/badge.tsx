@@ -10,11 +10,11 @@ const badgeVariants = cva(
   {
     variants: {
       tone: {
-        mint: 'bg-mint-tint',
-        purple: 'bg-purple-tint',
-        coral: 'bg-coral-tint',
-        yellow: 'bg-yellow-tint',
-        blue: 'bg-blue-tint',
+        river: 'bg-river-tint',
+        plum: 'bg-plum-tint',
+        brass: 'bg-brass-tint',
+        straw: 'bg-straw-tint',
+        blue: 'bg-mist',
         outline: 'border-[1.5px] border-ink bg-canvas leading-[1.3rem]',
       },
     },

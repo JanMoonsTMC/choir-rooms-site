@@ -113,7 +113,7 @@ describe('the public pages', () => {
   })
 
   it('/rooms lists every room, smallest first, with the pricing rule', async () => {
-    const list = html(await RoomsPage())
+    const list = html(await RoomsPage({ searchParams: Promise.resolve({}) }))
     expect(list).toContain('All rooms — 4 rooms')
     const order = ['the-band-room', 'the-loft', 'the-studio', 'the-hall'].map((slug) => list.indexOf(`href="/rooms/${slug}"`))
     expect(order.every((at) => at > -1)).toBe(true)

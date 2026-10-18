@@ -74,10 +74,59 @@
       "path": "/"
     },
     {
-      "path": "/rooms"
+      "path": "/rooms",
+      "groups": [
+        {
+          "criterion": 3,
+          "steps": [
+            {
+              "selector": "form :is(input, select, textarea):not([type=\"hidden\"], [type=\"submit\"], [type=\"button\"], [type=\"reset\"], [id], [aria-label], [aria-labelledby]):not(label *)",
+              "count": 0
+            },
+            {
+              "selector": "label[for=\"filter-people\"]",
+              "count": 1
+            },
+            {
+              "selector": "label[for=\"filter-feature\"]",
+              "count": 1
+            }
+          ],
+          "fix": "Give every form field a visible <label> whose for= matches the field's id, or put the field inside its <label>."
+        }
+      ]
+    },
+    {
+      "path": "/rooms?people=12&feature=upright-piano",
+      "groups": [
+        {
+          "criterion": 3,
+          "steps": [
+            {
+              "selector": "form :is(input, select, textarea):not([type=\"hidden\"], [type=\"submit\"], [type=\"button\"], [type=\"reset\"], [id], [aria-label], [aria-labelledby]):not(label *)",
+              "count": 0
+            },
+            {
+              "selector": "label[for=\"filter-people\"]",
+              "count": 1
+            },
+            {
+              "selector": "label[for=\"filter-feature\"]",
+              "count": 1
+            }
+          ],
+          "fix": "Give every form field a visible <label> whose for= matches the field's id, or put the field inside its <label>."
+        }
+      ]
     },
     {
       "path": "/rooms/the-studio"
+    },
+    {
+      "path": "/equipment"
+    },
+    {
+      "path": "/equipment/upright-piano"
     },
     {
       "path": "/rooms/{test-room}",

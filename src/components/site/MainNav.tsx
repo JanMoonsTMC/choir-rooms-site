@@ -2,13 +2,13 @@
 
 // What this is: the main menu, one list of links. The link of the page you are on gets a navy frame
 // with a solid offset and aria-current, so both sighted users and screen readers know where they are.
-// On a phone the links wrap onto a second row instead of hiding behind a menu button: four short links
+// On a phone the links wrap onto a second row instead of hiding behind a menu button: five short links
 // fit, and links you can see need no extra tap.
 //
 // What to change for your own site: the LINKS list (the text and where each link goes).
 // With the optional members' area on (src/lib/membersArea.ts), Header.tsx passes `account`, and the menu
-// gets a fifth link: "My bookings" for a member who is logged in, "Log in" for everyone else. While the
-// area is off the menu is exactly the four links.
+// gets a sixth link: "My bookings" for a member who is logged in, "Log in" for everyone else. While the
+// area is off the menu is exactly the five links.
 // 'use client' because it asks for the address that is open (usePathname). The server still sends the
 // finished menu as HTML, so it also works without JavaScript.
 import Link from 'next/link'
@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils'
 const LINKS = [
   { href: '/', label: 'Home' },
   { href: '/rooms', label: 'Rooms' },
+  { href: '/equipment', label: 'Equipment' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },
 ]
@@ -52,7 +53,7 @@ export function MainNav({ account = false, loggedIn = false }: { account?: boole
                   'flex min-h-11 items-center rounded-control px-3 font-semibold text-ink no-underline focus-visible:outline-offset-6',
                   current
                     ? 'framed rounded-control font-bold [--offset-size:4px]'
-                    : 'border-2 border-transparent hover:bg-blue-tint',
+                    : 'border-2 border-transparent hover:bg-mist',
                 )}
               >
                 {label}

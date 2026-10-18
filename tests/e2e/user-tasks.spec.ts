@@ -8,18 +8,38 @@ import { runFixture } from './global-setup'
 import { BOOKING_CONFIRMATION, countBookings, MADE_UP_DATA_NOTICE, NOT_CONFIRMED, readFixture, useOwnAddress } from './helpers'
 
 test.describe('task 2: find the room that fits your group', () => {
-  test('open the rooms, compare their size and equipment, open one, and come back', async ({ page }) => {
+  test('filter by group size and equipment, open a room, follow its equipment to the other side, and come back to the same filters', async ({ page }) => {
     await page.goto('/rooms')
     await expect(page.getByRole('heading', { level: 1, name: 'Rooms' })).toBeVisible()
-    const studio = page.getByRole('main').getByRole('link', { name: 'The Studio' })
-    await expect(studio).toBeVisible()
-    await studio.click()
-    await expect(page).toHaveURL(/\/rooms\/the-studio$/)
+
+    await page.getByLabel('Group size').selectOption({ label: 'Up to 12 people' })
+    await page.getByLabel('Equipment').selectOption({ label: 'Upright piano' })
+    await page.getByRole('button', { name: 'Show rooms' }).click()
+
+    // The filters are in the address, so the list can be shared and Back finds it again.
+    await expect(page).toHaveURL(/\/rooms\?people=12&feature=upright-piano#results$/)
+    const results = page.locator('#results')
+    await expect(results.getByRole('heading', { name: 'Rooms for up to 12 people with Upright piano — 2 rooms' })).toBeVisible()
+    await expect(results.getByRole('link', { name: 'The Loft' })).toBeVisible()
+    await expect(results.getByRole('link', { name: 'The Band Room' })).toHaveCount(0)
+
+    await results.getByRole('link', { name: 'The Studio' }).click()
     await expect(page.getByRole('heading', { level: 1, name: 'The Studio' })).toBeVisible()
-    await expect(page.getByText('Up to 25 people').first()).toBeVisible()
-    await expect(page.getByRole('main').getByText('Upright piano').first()).toBeVisible()
-    await page.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('link', { name: 'Rooms' }).click()
-    await expect(page).toHaveURL(/\/rooms$/)
+
+    // The equipment leads to its own page, which lists the rooms from the other side of the link.
+    await page.getByRole('main').getByRole('link', { name: 'Upright piano' }).first().click()
+    await expect(page).toHaveURL(/\/equipment\/upright-piano$/)
+    await expect(page.getByRole('heading', { level: 1, name: 'Upright piano' })).toBeVisible()
+    await expect(page.getByRole('main').getByRole('link', { name: 'The Loft' })).toBeVisible()
+    await expect(page.getByRole('main').getByRole('link', { name: 'The Studio' })).toBeVisible()
+
+    // The browser's Back button, then the room page's own way back: the filters are still chosen.
+    await page.goBack()
+    await expect(page.getByRole('heading', { level: 1, name: 'The Studio' })).toBeVisible()
+    await page.getByRole('link', { name: 'Back to the filtered rooms' }).click()
+    await expect(page).toHaveURL(/\/rooms\?people=12&feature=upright-piano/)
+    await expect(page.getByLabel('Group size')).toHaveValue('12')
+    await expect(page.getByLabel('Equipment')).toHaveValue('upright-piano')
   })
 })
 

@@ -17,7 +17,7 @@ const LINKS = [
 
 export function Footer() {
   return (
-    <footer className="mt-section bg-blue-tint">
+    <footer className="mt-section bg-mist">
       <div className="mx-auto grid max-w-page gap-block px-gutter py-12 sm:grid-cols-[2fr_1fr]">
         <div className="grid content-start gap-2">
           <p className="font-heading text-xl font-black">{SITE_NAME}</p>

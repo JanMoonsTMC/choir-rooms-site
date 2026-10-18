@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 import { buttonVariants } from '@/components/ui/button'
 
 type ButtonLinkProps = ComponentProps<typeof Link> & {
-  variant?: 'primary' | 'secondary' | 'quiet' | 'link'
+  variant?: 'primary' | 'secondary' | 'accent' | 'quiet' | 'link'
   size?: 'default' | 'sm' | 'lg'
 }
 

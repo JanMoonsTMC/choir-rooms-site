@@ -10,7 +10,10 @@ import { readFixture } from './helpers'
 const pages = [
   { name: 'home', path: '/' },
   { name: 'rooms', path: '/rooms' },
+  { name: 'rooms, filtered', path: '/rooms?people=12&feature=upright-piano' },
   { name: 'a room', path: '/rooms/the-studio' },
+  { name: 'equipment', path: '/equipment' },
+  { name: 'one piece of equipment', path: '/equipment/upright-piano' },
   { name: 'the test room, with its booking form', path: () => `/rooms/${readFixture().room.slug}` },
   { name: 'the confirmation', path: () => readFixture().confirmation },
   { name: 'about', path: '/about' },

@@ -37,7 +37,7 @@ describe('checks/checks.json', () => {
 
   it('checks the pages a user reaches, starting with the two tasks', () => {
     const paths = pages.map((page) => page.path)
-    for (const path of ['/', '/rooms', '/rooms/the-studio', '/rooms/{test-room}', '/about', '/privacy']) {
+    for (const path of ['/', '/rooms', '/rooms?people=12&feature=upright-piano', '/rooms/the-studio', '/equipment', '/equipment/upright-piano', '/rooms/{test-room}', '/about', '/privacy']) {
       expect(paths).toContain(path)
     }
     expect(paths.every((path) => path.startsWith('/'))).toBe(true)
