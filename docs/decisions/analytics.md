@@ -30,11 +30,19 @@ Vercel Web Analytics, page views only.
 - **One change of our own**: every page view passes through `withoutBookingRef` (`src/lib/analytics.ts`)
   first, so a confirmation page is counted as `/rooms/the-loft/booked`, without the signed booking
   reference in its address.
-- **Still to do in the dashboard** (the repository owner): Vercel → the project → **Analytics** →
-  **Enable**. Until then nothing is recorded, and the script's address answers 404.
+- **Switched on in the dashboard**: Vercel → the project → **Analytics** → **Enable** is done (checked on
+  18 October 2026: `https://choir-rooms-site.vercel.app/_vercel/insights/script.js` answers 200 with
+  JavaScript). The live pages load the script from the project's own analytics address,
+  `/925dec3705f9bf8c/script.js`, not from `/_vercel/insights/script.js`: the address comes from Vercel's
+  build, which `@vercel/analytics` reads; it is not in our code.
 - **How we checked it**: the tests (`tests/unit/analytics.test.ts`: the layout loads it only when switched
-  on; the booking reference is removed and every other address kept), and in the browser on our own
-  production build: the page's HTML loads the script once per page.
+  on; the booking reference is removed and every other address kept); in the browser on our own
+  production build: the page's HTML loads the script once per page; and on 18 October 2026 on the live
+  site, in Chrome driven by a script (puppeteer, headless): opening `/rooms` loaded
+  `/925dec3705f9bf8c/script.js` (200) and then sent the page view, `POST /925dec3705f9bf8c/view` (200).
+  Vercel's script ignores browsers that say they are automated (`navigator.webdriver`, or "HeadlessChrome"
+  in the user agent): with those, it loads but sends nothing, so for this check the browser gave an
+  ordinary Chrome user agent. We have not yet read the page view in the dashboard's reports.
 
 ## Why
 

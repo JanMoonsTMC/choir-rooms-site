@@ -24,7 +24,7 @@ and Blob through Vercel.
 | [Requirements](docs/requirements.md) (D2) | R1 to R12, each with a check and its result |
 | [Content and structure](docs/content-structure.md) (D3) | The content model, the sitemap, the menu, both tasks step by step |
 | [Design rationale](docs/design-rationale.md) (D4) | Sketches, palette and type, layout, principles, forms |
-| [Decision records](docs/decisions/README.md) (D5) | Our topic and tasks, one group per slot, live content, analytics, the calendar file |
+| [Decision records](docs/decisions/README.md) (D5) | Our topic and tasks, one group per slot, live content, analytics, our integration (the tawk.to chat window), the calendar file |
 | [Test report](docs/test-report.md) (D6) | Two rounds with people, the tools, the fixes and the release check |
 | [Hand-over](docs/handover.md) (D7) | Who owns what, what to build next, how to know it works |
 
@@ -53,7 +53,7 @@ In short (the [local set-up guide](docs/guides/local-setup.md) explains each ste
 | `src/seed` | The example content and our pictures, added once to a new database |
 | `src/migrations` | Every change to the database's tables, and the data migrations that brought our content to the live site |
 | `src/app/(site)/globals.css` | The design tokens: every colour, font, size and space, in one place |
-| `src/lib/analytics.ts`, `src/lib/calendar.ts` | Web Analytics (page views) and the booking's calendar file |
+| `src/lib/analytics.ts`, `src/lib/chat.ts`, `src/lib/calendar.ts` | Web Analytics (page views), the tawk.to chat window (our integration) and the booking's calendar file |
 | `scripts` | The build, the migration and seed runners, the guard that protects the live database, and the CI checks |
 | `docs/guides` | The starter's guides: [first hour](docs/guides/first-hour.md), [local set-up](docs/guides/local-setup.md), [troubleshooting](docs/guides/troubleshooting.md), [UX decisions](docs/guides/ux-decisions.md) |
 
@@ -86,7 +86,7 @@ holds our team code (`src/course-check.config.ts`: bookings, `groupName`). The h
   `MIGRATIONS: verified committed migrations`.
 - **Never paste the live database's address into `.env.local`.** The commands refuse it.
 - **Secrets only in Vercel and in `.env.local`.** Never in a file you commit (`.env.production` holds no
-  secret: only the analytics switch).
+  secret: only the analytics and chat switches).
 
 ## Licence and credits
 

@@ -14,6 +14,7 @@ so the site keeps one structure.
 | Pages: home intro, About, Contact, Privacy | `/`, `/about`, `/contact`, `/privacy` | `/admin` → Pages | The choir's secretary |
 | Site facts: pricing rule, address, e-mail | Home, Rooms, a room's page, Contact, the confirmation | `/admin` → Site facts | The secretary |
 | Pictures | Rooms, home | `/admin` → Media (our drawings, see `src/seed/images/SOURCES.md`) | The room manager |
+| Chat messages | The tawk.to chat window, on every public page | Typed by users; kept by tawk.to, never in our database (`docs/decisions/integration.md`) | The holder of the tawk.to account reads and answers them in tawk.to's dashboard |
 
 ## Content model
 
@@ -86,3 +87,15 @@ The main menu: **Home**, **Rooms**, **Equipment**, **About**, **Contact**. The f
    rooms fit.
 3. Open a room: its equipment links to each equipment page, which lists every room with it.
 4. **Back to the filtered rooms** returns to the same list, filters kept.
+
+On every public page, the chat button in the bottom corner opens the tawk.to chat window, for a question
+the pages do not answer (R13). Both tasks work without it.
+
+### Features of the tasks
+
+- **The calendar file** (booking, step 5; R11): **Add to my calendar** on the confirmation page downloads
+  `riverside-voices-<room>.ics`, made by our own site (`src/lib/calendar.ts`, the route
+  `/rooms/<slug>/booked/calendar?ref=…`). It holds the room, the start and end, the address and how to
+  change or cancel; never the group, a name, an e-mail address or the note. It answers only for a signed
+  confirmation link of that room (404 otherwise). It sends nothing to another service, so it is a feature
+  of the booking task, not our integration; why we chose it is in `docs/decisions/calendar-file.md`.

@@ -13,6 +13,7 @@ Each responsibility, with an owner named as a role, who can log in, and when it 
 | Vercel | the live site and its settings: project `choir-rooms-site` | Releases role (Test A), in the Vercel account that owns the project |
 | Neon | the database (connected through Vercel, Frankfurt) | Same Vercel account, through Storage; no separate Neon login is needed |
 | Vercel Blob | the images (public store, Production only) | Same Vercel account, through Storage |
+| tawk.to | the chat window on every public page (its property and widget `6ad4b263b2e7a834cef07781/1k57dhl5o`), its settings, and every message users type in it | The teacher's tawk.to account, made for this test project; no team member has a tawk.to login |
 
 - **Content in `/admin`**: the choir's room manager keeps the rooms, equipment and time slots; the
   secretary keeps the pages and the Site facts; the treasurer reads the bookings for the invoices. Each
@@ -21,12 +22,17 @@ Each responsibility, with an owner named as a role, who can log in, and when it 
   Last tested: never on the live site (on 18 October 2026 nobody in the team could log in there yet; the
   live content came through migrations instead, see `docs/decisions/live-content.md`). Tested on our own
   computers every day of the project.
+- **The chat** (tawk.to): the holder of the tawk.to account reads and answers the messages in tawk.to's
+  dashboard, and changes the chat's look and greeting there. Last tested: not yet (the preview of pull
+  request #12 first, then the live site). A next owner makes their own tawk.to property and puts its widget address in
+  `src/lib/chat.ts`; `NEXT_PUBLIC_CHAT` in `.env.production` switches the chat off (any value but `tawk`).
 - **What needs a developer**: a new field or collection (a migration), a new page, and any content
   change on the live site while nobody can log in to `/admin` (a data migration, as we did).
 - **Updates** (Node, Next.js, Payload): releases role; never done since the start (the starter's
   versions, Node 22).
 - **Monitoring**: releases role reads the Vercel dashboard (deployments, functions' errors, Analytics)
-  once a week. Last done: 18 October 2026 (deployments only; Analytics not yet switched on).
+  once a week. Last done: 18 October 2026 (deployments only; Analytics is switched on, its reports not
+  read yet).
 - **Backup and restore**: Neon keeps a restore window (point-in-time restore from the Neon console, reached
   through Vercel → Storage). Owner: releases role. Last tested: never.
 - **Ownership of the name and the content**: Riverside Voices is a made-up choir for a course project;
@@ -49,9 +55,12 @@ Ranked by what users and the choir lose without it:
 
 What does not work yet, or could break, and what to do about it:
 
-- **Web Analytics records nothing until it is switched on**: Vercel → project `choir-rooms-site` →
-  **Analytics** → **Enable**, then Redeploy. Until then the browser's console shows a 404 for
-  `/_vercel/insights/script.js`; the site works.
+- **Web Analytics ignores automated browsers**: a check by script (Playwright, puppeteer) loads the script
+  but sends no page view unless the browser gives an ordinary user agent (`docs/decisions/analytics.md`).
+- **The chat depends on tawk.to and on its account**: if tawk.to is down or a browser blocks it, there is
+  no chat button and everything else works. If the teacher's tawk.to account or its property is removed,
+  the button disappears or shows an error: switch the chat off (`NEXT_PUBLIC_CHAT`) or put in a new
+  property's address. A question nobody answers waits in tawk.to.
 - **The time slots run out on 13 December 2026** (see 1 above).
 - **Six old bicycle photos are still files in the Blob store**, unused (their media records were removed).
   Delete them in Vercel → Storage → the Blob store if you want it tidy.
@@ -74,8 +83,8 @@ How to run, change and deploy the site safely:
 - Different from the starter: our content model (rooms, equipment, time slots, bookings) and how live
   content changes without `/admin` (`docs/decisions/live-content.md`). `npm run migrate:create` asks
   questions in the terminal when a table is removed or added; answer "create table" / "create column"
-  unless you really rename something. `.env.production` switches Web Analytics on for every production
-  build.
+  unless you really rename something. `.env.production` switches Web Analytics and the tawk.to chat on
+  for every production build.
 - A change reaches the live site through `main`. Never use Vercel's "Promote to Production": use
   Redeploy, and check that the build log shows `MIGRATIONS: verified committed migrations`.
 - Our own steps: every change is a pull request from its own branch, with the template filled in (the AI
