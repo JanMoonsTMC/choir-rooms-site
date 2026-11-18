@@ -1,48 +1,31 @@
 # Requirements
 
+Written by: Test A and Test B
+
 What the site must do, written so that someone else can check it. Each requirement expresses a need of
-your users, and has a check that passes or fails on the live site. Add a row per requirement.
+our users, and has a check that passes or fails on the live site. The results were filled in on
+18 October 2026, at the hand-over: where a pull request was not merged yet, the result says where it
+passed and when it reaches the live site.
 
-**How to fill in this file**
-
-- Write your own text in the lines and tables under each grey box.
-- Replace every TODO, and the hint after it, with your own text. A section that still holds a TODO
-  counts as not filled in.
-- Delete a line or a table row that you do not use.
-- The grey boxes are guidance. The course's checks do not read them, so you may keep them or delete
-  them. In the editor, a box is every line from the one that starts with `<table` to the line
-  `</td></tr></table>`: to delete a box, delete all of those lines.
-
-In a team, write under the title who wrote this document, by first name or GitHub username.
-
-<table width="100%"><tr></tr><tr><td>
-
-**Guidance.** Write one row per requirement. Cover both of your user tasks first, then accessibility,
-privacy and speed. The five columns:
-- **Id:** R1, R2 and so on. A number is never used again.
-- **Requirement:** who can do what, under which condition. It names no product.
-- **Serves:** the task or the need behind it, in the words of the user or the organisation, with
-  the evidence it rests on, or how you will collect it.
-- **Check:** the page, the action and the exact result on the live site, so that another person can
-  run the check without asking you.
-- **Result:** "passed" with the date you checked it on the live site, or "not yet" with what is
-  missing, for example "not yet: not built".
-
-A requirement says what the site must do. Ask of each line: can the same outcome be reached in a
-different way? "A user can see which events are full" is a requirement, because a "Full" label and
-"0 seats left" both reach it. "A red Full label on the button" is one way of building it.
-
-**Example of one row:** R1. Requirement: a user can reserve one seat at an event that still has
-seats, with a name and an e-mail address, and sees a confirmation that says the reservation is
-saved. Serves: reserving a seat; the events coordinator needs to know before each event how many
-people are coming. Check: on `/events`, open "Meet the author" and reserve a seat with made-up
-details: the confirmation says the reservation is saved, and the reservation is listed in `/admin`.
-Result: not yet: the reservation is listed in `/admin`, but the confirmation does not say that it
-is saved.
-
-</td></tr></table>
+The primary task (book a room) is R6 to R10; the second task (find a room) is R1 to R5; R13 (the chat)
+serves both. Which task matters most is in `docs/brief.md`.
 
 | Id | Requirement | Serves | Check | Result |
 | --- | --- | --- | --- | --- |
-| R1 | TODO: who can do what, under which condition | TODO: the task or the need behind it | TODO: on the live site, what someone does, and what they must see | TODO: "passed" with the date you checked, or "not yet" with what is missing |
-| R2 | TODO: | TODO: | TODO: | TODO: |
+| R1 | Any user can see every room with how many people it holds, its price per time slot and its equipment, without logging in | Find a room: groups compare rooms before they choose | On `/rooms`, without filters: four rooms are listed (The Hall, The Studio, The Loft, The Band Room), each with "Up to … people", a price in EUR and its equipment | Passed on 18 October 2026 on the live site: `/rooms` lists the four rooms with size, price and equipment |
+| R2 | A user can narrow the rooms to the ones that hold their whole group | Find a room: a room that is too small is useless | On `/rooms`, choose the group size **Up to 25 people**, then **Show rooms**: exactly two rooms are listed, The Studio and The Hall, and the heading says "2 rooms" | Passed on 18 October 2026 on our production build (`tests/integration/find-room.test.tsx`, browser checks); live after pull request #4 |
+| R3 | A user can narrow the rooms to the ones that have the equipment they need | Find a room: a band needs a drum kit, a choir a piano | On `/rooms`, choose the equipment **Drum kit and amplifiers**, then **Show rooms**: only The Band Room is listed | Passed on 18 October 2026 on our production build (find-room test, and the test of our second task in `docs/test-report.md`); live after pull request #4 |
+| R4 | A filtered list can be shared and reached again with Back | Find a room: one member chooses, another books | Do R2, copy the address and open it in a private window: the same two rooms are listed and the group size is still chosen | Passed on 18 October 2026 on our production build (browser check: Back and "Back to the filtered rooms" keep the filters); live after pull request #4 |
+| R5 | A user sees which equipment a room has, and which rooms have a piece of equipment | Find a room: compare rooms by what matters to the group | On `/rooms/the-studio`, the equipment list links to **Upright piano**; that page lists The Studio and The Loft | Passed on 18 October 2026 on our production build (`/equipment/upright-piano` lists The Loft and The Studio); live after pull request #4 |
+| R6 | A user can book a free time slot of a room for their group, without an account and without paying | Book a room: the group needs a place to rehearse | On `/rooms/the-loft`, choose the first free time slot, fill in a made-up group name, name, e-mail address and a group size of 8, then **Book this slot**: the confirmation page shows "Your booking is saved", The Loft, the time and the address | Passed on 18 October 2026 on our production build (browser check and test round 1); the live site books without the group fields until pull request #5 is merged |
+| R7 | A time slot is never booked by two groups | Book a room: two groups in one room is a wasted evening | After R6, open `/rooms/the-loft` again: the slot you booked shows "Booked" and cannot be chosen | Passed on 18 October 2026 on our production build (a booked slot shows "Booked" and is disabled); live after pull request #5 |
+| R8 | A group that does not fit in the room is told so before anything is saved | Book a room: a room that is too small is found out at the door | On `/rooms/the-loft`, book a free slot with a group size of 20: the booking is not saved, and the group size field says the room holds at most 12 people | Passed on 18 October 2026 on our production build ("The Loft holds at most 12 people…" on the group size field); live after pull request #5 |
+| R9 | A user who forgets a field or mistypes their e-mail address sees what to fix, without losing what they typed | Book a room: users book on a phone, in a hurry | On a room page, leave the group name empty and type `name@example` as the e-mail address, then **Book this slot**: a message at the top says two fields need checking, both fields are marked, and the other values are still filled in | Passed on 18 October 2026 on our production build (browser check "a mistake"); live after pull request #5 |
+| R10 | Both tasks work on a phone and with the keyboard alone | Both tasks: most organisers book on a phone | On `/rooms` and on a room page at 390 px wide: no sideways scrolling; with Tab alone you can filter, choose a slot and book, and you always see where the focus is. CI's browser checks (axe) find no problems | Passed on 18 October 2026 on our production build: browser checks at 390 and 1100 px, axe without serious problems, keyboard by hand |
+| R11 | After booking, a user can put the rehearsal in their own calendar | Book a room: nobody forgets the rehearsal | On the confirmation page, **Add to my calendar** downloads a `.ics` file; opened in a calendar app it shows the room, the start and end time and the address, and no name or e-mail address | Passed on 18 October 2026 on our production build (the browser check downloads `riverside-voices-e2e-check-room.ics`); live after pull request #7 |
+| R12 | A user can read what the booking form keeps about them and for how long | Book a room: trust before typing in details | On `/privacy`: it lists the fields the booking form saves, who can see them and how long they are kept | Passed on 18 October 2026 on the live site for the booking fields; the parts on analytics and the calendar file arrive with pull request #7, the part on the chat window ("The chat window") is on the live site since pull request #8 (checked on 18 October 2026) |
+| R13 | A user can ask the choir a question from any public page, without leaving the page and without an account | Both tasks: a question the pages leave open (how long a slot is, a tuned piano, step-free access) should not stop a booking | On `/` and on `/rooms/the-loft`: a chat button shows in the bottom corner and opens the tawk.to chat window with a box to type in; `/privacy` says what the chat stores and that typing is optional. With the chat closed, R6 still passes | Passed on 18 October 2026 on the live site, after pull request #8: on `/` and on `/rooms` the chat button shows in the bottom corner and opens the chat window ("Type here and press enter"); `/privacy` shows "The chat window". The booking with the chat in the page passed in CI's browser checks on the production build of #8 (with tawk.to out of their reach); not tried on the live site, to keep the live bookings clean |
+
+How to write a good check: name the page, the action and the exact result. A result is never just
+"done": "Not yet: the list is right, but the shared link loses the group size" tells the next reader
+exactly what to fix.
