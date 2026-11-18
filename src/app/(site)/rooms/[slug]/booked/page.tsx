@@ -49,7 +49,7 @@ export default async function BookedPage({ params, searchParams }: Props) {
   if (!confirmed) {
     return (
       <div className="pb-6">
-        <PageTitle title="Booking confirmation" tone="yellow" />
+        <PageTitle title="Booking confirmation" tone="straw" />
         <Notice tone="warning" label="Please note" className="max-w-3xl">
           <p className="font-heading text-xl font-extrabold">We can&apos;t show this booking confirmation.</p>
           <p>The link may be incomplete or out of date. The room&apos;s page shows its time slots and which ones are still free.</p>
@@ -88,7 +88,7 @@ export default async function BookedPage({ params, searchParams }: Props) {
             </p>
           )}
         </Notice>
-        <section aria-labelledby="booking" className="framed grid gap-4 p-6 offset-mint">
+        <section aria-labelledby="booking" className="framed grid gap-4 p-6 offset-river">
           <h2 id="booking" className="text-xl">Your booking</h2>
           <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2">
             <dt className="text-ink-soft">Room</dt>

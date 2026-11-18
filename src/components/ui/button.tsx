@@ -15,8 +15,11 @@ const buttonVariants = cva(
         primary:
           'border-2 border-ink bg-ink text-canvas shadow-[3px_3px_0_0_var(--color-brand)] hover:bg-link hover:border-link active:translate-x-[2px] active:translate-y-[2px] active:shadow-none',
         secondary:
-          'border-2 border-ink bg-canvas text-ink hover:bg-blue-tint active:translate-x-[1px] active:translate-y-[1px]',
-        quiet: 'text-ink hover:bg-blue-tint',
+          'border-2 border-ink bg-canvas text-ink hover:bg-mist active:translate-x-[1px] active:translate-y-[1px]',
+        // For a dark background, such as the home page's hero: brass, with ink text.
+        accent:
+          'border-2 border-brass bg-brass text-ink hover:border-straw hover:bg-straw active:translate-x-[1px] active:translate-y-[1px]',
+        quiet: 'text-ink hover:bg-mist',
         link: 'text-link underline underline-offset-4 hover:decoration-2',
       },
       size: {

@@ -106,11 +106,11 @@ export default async function RoomPage({ params }: Props) {
   return (
     <article className="pb-6">
       <ParentLink href="/rooms" label="Rooms" current={room.name} />
-      <PageTitle title={room.name} intro={room.summary} image={imageFrom(room.image)} imageAccent="purple" className="mt-3 sm:mt-4" />
+      <PageTitle title={room.name} intro={room.summary} image={imageFrom(room.image)} imageAccent="plum" className="mt-3 sm:mt-4" />
 
       <div className="grid gap-block lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
         {/* First in the page (a phone shows it first), on the right on wide screens. */}
-        <section aria-labelledby="facts" className="framed grid gap-4 p-6 offset-purple lg:col-start-2 lg:row-start-1">
+        <section aria-labelledby="facts" className="framed grid gap-4 p-6 offset-plum lg:col-start-2 lg:row-start-1">
           <h2 id="facts" className="text-xl">At a glance</h2>
           <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2">
             <dt className="text-ink-soft">Size</dt>
@@ -144,7 +144,7 @@ export default async function RoomPage({ params }: Props) {
             </section>
           )}
 
-          <section aria-labelledby="book" className="framed grid gap-5 p-5 offset-coral sm:p-8">
+          <section aria-labelledby="book" className="framed grid gap-5 p-5 offset-brass sm:p-8">
             <h2 id="book" className="text-2xl">Book a time slot</h2>
             {slots.length === 0 ? (
               <Notice tone="warning" label="No times yet">

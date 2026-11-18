@@ -12,10 +12,10 @@ import { cn } from '@/lib/utils'
 const alertVariants = cva('grid w-full gap-2 rounded-frame px-5 py-4 text-base text-ink', {
   variants: {
     tone: {
-      info: 'bg-info-wash [--chip:var(--color-purple-tint)]',
-      success: 'bg-success-wash [--chip:var(--color-mint-tint)]',
-      warning: 'bg-warning-wash [--chip:var(--color-yellow-tint)]',
-      error: 'bg-error-wash [--chip:var(--color-coral-tint)]',
+      info: 'bg-info-wash [--chip:var(--color-plum-tint)]',
+      success: 'bg-success-wash [--chip:var(--color-river-tint)]',
+      warning: 'bg-warning-wash [--chip:var(--color-straw-tint)]',
+      error: 'bg-error-wash [--chip:var(--color-rose-tint)]',
     },
   },
   defaultVariants: {

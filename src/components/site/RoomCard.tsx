@@ -16,7 +16,7 @@ type RoomCardProps = {
 
 export function RoomCard({ room, query = '', headingLevel = 'h3' }: RoomCardProps) {
   return (
-    <FramedCard title={room.name} href={`/rooms/${room.slug}${query}`} image={imageFrom(room.image)} accent="purple" headingLevel={headingLevel}>
+    <FramedCard title={room.name} href={`/rooms/${room.slug}${query}`} image={imageFrom(room.image)} accent="plum" headingLevel={headingLevel}>
       <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1">
         <dt className="text-ink-soft">Size</dt>
         <dd className="font-semibold">{capacityLabel(room.capacity)}</dd>
