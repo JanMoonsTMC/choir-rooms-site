@@ -51,12 +51,12 @@ export async function Header() {
             href="/"
             className="flex min-h-11 items-center gap-3 font-heading text-xl font-black text-ink no-underline"
           >
-            <span className="framed grid size-10 place-items-center rounded-control bg-yellow-tint [--offset-size:3px]">
+            <span className="framed grid size-10 place-items-center rounded-control bg-straw-tint [--offset-size:3px]">
               <Music aria-hidden="true" className="size-6" strokeWidth={2.25} />
             </span>
             {SITE_NAME}
           </Link>
-          {/* A fifth menu link only while the optional members' area is on: "My bookings" for a member
+          {/* A sixth menu link only while the optional members' area is on: "My bookings" for a member
               who is logged in, "Log in" for everyone else. */}
           <MainNav account={membersAreaOn()} loggedIn={member !== null} />
           {member && (

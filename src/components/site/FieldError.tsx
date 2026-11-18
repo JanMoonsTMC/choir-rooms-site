@@ -21,7 +21,7 @@ type FieldErrorProps = {
 export function FieldError({ id, className, children }: FieldErrorProps) {
   return (
     <p id={id} data-slot="field-error" className={cn('flex items-start gap-2 text-ink', className)}>
-      {/* Navy on a coral wash, like the field. The words carry the meaning; the icon draws the eye. */}
+      {/* Navy on a brass wash, like the field. The words carry the meaning; the icon draws the eye. */}
       <CircleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0 fill-error-wash text-ink" strokeWidth={2.25} />
       <span>
         <strong>Error: </strong>

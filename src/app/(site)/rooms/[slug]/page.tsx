@@ -21,6 +21,7 @@ import { ParentLink } from '@/components/site/ParentLink'
 import { capacityLabel, formatPrice, formatSlotTime, imageFrom } from '@/lib/format'
 import { membersAreaOn, signedInMember } from '@/lib/membersArea'
 import config from '@/payload.config'
+import { filterQuery, parseFilters, type SearchParams } from '@/tasks/find-room/filters'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,7 +29,9 @@ export const dynamic = 'force-dynamic'
 // on a phone. Later slots appear as the days pass.
 const SHOWN_DAYS = 14
 
-type Props = { params: Promise<{ slug: string }> }
+// searchParams: the filters of the rooms list the user came from (/rooms/the-loft?people=12), so
+// "Back" returns to that same list. No JavaScript and no browser history are needed for that.
+type Props = { params: Promise<{ slug: string }>; searchParams?: Promise<SearchParams> }
 
 // cache(): the page and its browser-tab title ask for the same record once per visit.
 const findRoom = cache(async (slug: string) => {
@@ -51,10 +54,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: room.name, description: room.summary }
 }
 
-export default async function RoomPage({ params }: Props) {
+export default async function RoomPage({ params, searchParams }: Props) {
   const room = await findRoom((await params).slug)
   // No room with this slug: the "not found" page, which explains and offers a way on.
   if (!room) notFound()
+  const filters = parseFilters((await searchParams) ?? {})
+  const back = `/rooms${filterQuery(filters)}`
   const payload = await getPayload({ config })
 
   // The room's time slots that have not started yet, in the next SHOWN_DAYS days, earliest first.
@@ -105,12 +110,12 @@ export default async function RoomPage({ params }: Props) {
 
   return (
     <article className="pb-6">
-      <ParentLink href="/rooms" label="Rooms" current={room.name} />
-      <PageTitle title={room.name} intro={room.summary} image={imageFrom(room.image)} imageAccent="purple" className="mt-3 sm:mt-4" />
+      <ParentLink href={back} label="Rooms" current={room.name} />
+      <PageTitle title={room.name} intro={room.summary} image={imageFrom(room.image)} imageAccent="plum" className="mt-3 sm:mt-4" />
 
       <div className="grid gap-block lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
         {/* First in the page (a phone shows it first), on the right on wide screens. */}
-        <section aria-labelledby="facts" className="framed grid gap-4 p-6 offset-purple lg:col-start-2 lg:row-start-1">
+        <section aria-labelledby="facts" className="framed grid gap-4 p-6 offset-plum lg:col-start-2 lg:row-start-1">
           <h2 id="facts" className="text-xl">At a glance</h2>
           <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2">
             <dt className="text-ink-soft">Size</dt>
@@ -144,7 +149,7 @@ export default async function RoomPage({ params }: Props) {
             </section>
           )}
 
-          <section aria-labelledby="book" className="framed grid gap-5 p-5 offset-coral sm:p-8">
+          <section aria-labelledby="book" className="framed grid gap-5 p-5 offset-brass sm:p-8">
             <h2 id="book" className="text-2xl">Book a time slot</h2>
             {slots.length === 0 ? (
               <Notice tone="warning" label="No times yet">
@@ -163,6 +168,10 @@ export default async function RoomPage({ params }: Props) {
               <BookingForm room={room.slug} slots={slots} requestId={randomUUID()} member={member && { name: member.name ?? '', email: member.email }} />
             )}
           </section>
+
+          <ButtonLink href={back} variant="secondary" className="w-fit">
+            {filters.people || filters.feature ? 'Back to the filtered rooms' : 'Back to all rooms'}
+          </ButtonLink>
         </div>
       </div>
     </article>

@@ -1,6 +1,6 @@
 // A card, from shadcn/ui (npx shadcn add card), restyled with the site's tokens: a thin navy frame,
 // rounded corners and a solid coloured offset (the `framed` style in globals.css). Pick the offset's
-// colour with a class: <Card className="offset-purple">. For a card with a picture, use FramedCard
+// colour with a class: <Card className="offset-plum">. For a card with a picture, use FramedCard
 // (src/components/site/FramedCard.tsx). No page uses Card yet: it is a spare part of the kit, ready for a
 // card without a picture.
 import * as React from 'react'

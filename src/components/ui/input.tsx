@@ -1,8 +1,8 @@
 // A text field, from shadcn/ui (npx shadcn add input), restyled with the site's tokens. Always give it
 // a visible <Label> (never only a placeholder).
 //
-// aria-invalid="true" turns it into the error look: a thicker navy border and a coral wash. The border
-// stays navy because coral is too light against white for a border (below the 3:1 a field's edge
+// aria-invalid="true" turns it into the error look: a thicker navy border and a brass wash. The border
+// stays navy because brass is too light against white for a border (below the 3:1 a field's edge
 // needs). So the colour is never the only sign: put a FieldError (src/components/site/FieldError.tsx)
 // under the field, which says "Error" in words, and point the field's aria-describedby at it.
 import * as React from 'react'
