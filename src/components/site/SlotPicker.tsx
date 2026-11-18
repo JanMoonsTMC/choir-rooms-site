@@ -6,6 +6,7 @@
 // on a page this same way.
 //
 // What to change for your own site: the legend ("Choose a time") and the name of what is booked.
+import { ButtonLink } from '@/components/site/ButtonLink'
 import { FieldError } from '@/components/site/FieldError'
 import { placesLabel } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -25,9 +26,12 @@ type SlotPickerProps = {
   // The slot chosen before the form came back with a problem, so the choice is kept.
   selected?: string
   error?: string
+  // The address of the next two weeks' time slots, when there are any. The link sits under the list too,
+  // where a user who scrolled through every slot looks for a later date (our test round 1, finding 1).
+  laterHref?: string
 }
 
-export function SlotPicker({ slots, selected, error }: SlotPickerProps) {
+export function SlotPicker({ slots, selected, error, laterHref }: SlotPickerProps) {
   return (
     // id="timeSlot": the error box's link to this group. It scrolls to the group with "Choose a time" at
     // the top (scroll-mt-6 keeps a little space above it). tabIndex -1 lets the link move the keyboard
@@ -72,6 +76,11 @@ export function SlotPicker({ slots, selected, error }: SlotPickerProps) {
           )
         })}
       </ul>
+      {laterHref && (
+        <p className="mt-2">
+          <ButtonLink href={laterHref} variant="secondary" size="sm" className="min-h-11">Later time slots</ButtonLink>
+        </p>
+      )}
     </fieldset>
   )
 }
