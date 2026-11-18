@@ -1,6 +1,6 @@
 // The calendar file for one booking: an iCalendar (.ics) file, the format every calendar app opens
-// (RFC 5545). Our integration: it needs no account, no key and no other service, because the site makes
-// the file itself (docs/decisions/integration.md).
+// (RFC 5545). A feature of the booking task: it needs no account, no key and no other service, because
+// the site makes the file itself (docs/decisions/calendar-file.md).
 //
 // It holds only public facts: the room, the start and end, and the address. Never the group, a name, an
 // e-mail address or the note: the file may be forwarded, and it is made from the confirmation link alone.

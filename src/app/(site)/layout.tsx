@@ -6,7 +6,9 @@ import type { ReactNode } from 'react'
 import { Footer } from '@/components/site/Footer'
 import { Header } from '@/components/site/Header'
 import { SiteAnalytics } from '@/components/site/SiteAnalytics'
+import { SiteChat } from '@/components/site/SiteChat'
 import { SITE_TITLE } from '@/content/riverside-voices'
+import { chatOn } from '@/lib/chat'
 import { cn } from '@/lib/utils'
 import './globals.css'
 
@@ -47,6 +49,10 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
             .env.production sets it; docs/decisions/analytics.md). Without it, the site loads no
             analytics script at all. SiteAnalytics leaves a confirmation's booking reference out. */}
         {process.env.NEXT_PUBLIC_ANALYTICS === 'vercel' && <SiteAnalytics />}
+        {/* The tawk.to chat window, only when NEXT_PUBLIC_CHAT is "tawk" (our .env.production sets it;
+            docs/decisions/integration.md). Here, in the public pages' frame, so every public page has it
+            and /admin does not. */}
+        {chatOn() && <SiteChat />}
       </body>
     </html>
   )

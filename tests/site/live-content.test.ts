@@ -9,6 +9,7 @@ import type { PostgresAdapter } from '@payloadcms/db-postgres'
 import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 import { up } from '../../src/migrations/20261017_224621_choir_content'
 import { up as privacyUp } from '../../src/migrations/20261018_000041_privacy_analytics'
+import { up as privacyChatUp } from '../../src/migrations/20261018_120000_privacy_chat'
 import { recordExampleAdded } from '../../src/seed/exampleFlag'
 import { richText } from '../../src/seed/richText'
 import { forgetExampleAdded, getTestPayload, resetCollections, resetSiteFacts } from '../setup/payload'
@@ -97,6 +98,26 @@ describe('the live-content migration', () => {
     expect(JSON.stringify(privacy.body)).toContain('Vercel Web Analytics')
     expect(JSON.stringify(privacy.body)).toContain('Add to my calendar')
     expect(JSON.stringify(privacy.body)).not.toContain('Campus Cycle')
+  })
+
+  it('the chat migration brings the tawk.to chat window to an existing privacy page', async () => {
+    const p = await getTestPayload()
+    await starterExample(p)
+    await runMigration(p, privacyChatUp)
+    const privacy = (await p.find({ collection: 'pages', where: { slug: { equals: 'privacy' } }, depth: 0 })).docs[0]
+    const body = JSON.stringify(privacy.body)
+    expect(body).toContain('The chat window')
+    expect(body).toContain('tawk.to')
+    expect(body).toContain('Typing is optional')
+    // The parts that came before it stay.
+    expect(body).toContain('Vercel Web Analytics')
+    expect(body).not.toContain('Campus Cycle')
+  })
+
+  it('the chat migration does nothing on a database without a privacy page', async () => {
+    const p = await getTestPayload()
+    await runMigration(p, privacyChatUp)
+    expect(await p.count({ collection: 'pages' })).toEqual({ totalDocs: 0 })
   })
 
   it('on a new, empty database it does nothing: the seed adds our content there', async () => {
