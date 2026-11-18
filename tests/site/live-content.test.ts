@@ -8,6 +8,7 @@ import { commitTransaction, createLocalReq, initTransaction, type Payload } from
 import type { PostgresAdapter } from '@payloadcms/db-postgres'
 import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 import { up } from '../../src/migrations/20261017_224621_choir_content'
+import { up as privacyUp } from '../../src/migrations/20261018_000041_privacy_analytics'
 import { recordExampleAdded } from '../../src/seed/exampleFlag'
 import { richText } from '../../src/seed/richText'
 import { forgetExampleAdded, getTestPayload, resetCollections, resetSiteFacts } from '../setup/payload'
@@ -24,12 +25,12 @@ async function resetAll() {
 }
 
 /** Runs the migration's up() as Payload's migrate does: in one transaction, then commits it. */
-async function runMigration(p: Payload) {
+async function runMigration(p: Payload, migrate: typeof up = up) {
   const req = await createLocalReq({}, p)
   await initTransaction(req)
   const adapter = p.db as unknown as PostgresAdapter
   const db = (req.transactionID !== undefined && adapter.sessions[await req.transactionID]?.db) || adapter.drizzle
-  await up({ db: db as never, payload: p, req })
+  await migrate({ db: db as never, payload: p, req })
   await commitTransaction(req)
 }
 
@@ -86,6 +87,16 @@ describe('the live-content migration', () => {
     expect(await p.count({ collection: 'rooms' })).toEqual({ totalDocs: 4 })
     expect(await p.count({ collection: 'features' })).toEqual({ totalDocs: 8 })
     expect((await p.count({ collection: 'timeSlots' })).totalDocs).toBe(before)
+  })
+
+  it('the privacy migration brings the analytics and the calendar file to an existing privacy page', async () => {
+    const p = await getTestPayload()
+    await starterExample(p)
+    await runMigration(p, privacyUp)
+    const privacy = (await p.find({ collection: 'pages', where: { slug: { equals: 'privacy' } }, depth: 0 })).docs[0]
+    expect(JSON.stringify(privacy.body)).toContain('Vercel Web Analytics')
+    expect(JSON.stringify(privacy.body)).toContain('Add to my calendar')
+    expect(JSON.stringify(privacy.body)).not.toContain('Campus Cycle')
   })
 
   it('on a new, empty database it does nothing: the seed adds our content there', async () => {
