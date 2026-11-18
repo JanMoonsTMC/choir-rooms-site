@@ -1,148 +1,103 @@
 # Hand-over
 
-Everything the next owner of this site needs. Never write a
-password, a secret or a connection string in this file.
+Written by: Test A and Test B
 
-**How to fill in this file**
-
-- Write your own text in the lines and tables under each grey box.
-- Replace every TODO, and the hint after it, with your own text. A section that still holds a TODO
-  counts as not filled in.
-- Delete a line or a table row that you do not use.
-- The grey boxes are guidance. The course's checks do not read them, so you may keep them or delete
-  them. In the editor, a box is every line from the one that starts with `<table` to the line
-  `</td></tr></table>`: to delete a box, delete all of those lines.
-
-In a team, write under the title who wrote this document, by first name or GitHub username.
+Everything the next owner of this site needs. Never write a password, a secret or a connection string
+in this file.
 
 ## Who owns what
 
-<table width="100%"><tr></tr><tr><td>
-
-**Guidance.** Start with where everything is. Then fill in the first table: for each service, the
-name of the account that owns it. Secrets stay in Vercel's settings and in `.env.local` on your own
-computer; this file says who holds them.
-
-**Example:** GitHub: the account `millbrook-events`, which belongs to one team member. Gap: the
-repository must be transferred to the library before that member leaves.
-
-</td></tr></table>
-
-- **Live site:** TODO: its address
-- **Repository:** TODO: its address
-- **Admin screen:** TODO: its address
+- **Live site:** https://choir-rooms-site.vercel.app/
+- **Repository:** https://github.com/JanMoonsTMC/choir-rooms-site
+- **Admin screen:** https://choir-rooms-site.vercel.app/admin
 
 | Service | What it holds | Owner (account name, not the password) |
 | --- | --- | --- |
-| GitHub | the code | TODO: |
-| Vercel | the live site and its settings | TODO: |
-| Neon | the database (connected through Vercel) | TODO: |
-| Vercel Blob | the images | TODO: |
-
-<table width="100%"><tr></tr><tr><td>
-
-**Guidance.** The second table has one row for each of the six responsibilities. Keep the six names
-in the first column as they are:
-- **Content:** the pages and the records stay right.
-- **Access:** someone decides who gets an account, and removes an account that is no longer needed.
-- **Updates:** someone applies security fixes to the software the site is built from.
-- **Monitoring:** someone notices when the site or a form stops working.
-- **Backup and restore:** a copy of the database exists, and someone has tried to put it back.
-- **Ownership:** the accounts that hold the code, the live site and the database belong to the
-  organisation.
-
-In each row, write the owner as a role, who can log in to do it, and the date it was last tested, or
-"never". When nobody owns it yet, write "No role yet" and name the gap. "A copy of the database
-exists" is done. "The copy was restored on test data on 3 May 2026" is tested.
-
-**Example of the row Content:** owner: the events coordinator. Who can log in: the coordinator and
-one librarian, as editors in `/admin`. Last tested: 12 May 2026, when the coordinator added an event
-without help.
-
-</td></tr></table>
+| GitHub | the code: `JanMoonsTMC/choir-rooms-site` | Releases and repository role (Test A), GitHub account `JanMoonsTMC`; Test B (`jnmoons`) is a collaborator |
+| Vercel | the live site and its settings: project `choir-rooms-site` | Releases role (Test A), in the Vercel account that owns the project |
+| Neon | the database (connected through Vercel, Frankfurt) | The same Vercel account, through Storage; no separate Neon login is needed |
+| Vercel Blob | the images (public store, Production only) | The same Vercel account, through Storage |
+| tawk.to | the chat window on every public page (its property and widget `6ad4b263b2e7a834cef07781/1k57dhl5o`), its settings, and every message users type in it | The teacher's tawk.to account, made for this test project; no team member has a tawk.to login |
 
 | Responsibility | Owner (a role) | Who can log in | Last tested |
 | --- | --- | --- | --- |
-| Content | TODO: | TODO: | TODO: |
-| Access | TODO: | TODO: | TODO: |
-| Updates | TODO: | TODO: | TODO: |
-| Monitoring | TODO: | TODO: | TODO: |
-| Backup and restore | TODO: | TODO: | TODO: |
-| Ownership | TODO: | TODO: | TODO: |
+| Content | The choir's room manager (rooms, equipment, time slots) and its secretary (pages, Site facts); the treasurer reads the bookings for the invoices | Editors in `/admin`, each with an account from an existing editor | Never on the live site: on 18 October 2026 nobody in the team could log in there yet, and the live content came through migrations (`docs/decisions/live-content.md`). Tested on our own computers every day of the project |
+| Access | The releases role, who holds the first editor's account | The first editor: the one in Vercel's settings `FIRST_ADMIN_EMAIL` and `FIRST_ADMIN_PASSWORD` | Never on the live site |
+| Updates | The releases role (Node, Next.js, Payload) | The GitHub account and the Vercel account above | Never: the site still runs the starter's versions, on Node 22 |
+| Monitoring | The releases role reads the Vercel dashboard once a week: deployments, the functions' errors, Analytics | The Vercel account above | 18 October 2026: deployments only. Analytics is switched on; its reports were not read yet |
+| Backup and restore | The releases role. Neon keeps a restore window (point-in-time restore from the Neon console, reached through Vercel → Storage) | The Vercel account above | Never |
+| Ownership | No role at the choir: Riverside Voices is made up, so the accounts stay with the releases role (GitHub, Vercel) and with the teacher (tawk.to) | The holders of those accounts | Never: nothing was transferred |
 
-<table width="100%"><tr></tr><tr><td>
+- **Who edits which content in `/admin`:** The room manager keeps the rooms, the equipment and the time
+  slots. The secretary keeps the pages and the Site facts. The treasurer reads the bookings.
+- **How a new editor gets an account:** From an existing editor: `/admin` → Users → Create new.
+- **What needs a developer:** A new field or collection (a migration), a new page, and any content
+  change on the live site while nobody can log in to `/admin` (a data migration, as we did).
 
-**Guidance.** One line for each of the three points below is enough.
+The chat (tawk.to): the holder of the tawk.to account reads and answers the messages in tawk.to's
+dashboard, and changes the chat's look and greeting there. Last tested on 18 October 2026 on the live
+site: the button shows on `/` and `/rooms` and opens the chat window. No message was sent, so nobody has
+yet seen one arrive in the dashboard. A next owner makes their own tawk.to property and puts its widget
+address in `src/lib/chat.ts`; `NEXT_PUBLIC_CHAT` in `.env.production` switches the chat off (any value
+but `tawk`).
 
-**Example:** The events coordinator and one librarian add and change events and speakers in
-`/admin`. The coordinator makes the account of a new editor. A new field or a new page needs a
-developer.
-
-</td></tr></table>
-
-- **Who edits which content in `/admin`:** TODO:
-- **How a new editor gets an account:** TODO:
-- **What needs a developer:** TODO:
+The pictures are our own drawings from Lucide icons (`src/seed/images/SOURCES.md`).
 
 ## Left out, and in which order
 
-<table width="100%"><tr></tr><tr><td>
+1. **New time slots after the first eight weeks.** The live site has slots until 13 December 2026 (eight
+   weeks from the deploy of 18 October). After that groups can book nothing until someone adds slots in
+   `/admin` → Time Slots, one by one. Next to build: a button or a small script that adds the next eight
+   weeks of the weekly pattern (`src/tasks/book-slot/comingSlots.ts` already works them out).
+2. **A confirmation e-mail.** Groups only have the confirmation page and the calendar file; a lost tab
+   means a forgotten booking. It needs an e-mail service (an account and a key), so it was out of scope.
+3. **Changing or cancelling a booking yourself.** Today a group e-mails us and an editor changes it.
+4. **Comparing rooms side by side** (`docs/test-report.md`, finding 9).
+5. **Typing the exact group size in the filter** instead of choosing a range (finding 8).
+6. **Repeating bookings** (every Tuesday until June), real photos of the rooms, and a Dutch version.
 
-**Guidance.** Write a numbered list of everything that is not built: your ideas, the findings in
-`docs/test-report.md` that are still open, and the requirements that still say "not yet" in
-`docs/requirements.md`. Put first what users and the organisation lose most without, and add a line
-for each item. Under the list, say what does not work yet, was never tested or could break, and what
-to do about it.
-
-**Example:** 1. A waiting list for full events: today a user who meets a full event cannot hear that
-a seat came free. Not tested: nobody has tried the reservation form with a screen reader on a phone.
-Test it before the library announces the site.
-
-</td></tr></table>
-
-1. TODO: the first thing to build next, and what users lose without it
-2. TODO: the next one, and what users lose without it
-
-- **What does not work yet, or could break:** TODO:
-- **What to do about it:** TODO:
+- **What does not work yet, or could break:**
+  - Nobody outside our team has done either task (`docs/test-report.md`, "Not tested yet").
+  - The time slots run out on 13 December 2026 (see 1 above).
+  - Web Analytics ignores automated browsers: a check by script (Playwright, puppeteer) loads the script
+    but sends no page view unless the browser gives an ordinary user agent
+    (`docs/decisions/analytics.md`).
+  - The chat depends on tawk.to and on its account. If tawk.to is down or a browser blocks it, there is
+    no chat button and everything else works. If the teacher's tawk.to account or its property is
+    removed, the button disappears or shows an error. A question nobody answers waits in tawk.to.
+  - Six old bicycle photos are still files in the Blob store, unused (their media records were removed).
+  - The previews have no Blob store, so rooms there show no picture. That is expected.
+  - A failed migration stops the production build, and the live site keeps the previous version.
+- **What to do about it:**
+  - Watch one person outside the team do both tasks before real groups use the site.
+  - Add time slots before 13 December 2026.
+  - When the chat's account goes: switch the chat off (`NEXT_PUBLIC_CHAT`) or put in a new property's
+    address.
+  - Delete the six photos in Vercel → Storage → the Blob store if you want it tidy.
+  - After a failed migration: read the build log ("MIGRATIONS: FAILED") and fix the migration before
+    redeploying.
 
 ## How you will know it works
 
-<table width="100%"><tr></tr><tr><td>
-
-**Guidance.** Write two or three measures, one list item each. Each measure says what is counted,
-where it is read, and the number that would make the owner act. Write that number in figures.
-
-**Example:** Seats reserved per event, read in `/admin` every week. With 0 reservations 3 days
-before an event, do the reservation task yourself on the live site.
-
-</td></tr></table>
-
-- TODO: what is counted, where it is read, and the number that makes the owner act
-- TODO: a second measure, in the same way
+- **Bookings per week**, read in `/admin` → Bookings, sorted by date. Act when there are fewer than 3 a week for a month: ask the groups why (prices, times, the booking form).
+- **Room page views against confirmations**, read in Vercel → Analytics: the views of `/rooms/<room>` against `/rooms/<room>/booked`. Act when fewer than 1 in 20 views of a room page ends in a booking.
+- **CI and the production build**, read in GitHub → Actions on `main` and in Vercel → Deployments. Act on 1 failed deployment at once, and read what a red run on `main` says.
 
 How to run, change and deploy the site safely:
 
-<table width="100%"><tr></tr><tr><td>
-
-**Guidance.** The lines below hold the starter's own rules and the course's default steps. Keep the
-two steps "How a change goes live" and "How we go back", or change them to your own steps: who
-merges, the checks that must pass, and how you go back to the version before. Vercel's **Instant
-Rollback** runs no build, so go back with **Revert**.
-
-**Example of a step of your own:** A change to the reservation form is merged only after a second
-member has tried it on the preview.
-
-</td></tr></table>
-
 - On your own computer: `docs/guides/local-setup.md`.
-- TODO: anything your project does differently, or write "Nothing different".
+- Different from the starter: our content model (rooms, equipment, time slots, bookings) and how live
+  content changes without `/admin` (`docs/decisions/live-content.md`). `npm run migrate:create` asks
+  questions in the terminal when a table is removed or added; answer "create table" / "create column"
+  unless you really rename something. `.env.production` switches Web Analytics and the tawk.to chat on
+  for every production build.
 - A change reaches the live site through `main`. Never use Vercel's "Promote to Production": use
   Redeploy, and check that the build log shows `MIGRATIONS: verified committed migrations`.
 - **How a change goes live:** A change to the code goes live through a branch and a pull request
   with its preview and its AI note. Its author waits for the starter's checks, reads what they say,
-  and merges it into `main`.
+  and merges it into `main`. A review is optional: we ask the other member for one when a change touches
+  the booking. After the merge, the author reads the production build log. Our documents go straight to
+  `main`.
 - **How we go back:** To go back to the version before, use **Revert** on the merged pull request on
   GitHub. It opens a new pull request that undoes the change: merge it like any other, so that its
   build runs. A revert leaves the database as it is: a migration that has already run stays.
-- TODO: keep the steps "How a change goes live" and "How we go back" or change them, then delete this line.
