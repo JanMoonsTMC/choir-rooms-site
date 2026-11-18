@@ -46,7 +46,9 @@ export function PageTitle({ title, intro, tone = 'river', image, imageAccent = '
             imageAccent === 'plum' ? 'offset-plum' : 'offset-brass',
           )}
         >
-          <Image src={image.src} alt={image.alt} fill sizes="(min-width: 768px) 24rem, 100vw" className="object-cover" />
+          {/* priority: the title's picture is the biggest thing a phone shows first, so it loads at once
+              instead of lazily (Lighthouse's "largest contentful paint", found in our test round 1). */}
+          <Image src={image.src} alt={image.alt} fill priority sizes="(min-width: 768px) 24rem, 100vw" className="object-cover" />
         </div>
       )}
     </header>
