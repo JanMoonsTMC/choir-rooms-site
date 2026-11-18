@@ -20,7 +20,7 @@ type HeroProps = {
 
 export function Hero({ title, text, actions, image }: HeroProps) {
   return (
-    <section className="staff-lines grid items-center gap-block overflow-hidden rounded-panel bg-ink p-6 text-canvas sm:p-10 lg:grid-cols-[1.4fr_1fr] lg:gap-14 lg:p-14">
+    <section className="staff-lines grid items-center [--color-focus:var(--color-straw)] gap-block overflow-hidden rounded-panel bg-ink p-6 text-canvas sm:p-10 lg:grid-cols-[1.4fr_1fr] lg:gap-14 lg:p-14">
       <div className="grid gap-5">
         <p className="text-sm font-bold tracking-[0.08em] text-brass-tint uppercase">{TAGLINE}</p>
         <h1 className="text-4xl">{title}</h1>
