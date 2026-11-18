@@ -156,9 +156,10 @@ export const PAGES = [
       },
     ]),
   },
-  // When you add a field to the booking form or change the analytics, change this page in /admin too:
-  // the seed never changes a page that exists. (The migration 20261018_*_privacy_analytics brought the
-  // two parts about analytics and the calendar file to the live site.)
+  // When you add a field to the booking form or change the analytics or the chat, change this page in
+  // /admin too: the seed never changes a page that exists. (The migration 20261018_*_privacy_analytics
+  // brought the two parts about analytics and the calendar file to the live site, and
+  // 20261018_*_privacy_chat the parts about the tawk.to chat window.)
   {
     title: 'Privacy',
     slug: 'privacy',
@@ -191,10 +192,19 @@ export const PAGES = [
         paragraph:
           'The "Add to my calendar" file is made by this site itself, not by another service. It holds only the room, the time and the address of your booking.',
       },
-            { heading: 'Cookies' },
+      { heading: 'The chat window' },
       {
         paragraph:
-          'This site sets cookies only for people who log in, such as an editor in /admin: one to keep them logged in, and one that remembers the look they chose for /admin.',
+          "The chat button in the corner of every page opens a chat window from tawk.to, a chat service we do not run. Its code comes from tawk.to's servers once a page has loaded, so tawk.to receives your internet (IP) address, your browser's details and the address of the page you are on. It stores its own cookies and local storage in your browser for the chat session, among them a random code that recognises your browser when you come back, for six months.",
+      },
+      {
+        paragraph:
+          "If you type in the chat, tawk.to keeps the messages you type, and a name or e-mail address only if you give one; the chat's account holder reads them in tawk.to's dashboard. Typing is optional: you can find and book a room without the chat. Use made-up details in the chat too.",
+      },
+      { heading: 'Cookies' },
+      {
+        paragraph:
+          "This site itself sets cookies only for people who log in, such as an editor in /admin: one to keep them logged in, and one that remembers the look they chose for /admin. The chat window's cookies are tawk.to's own (see The chat window above).",
       },
       { heading: 'A practice project' },
       { paragraph: MADE_UP_DATA_NOTICE },

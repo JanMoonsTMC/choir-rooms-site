@@ -103,8 +103,8 @@ export default async function BookedPage({ params, searchParams }: Props) {
             )}
           </dl>
         </section>
-        {/* Our integration (docs/decisions/integration.md): the booking as a calendar file, made by this
-            site itself. download: the browser saves it instead of showing its text. */}
+        {/* The booking as a calendar file, made by this site itself (docs/decisions/calendar-file.md).
+            download: the browser saves it instead of showing its text. */}
         <div className="grid gap-2">
           <ButtonLink href={`/rooms/${room.slug}/booked/calendar?ref=${bookingRef(Number(id))}`} download className="w-fit" prefetch={false}>
             Add to my calendar

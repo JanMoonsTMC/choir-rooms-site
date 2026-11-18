@@ -1,6 +1,7 @@
 // GET /rooms/<slug>/booked/calendar?ref=<booking id>.<signature>: the booking as a calendar file (.ics),
-// for the "Add to my calendar" link on the confirmation page. Our integration (docs/decisions/
-// integration.md): any calendar app opens the file, and nothing is sent to another service.
+// for the "Add to my calendar" link on the confirmation page. A feature of the booking task
+// (docs/decisions/calendar-file.md): any calendar app opens the file, and nothing is sent to another
+// service.
 //
 // It answers only for a confirmation link whose signature is right (src/tasks/book-slot/receipt.ts) and
 // whose booking is for THIS room, like the confirmation page. The file holds the room, the time and the
