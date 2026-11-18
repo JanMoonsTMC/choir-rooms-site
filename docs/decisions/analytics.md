@@ -1,132 +1,80 @@
 # Decision: analytics
 
+Written by: Test B, with Test A
+
 Whether the site measures how it is used, and with which tool. Its reader comes later, with one
-question: can I change this, and what happens if I do? The starter's
-analytics are off until `NEXT_PUBLIC_ANALYTICS` names a tool; see `src/lib/analytics.ts`.
-
-**How to fill in this file**
-
-- Write your own text in the lines and tables under each grey box.
-- Replace every TODO, and the hint after it, with your own text. A section that still holds a TODO
-  counts as not filled in.
-- Delete a line or a table row that you do not use.
-- The grey boxes are guidance. The course's checks do not read them, so you may keep them or delete
-  them. In the editor, a box is every line from the one that starts with `<table` to the line
-  `</td></tr></table>`: to delete a box, delete all of those lines.
+question: can I change this, and what happens if I do?
 
 ## The question
 
-<table width="100%"><tr></tr><tr><td>
-
-**Guidance.** Write in one sentence what had to be decided. Add the need or the requirement behind
-it, and what you want the numbers to tell you.
-
-**Example:** Do we measure how the site is used, and with which tool? The library wants to know how
-many people who open an event's page go on to reserve a seat (requirement R1).
-
-</td></tr></table>
-
-- **The question:** TODO: one sentence
-- **The need or requirement behind it:** TODO:
+- **The question:** Which rooms and pages do groups look at, and do they reach the booking form?
+- **The need or requirement behind it:** The choir wants to know which rooms to describe better, and
+  whether the rooms list leads to bookings. Bookings alone (in `/admin`) say nothing about the groups
+  who looked and left.
 
 ## Options considered
 
-<table width="100%"><tr></tr><tr><td>
-
-**Guidance.** Write at least two options, one row each: what the option would give, and what it
-would cost. One of them is the simplest thing, which is the first row here. The other usual options
-for analytics are Vercel Web Analytics, which the starter can switch on, and Matomo, only if someone
-already hosts it for you. Add a row for each further option.
-
-**Example:** No analytics: it costs nothing and collects nothing, but we cannot see whether anyone
-opens an event's page.
-
-</td></tr></table>
-
 | Option | What it would give | What it would cost |
 | --- | --- | --- |
-| No analytics | TODO: | TODO: |
-| TODO: | TODO: | TODO: |
+| No analytics | Nothing to set up, and nothing about users leaves the site. | We would only know about bookings, never about the groups who looked and left. |
+| Vercel Web Analytics, page views only (free Hobby plan) | It is already built into the starter (`src/lib/analytics.ts`). It sets no cookies, so no cookie banner, and it needs no new account: it is part of the Vercel project we already have. | On Hobby only page views count, not our two events (`filter_used`, `booking_saved`), and only one month of reports is kept. |
+| Matomo or Plausible | More reports, and custom events. | A new account, or a server someone has to run and pay for. Our brief allows free plans only, and no new accounts. |
 
 ## The decision
 
-<table width="100%"><tr></tr><tr><td>
-
-**Guidance.** Write the option you chose as one sentence. Once it is installed, add what you
-installed, where its settings are, and how you checked that it does what you expected: the grading
-list asks for it. Until then, write "Not installed yet" on those lines. In a team, name who took part
-in the decision. Working alone, delete that line.
-
-**Example:** We chose Vercel Web Analytics. It is switched on with `NEXT_PUBLIC_ANALYTICS=vercel` in
-Vercel's settings and with **Enable** on the project's Analytics tab. We opened the live site with
-the browser's Network tab open, and saw the request named `view` that records a page view.
-
-</td></tr></table>
-
-- **We chose:** TODO:
-- **What we installed, and where its settings are:** TODO:
-- **How we checked that it does what we expected:** TODO:
-- **Who took part in the decision:** TODO:
+- **We chose:** Vercel Web Analytics, page views only.
+- **What we installed, and where its settings are:** The starter's `@vercel/analytics` package, loaded
+  by `src/components/site/SiteAnalytics.tsx` in the site layout. `NEXT_PUBLIC_ANALYTICS=vercel` in
+  `.env.production` switches it on for every production build (the live site and the previews). In the
+  dashboard, Vercel → the project → **Analytics** → **Enable** is done. One change of our own: every
+  page view passes through `withoutBookingRef` (`src/lib/analytics.ts`) first, so a confirmation page is
+  counted as `/rooms/the-loft/booked`, without the signed booking reference in its address.
+- **How we checked that it does what we expected:** The tests (`tests/unit/analytics.test.ts`): the
+  layout loads it only when switched on, and the booking reference is removed while every other address
+  is kept. On 18 October 2026 on the live site, in Chrome driven by a script (puppeteer, headless):
+  opening `/rooms` loaded the analytics script (200) and then sent the page view (200). Vercel's script
+  ignores browsers that say they are automated, so for this check the browser gave an ordinary Chrome
+  user agent.
+- **Who took part in the decision:** Test B (research and testing), with Test A, on 18 October 2026.
 
 ## Why
 
-<table width="100%"><tr></tr><tr><td>
-
-**Guidance.** Give each reason with its evidence: what you checked before you decided. Then say what
-that evidence cannot tell you. Two or three reasons are enough.
-
-**Example:** It needs no second account, because the site already runs on Vercel. We read Vercel's
-pricing page: the free plan includes page views. That page cannot tell us whether page views alone
-will answer our question.
-
-</td></tr></table>
-
-- **Why we chose it:** TODO: each reason with what you checked
-- **What this evidence cannot tell us:** TODO:
+- **Why we chose it:**
+  - It answers our question with page views alone: the views of each `/rooms/<slug>` against the views
+    of its `/booked` page show which rooms lead to bookings.
+  - Vercel's documentation (read on 18 October 2026) says it sets no cookies, identifies visits by a
+    hash that is discarded after 24 hours, and stores no personal identifiers. So our privacy page can
+    stay short and no cookie banner is needed.
+  - The Hobby plan includes 50,000 events a month; our site will see far fewer.
+- **What this evidence cannot tell us:** We saw the page view being sent, not arriving: we have not yet
+  read it in the dashboard's reports. What Vercel stores we know from its documentation only.
 
 ## Consequences
 
-<table width="100%"><tr></tr><tr><td>
-
-**Guidance.** Write what you accepted with the choice, both the good and the bad. One line for each
-point below is enough.
-
-**Example:** On the free plan we see page views only, so we cannot count saved reservations. To
-leave the tool, we remove the setting and switch Analytics off in Vercel.
-
-</td></tr></table>
-
-- **Its cost in money and in time:** TODO:
-- **Who maintains it:** TODO:
-- **What we give up:** TODO: what you cannot learn, and what the free plan leaves out
-- **How we could leave the tool later:** TODO:
-- **The data it collects about our users, and whether it needs a cookie banner:** TODO:
+- **Its cost in money and in time:** No money on the Hobby plan. Reports cover one month only, so
+  someone reads them every month. When the 50,000 events are used up, collection pauses until the next
+  month; the site keeps working.
+- **Who maintains it:** The releases role, who reads the Vercel dashboard (`docs/handover.md`).
+- **What we give up:** We cannot count the two steps the starter marks as events (`filter_used`,
+  `booking_saved`): they need a paid plan, and Vercel drops them on Hobby. The calls stay in the code,
+  ready for a later plan.
+- **How we could leave the tool later:** Remove `NEXT_PUBLIC_ANALYTICS` from `.env.production`: the
+  layout then loads no analytics script. Then also take the part "Counting visits" off the privacy page.
+- **The data it collects about our users, and whether it needs a cookie banner:** Users' page views go
+  to Vercel, without cookies and without a personal identifier, so no cookie banner. The privacy page
+  says so ("Counting visits"); the live privacy page got this text through the migration
+  `20261018_000041_privacy_analytics`.
 
 ## Facts read on
 
-<table width="100%"><tr></tr><tr><td>
-
-**Guidance.** List each provider's page you read, with its link and the date you read it. Plans and
-limits change, so the date tells the next reader how old the facts are. Add a row for each page.
-
-**Example:** Vercel's pricing page for Web Analytics, with its link, read on 20 April 2026.
-
-</td></tr></table>
-
 | Page | Its link | Read on |
 | --- | --- | --- |
-| TODO: | TODO: | TODO: date |
+| Pricing for Web Analytics (Hobby: 50,000 events a month, no custom events, one month of reports, collection pauses at the limit) | https://vercel.com/docs/analytics/limits-and-pricing | 18 October 2026 |
+| Privacy and Compliance (no third-party cookies, a request hash discarded after 24 hours, the data stored per page view) | https://vercel.com/docs/analytics/privacy-policy | 18 October 2026 |
+| Getting started with Vercel Web Analytics (enable it per project in the dashboard; the `Analytics` component in the root layout) | https://vercel.com/docs/analytics/quickstart | 18 October 2026 |
 
 ## Review when
 
-<table width="100%"><tr></tr><tr><td>
-
-**Guidance.** Name the event that should make someone look at this decision again. One line is
-enough.
-
-**Example:** We review it when the library asks how many reservations come from each event's page,
-because the free plan cannot answer that.
-
-</td></tr></table>
-
-TODO: when to review it.
+When we want to count filters and bookings as events (then a paid plan, or another tool in `track()`),
+when the reports show more than 30,000 page views in a month, or when the site gets real users and their
+personal data.
