@@ -3,7 +3,7 @@
 // two most useful ways on, instead of leaving the user stuck.
 import { ButtonLink } from '@/components/site/ButtonLink'
 import { PageTitle } from '@/components/site/PageTitle'
-import { SITE_NAME } from '@/content/campus-cycle'
+import { SITE_NAME } from '@/content/riverside-voices'
 
 export default function NotFound() {
   return (

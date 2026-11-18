@@ -227,7 +227,7 @@ export interface Page {
   id: number;
   title: string;
   /**
-   * The last part of the web address, for example repair-a-puncture. Use lowercase letters, digits and hyphens.
+   * The last part of the web address, for example warm-up-your-voice. Use lowercase letters, digits and hyphens.
    */
   slug: string;
   intro?: string | null;
@@ -257,7 +257,7 @@ export interface Topic {
   id: number;
   name: string;
   /**
-   * The last part of the web address, for example repair-a-puncture. Use lowercase letters, digits and hyphens.
+   * The last part of the web address, for example warm-up-your-voice. Use lowercase letters, digits and hyphens.
    */
   slug: string;
   description?: string | null;
@@ -277,7 +277,7 @@ export interface Workshop {
   id: number;
   title: string;
   /**
-   * The last part of the web address, for example repair-a-puncture. Use lowercase letters, digits and hyphens.
+   * The last part of the web address, for example warm-up-your-voice. Use lowercase letters, digits and hyphens.
    */
   slug: string;
   level: 'beginner' | 'intermediate';
@@ -328,7 +328,7 @@ export interface Clinic {
   id: number;
   name: string;
   /**
-   * The last part of the web address, for example repair-a-puncture. Use lowercase letters, digits and hyphens.
+   * The last part of the web address, for example warm-up-your-voice. Use lowercase letters, digits and hyphens.
    */
   slug: string;
   day: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
@@ -361,7 +361,7 @@ export interface TimeSlot {
   clinic: number | Clinic;
   startsAt: string;
   /**
-   * How many bicycles can be booked in this time slot. The clinic takes 2.
+   * How many groups can book this time slot. A practice room takes 1.
    */
   places: number;
   label?: string | null;

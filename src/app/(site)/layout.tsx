@@ -6,7 +6,7 @@ import { Hanken_Grotesk } from 'next/font/google'
 import type { ReactNode } from 'react'
 import { Footer } from '@/components/site/Footer'
 import { Header } from '@/components/site/Header'
-import { SITE_TITLE } from '@/content/campus-cycle'
+import { SITE_TITLE } from '@/content/riverside-voices'
 import './globals.css'
 
 // Hanken Grotesk, free to share (SIL Open Font Licence). next/font downloads it once, while the site is
@@ -19,10 +19,10 @@ const hanken = Hanken_Grotesk({
 
 export const metadata: Metadata = {
   // The site's name on the home page's tab; every other page gives its own part, and the name is added
-  // after it (src/content/campus-cycle.ts, SITE_TITLE).
+  // after it (src/content/riverside-voices.ts, SITE_TITLE).
   title: SITE_TITLE,
   description:
-    'Campus Cycle: bicycle maintenance workshops and a repair clinic at the college. A fictional example site for the course Building better websites.',
+    'Riverside Voices: practice rooms for choirs, bands and theatre groups, to book online. A fictional choir, made for the course Building better websites.',
 }
 
 export default function SiteLayout({ children }: { children: ReactNode }) {
