@@ -1,153 +1,114 @@
-For teams; a learner working alone can delete this file.
-
 # Content and structure
 
-What content your site holds and how it is organised. It is read by everyone who adds a page or a
-field, so the site keeps one structure.
+Written by: Test A and Test B
 
-**How to fill in this file**
-
-- Write your own text in the lines and tables under each grey box.
-- Replace every TODO, and the hint after it, with your own text. A section that still holds a TODO
-  counts as not filled in.
-- Delete a line or a table row that you do not use.
-- The grey boxes are guidance. The course's checks do not read them, so you may keep them or delete
-  them. In the editor, a box is every line from the one that starts with `<table` to the line
-  `</td></tr></table>`: to delete a box, delete all of those lines.
-
-Write under the title who wrote this document, by first name or GitHub username.
-
-The collection your transactional task saves into is also named in `src/course-check.config.ts`,
-with the text field that names a record: the course's checks read them there. Fill it in when your
-own task replaces the booking example.
+What content our site holds and how it is organised. Everyone who adds a page or a field reads it first,
+so the site keeps one structure.
 
 ## Content inventory
 
-<table width="100%"><tr></tr><tr><td>
-
-**Guidance.** Write one row per piece of content the site needs, and add a row for each further
-piece. Start with the content each user task needs. The columns:
-- **Content:** the piece of content, with anything you do not know about it yet.
-- **User question:** what the user needs to decide or do.
-- **Source:** the evidence you can check the content against.
-- **Kept up to date by:** the role you propose for it.
-- **Pages:** the pages that show it.
-- **Status:** to write, written or checked.
-
-**Example:** Event dates, times and seats. User question: when is it, and is there room? Source: the
-library's events calendar. Kept up to date by: the events coordinator, in `/admin`. Pages: the events
-list and each event's page. Status: checked.
-
-</td></tr></table>
+Riverside Voices is made up, so no content can be checked against a real source. "Written" below means:
+written by us and entered on the site.
 
 | Content | User question | Source | Kept up to date by (a role) | Pages | Status |
 | --- | --- | --- | --- | --- | --- |
-| TODO: | TODO: | TODO: | TODO: | TODO: | TODO: to write, written or checked |
-| TODO: | TODO: | TODO: | TODO: | TODO: | TODO: |
+| Rooms: name, size, price per slot, place in the house, summary, description, picture | Which room holds my group, and what does it cost? | Made up by us; the records in `/admin` → Rooms (the first four came from the seed and the live-content migration) | The choir's room manager | Home, Rooms, a room's page, an equipment page | written |
+| Equipment: name, description, which rooms have it | Which room has what my group needs? | Made up by us; `/admin` → Equipment, and each room's Equipment field | The room manager | Home (quick links), Rooms (filter), Equipment, a room's page | written |
+| Time slots of each room | When is this room free? | The first eight weeks came from the seed or the migration; after that the room manager adds them in `/admin` → Time Slots | The room manager | A room's page (the booking form) | written until 13 December 2026 |
+| Bookings: group, group size, contact name, e-mail address, note | Is my booking saved? | The booking form | The treasurer (invoices), the room manager (changes and cancellations) | Only in `/admin` (private); the public pages only count them | written by users |
+| Pages: home intro, About, Contact, Privacy | Who is this choir, how do I reach it, and what does it keep about me? | Made up by us; `/admin` → Pages | The choir's secretary | `/`, `/about`, `/contact`, `/privacy` | written |
+| Site facts: pricing rule, address, e-mail address | What do I pay, and where is the house? | Made up by us; `/admin` → Site facts | The secretary | Home, Rooms, a room's page, Contact, the confirmation | written |
+| Pictures | What does the room look like? | Our own drawings (`src/seed/images/SOURCES.md`); `/admin` → Media | The room manager | Rooms, Home | written |
+| Chat messages | Can I ask a question the pages leave open? | Typed by users; kept by tawk.to, never in our database (`docs/decisions/integration.md`) | The holder of the tawk.to account, in tawk.to's dashboard | The chat window, on every public page | written by users |
 
 ## Content model
 
-<table width="100%"><tr></tr><tr><td>
-
-**Guidance.** Draw the model before you build it. Then write here:
-- each collection with its fields. Your model has at least four collections of your own topic;
-  users, media and pages do not count;
-- each relation between two collections: one-to-many or many-to-many;
-- your one many-to-many relation, and the page that shows it from each side;
-- a picture of your drawing. A photo of a paper drawing is fine.
-
-Upload the picture to the `docs/` folder on GitHub (**Add file**, then **Upload files**), and show
-it with a line such as `![Our content model](content-model.jpg)`. Give the file a name without
-spaces, and write that name with the same capitals. Keep faces and names out of the photo.
-
-**Example:** Events: title, date, start time, seats, age group. Speakers: name, short biography.
-Rooms: name, floor. Reservations: name, e-mail address. Each event takes place in one room, and
-each reservation is for one event (both one-to-many). Events and speakers are many-to-many: each
-event's page lists its speakers, and each speaker's page lists their events.
-
-</td></tr></table>
+Four collections of our own, next to the starter's Pages, Media, Users and the optional Members.
 
 | Collection | Its fields |
 | --- | --- |
-| TODO: | TODO: |
-| TODO: | TODO: |
-| TODO: | TODO: |
-| TODO: | TODO: |
+| Rooms (`src/collections/Rooms.ts`) | `name`, `slug`, `capacity` (the most people it holds), `price` (EUR per two-hour slot), `location` (where in the house), `summary`, `description` (rich text), `image` (Media), `features` (many Equipment), and the reverse list `timeSlots` |
+| Equipment (`features`, `src/collections/Features.ts`) | `name`, `slug`, `description`, and the reverse list `rooms` |
+| Time slots (`timeSlots`, `src/collections/TimeSlots.ts`) | `room` (one Room), `startsAt`, `endsAt`, `places` (1: one group per slot), and the reverse list `bookings` (editors only) |
+| Bookings (`src/collections/Bookings.ts`) | `timeSlot` (one Time slot), `groupName`, `groupSize`, `name` (the contact), `email`, `note`, `requestId` (stops double sends), `member` (members' area only) |
 
 | Relation between | One-to-many or many-to-many |
 | --- | --- |
-| TODO: two collections | TODO: |
-| TODO: two collections | TODO: |
+| Rooms and Equipment | many-to-many: stored once, in each room's `features`; each piece of equipment's `rooms` reads it back |
+| Rooms and Time slots | one-to-many: stored in the time slot (`room`) |
+| Time slots and Bookings | one-to-many: stored in the booking (`timeSlot`) |
 
-- **Our many-to-many:** TODO: the two collections, and the page that shows it from each side
-- **Our drawing:** TODO: the line that shows the picture
+The database refuses to delete a room that has time slots, a time slot that has bookings, or equipment
+a room still lists.
+
+- **Our many-to-many:** Rooms and Equipment. A room's page (`/rooms/<slug>`) lists its equipment, and
+  each equipment page (`/equipment/<slug>`) lists the rooms that have it.
+- **Our drawing:**
+
+![Our content model: rooms, equipment, time slots and bookings](content-model.svg)
 
 ## Sitemap
 
-<table width="100%"><tr></tr><tr><td>
-
-**Guidance.** List your 6 to 9 pages in the first table, one row each. A page counts when a user can
-reach it from the home page through links. A page that shows one record, such as each event's own
-page, counts once. The three pages in the second table do not count towards the 6 to 9: give their
-addresses.
-
-**Example:** Events (`/events`): the list of coming events, with its filters. It leads to each
-event's page (`/events/<slug>`), which shows the seats left and the reservation form.
-
-</td></tr></table>
-
 | Page | Address | Its job | Leads to |
 | --- | --- | --- | --- |
-| TODO: | TODO: | TODO: | TODO: |
-| TODO: | TODO: | TODO: | TODO: |
+| Home | `/` | Says what the choir rents out, and starts both tasks | Rooms, a room, the filtered rooms list (equipment quick links), About |
+| Rooms | `/rooms`, filtered: `/rooms?people=25&feature=upright-piano` | Find a room: the list with its two filters | A room, an equipment page |
+| A room | `/rooms/<slug>`, later weeks: `/rooms/<slug>?from=2` | Book a room: its size, price and equipment, and the booking form | Its equipment, the confirmation, back to the (filtered) rooms list |
+| Equipment | `/equipment` | Lists every piece of equipment | An equipment page |
+| One piece of equipment | `/equipment/<slug>` | Shows the rooms that have it | Its rooms, the rooms list filtered by it |
+| About | `/about` | Says who the choir is and how the rental works | Contact |
+| Contact | `/contact` | Gives the address and the e-mail address | — |
+
+That is seven pages that count.
 
 | Page that does not count | Address |
 | --- | --- |
-| The confirmation page | TODO: |
-| The privacy page | TODO: |
-| The not-found page | TODO: what a user sees at an address that does not exist |
+| The confirmation page | `/rooms/<slug>/booked?ref=…`; it leads to the calendar file, Contact, back to the room and Home |
+| The privacy page | `/privacy` |
+| The not-found page | Any other address shows "We could not find that page", with **Go to the home page** and **See the rooms** |
+
+The calendar file is a download, not a page: `/rooms/<slug>/booked/calendar?ref=…`.
 
 ## Navigation labels
 
-<table width="100%"><tr></tr><tr><td>
-
-**Guidance.** List the words in your main menu, in the order they appear. Choose the words your
-users use, and give your reason where a choice was not obvious.
-
-**Example:** "Home", "What's on", "Speakers", "Visit us", "About". We chose "What's on" over
-"Events" because users ask the library's desk "what's on this week?".
-
-</td></tr></table>
-
-- **The words in our main menu:** TODO: in the order they appear
-- **Why users will understand these words:** TODO:
+- **The words in our main menu:** Home, Rooms, Equipment, About, Contact. The footer adds Privacy.
+- **Why users will understand these words:** "Rooms", not "Book": a group first looks at the rooms, and
+  every room page has its booking form; the home page's main button says "Find and book a room".
+  "Equipment", not "Features": it is the word a group uses when it asks "do you have a drum kit?". Five
+  short words fit on one or two rows on a phone, with no menu button to find first.
 
 ## Each user task, step by step
 
-<table width="100%"><tr></tr><tr><td>
+**Task 1:** Book a practice room for a time slot
 
-**Guidance.** Write a numbered list per task, and add a line for each step. Each step names the
-page, what the user does and what they see next. The last step is the outcome of the task. Use the
-words your buttons and links show: someone who has never seen your site must be able to follow the
-steps on the live site without asking you.
+1. On the home page, the user chooses **Find and book a room**, or a room card.
+2. The Rooms page lists the rooms. The user opens a room. (The filters are optional here: task 2.)
+3. The room's page shows its size, price and equipment, and the time slots of the next two weeks, each
+   "Free" or "Booked". **Later time slots** shows the two weeks after.
+4. The user chooses a free time slot, fills in the group, the number of people, a contact name, an e-mail
+   address and optionally a note, and chooses **Book this slot**.
+5. When it is not saved, the box at the top lists each problem with a link to its field, and everything
+   typed stays.
+6. When it is saved, the confirmation shows the room, the time and the address, what happens next, and
+   **Add to my calendar** (a `.ics` file).
 
-**Example:** Task 1: reserve a seat.
-1. On the home page, the user chooses "What's on" in the menu.
-2. The events list shows the coming events. The user opens "Meet the author".
-3. The event's page shows "12 seats left" and the reservation form.
-4. The user fills in a name and an e-mail address, and chooses **Reserve my seat**.
-5. The confirmation says: "Your seat is reserved. This is a practice project: use made-up details."
+**Task 2:** Find the room that fits your group
 
-</td></tr></table>
+1. On the home page, the user chooses an equipment quick link, or **Find and book a room**.
+2. On the Rooms page, the user chooses **Group size** and **Equipment**, then **Show rooms**. The result
+   line says how many rooms fit.
+3. The user opens a room. Its equipment links to each equipment page, which lists every room that has it.
+4. **Back to the filtered rooms** returns to the same list, with the filters kept. The user knows which
+   rooms fit the group.
 
-**Task 1:** TODO: the name of your primary task
+On every public page, the chat button in the bottom corner opens the tawk.to chat window, for a question
+the pages do not answer (R13). Both tasks work without it.
 
-1. TODO: the page, what the user does, and what they see next
-2. TODO: the next step
-3. TODO: the last step, which is the outcome of the task
+### Features of the tasks
 
-**Task 2:** TODO: the name of your second task
-
-1. TODO: the page, what the user does, and what they see next
-2. TODO: the next step
-3. TODO: the last step, which is the outcome of the task
+- **The calendar file** (task 1, step 6; R11): **Add to my calendar** on the confirmation page downloads
+  `riverside-voices-<room>.ics`, made by our own site (`src/lib/calendar.ts`, the route
+  `/rooms/<slug>/booked/calendar?ref=…`). It holds the room, the start and end, the address and how to
+  change or cancel; never the group, a name, an e-mail address or the note. It answers only for a signed
+  confirmation link of that room (404 otherwise). It sends nothing to another service, so it is a feature
+  of the booking task, not our integration; why we chose it is in `docs/decisions/calendar-file.md`.
