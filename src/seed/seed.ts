@@ -156,8 +156,9 @@ export const PAGES = [
       },
     ]),
   },
-  // When you add a field to the booking form or switch on analytics, change this page in /admin too:
-  // the seed never changes a page that exists.
+  // When you add a field to the booking form or change the analytics, change this page in /admin too:
+  // the seed never changes a page that exists. (The migration 20261018_*_privacy_analytics brought the
+  // two parts about analytics and the calendar file to the live site.)
   {
     title: 'Privacy',
     slug: 'privacy',
@@ -180,7 +181,17 @@ export const PAGES = [
         paragraph:
           'When you send a form, the site keeps a scrambled code made from your internet (IP) address, for one hour, to stop anyone who sends forms too often. The address itself is not stored.',
       },
-      { heading: 'Cookies' },
+      { heading: 'Counting visits' },
+      {
+        paragraph:
+          'We count page views with Vercel Web Analytics, to see which rooms groups look at. It sets no cookies and keeps no name, e-mail address or internet address; it tells visits apart for at most 24 hours with a scrambled code. A booking confirmation is counted without its booking reference.',
+      },
+      { heading: 'The calendar file' },
+      {
+        paragraph:
+          'The "Add to my calendar" file is made by this site itself, not by another service. It holds only the room, the time and the address of your booking.',
+      },
+            { heading: 'Cookies' },
       {
         paragraph:
           'This site sets cookies only for people who log in, such as an editor in /admin: one to keep them logged in, and one that remembers the look they chose for /admin.',

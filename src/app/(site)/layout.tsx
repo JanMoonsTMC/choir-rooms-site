@@ -1,11 +1,11 @@
 // The frame around every public page: the fonts, the colours (globals.css), the header with the menu,
 // the page itself in <main>, and the footer. The admin (/admin) has its own frame in (payload).
-import { Analytics } from '@vercel/analytics/next'
 import type { Metadata } from 'next'
 import { Fraunces, Source_Sans_3 } from 'next/font/google'
 import type { ReactNode } from 'react'
 import { Footer } from '@/components/site/Footer'
 import { Header } from '@/components/site/Header'
+import { SiteAnalytics } from '@/components/site/SiteAnalytics'
 import { SITE_TITLE } from '@/content/riverside-voices'
 import { cn } from '@/lib/utils'
 import './globals.css'
@@ -43,9 +43,10 @@ export default function SiteLayout({ children }: { children: ReactNode }) {
           {children}
         </main>
         <Footer />
-        {/* Page views for Vercel Web Analytics, only when NEXT_PUBLIC_ANALYTICS is "vercel" (see
-            src/lib/analytics.ts). Without it, the site loads no analytics script at all. */}
-        {process.env.NEXT_PUBLIC_ANALYTICS === 'vercel' && <Analytics />}
+        {/* Page views for Vercel Web Analytics, only when NEXT_PUBLIC_ANALYTICS is "vercel" (our
+            .env.production sets it; docs/decisions/analytics.md). Without it, the site loads no
+            analytics script at all. SiteAnalytics leaves a confirmation's booking reference out. */}
+        {process.env.NEXT_PUBLIC_ANALYTICS === 'vercel' && <SiteAnalytics />}
       </body>
     </html>
   )
