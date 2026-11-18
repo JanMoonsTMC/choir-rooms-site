@@ -71,12 +71,10 @@ export interface Config {
     users: User;
     media: Media;
     pages: Page;
-    topics: Topic;
-    workshops: Workshop;
-    clinics: Clinic;
+    features: Feature;
+    rooms: Room;
     timeSlots: TimeSlot;
     bookings: Booking;
-    repairs: Repair;
     throttle: Throttle;
     members: Member;
     'payload-kv': PayloadKv;
@@ -85,10 +83,10 @@ export interface Config {
     'payload-migrations': PayloadMigration;
   };
   collectionsJoins: {
-    topics: {
-      workshops: 'workshops';
+    features: {
+      rooms: 'rooms';
     };
-    clinics: {
+    rooms: {
       timeSlots: 'timeSlots';
     };
     timeSlots: {
@@ -99,12 +97,10 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
-    topics: TopicsSelect<false> | TopicsSelect<true>;
-    workshops: WorkshopsSelect<false> | WorkshopsSelect<true>;
-    clinics: ClinicsSelect<false> | ClinicsSelect<true>;
+    features: FeaturesSelect<false> | FeaturesSelect<true>;
+    rooms: RoomsSelect<false> | RoomsSelect<true>;
     timeSlots: TimeSlotsSelect<false> | TimeSlotsSelect<true>;
     bookings: BookingsSelect<false> | BookingsSelect<true>;
-    repairs: RepairsSelect<false> | RepairsSelect<true>;
     throttle: ThrottleSelect<false> | ThrottleSelect<true>;
     members: MembersSelect<false> | MembersSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -251,9 +247,9 @@ export interface Page {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "topics".
+ * via the `definition` "features".
  */
-export interface Topic {
+export interface Feature {
   id: number;
   name: string;
   /**
@@ -261,8 +257,8 @@ export interface Topic {
    */
   slug: string;
   description?: string | null;
-  workshops?: {
-    docs?: (number | Workshop)[];
+  rooms?: {
+    docs?: (number | Room)[];
     hasNextPage?: boolean;
     totalDocs?: number;
   };
@@ -271,34 +267,30 @@ export interface Topic {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "workshops".
+ * via the `definition` "rooms".
  */
-export interface Workshop {
+export interface Room {
   id: number;
-  title: string;
+  name: string;
   /**
    * The last part of the web address, for example warm-up-your-voice. Use lowercase letters, digits and hyphens.
    */
   slug: string;
-  level: 'beginner' | 'intermediate';
-  day: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
   /**
-   * Use the 24-hour clock, for example 18:30.
+   * The largest group the room takes. The room filter and the booking form both read it.
    */
-  startTime: string;
+  capacity: number;
   /**
-   * Use the 24-hour clock, for example 20:00. Leave empty if the workshop has none.
+   * What one two-hour time slot in this room costs. The choir sends an invoice; nobody pays online.
    */
-  endTime?: string | null;
-  /**
-   * Only for a workshop with no end time that must be over by a certain time. Use the 24-hour clock, for example 15:00. Pages show "ends by 15:00".
-   */
-  latestEnd?: string | null;
   price: number;
   /**
-   * The largest number of people in one workshop.
+   * For example: ground floor, at the back. Say whether there are stairs.
    */
-  groupSize: number;
+  location: string;
+  /**
+   * One sentence: who the room suits. Not its size, price or equipment: those are fields.
+   */
   summary: string;
   description?: {
     root: {
@@ -316,34 +308,7 @@ export interface Workshop {
     [k: string]: unknown;
   } | null;
   image?: (number | null) | Media;
-  topics?: (number | Topic)[] | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "clinics".
- */
-export interface Clinic {
-  id: number;
-  name: string;
-  /**
-   * The last part of the web address, for example warm-up-your-voice. Use lowercase letters, digits and hyphens.
-   */
-  slug: string;
-  day: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
-  /**
-   * Use the 24-hour clock, for example 18:30.
-   */
-  startTime: string;
-  /**
-   * Use the 24-hour clock, for example 17:00.
-   */
-  endTime: string;
-  /**
-   * If your course gave you a personal code for warm-up 4, put it in this summary.
-   */
-  summary: string;
+  features?: (number | Feature)[] | null;
   timeSlots?: {
     docs?: (number | TimeSlot)[];
     hasNextPage?: boolean;
@@ -358,10 +323,11 @@ export interface Clinic {
  */
 export interface TimeSlot {
   id: number;
-  clinic: number | Clinic;
+  room: number | Room;
   startsAt: string;
+  endsAt: string;
   /**
-   * How many groups can book this time slot. A practice room takes 1.
+   * How many groups can book this time slot. A practice room takes 1 group at a time.
    */
   places: number;
   label?: string | null;
@@ -380,9 +346,14 @@ export interface TimeSlot {
 export interface Booking {
   id: number;
   /**
-   * The clinic time slot this booking is for.
+   * The room time slot this booking is for.
    */
   timeSlot: number | TimeSlot;
+  groupName?: string | null;
+  /**
+   * How many people come. The booking form refuses a group bigger than the room.
+   */
+  groupSize?: number | null;
   name: string;
   email: string;
   note?: string | null;
@@ -425,18 +396,6 @@ export interface Member {
     | null;
   password?: string | null;
   collection: 'members';
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "repairs".
- */
-export interface Repair {
-  id: number;
-  name: string;
-  price: number;
-  description?: string | null;
-  updatedAt: string;
-  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -485,16 +444,12 @@ export interface PayloadLockedDocument {
         value: number | Page;
       } | null)
     | ({
-        relationTo: 'topics';
-        value: number | Topic;
+        relationTo: 'features';
+        value: number | Feature;
       } | null)
     | ({
-        relationTo: 'workshops';
-        value: number | Workshop;
-      } | null)
-    | ({
-        relationTo: 'clinics';
-        value: number | Clinic;
+        relationTo: 'rooms';
+        value: number | Room;
       } | null)
     | ({
         relationTo: 'timeSlots';
@@ -503,10 +458,6 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'bookings';
         value: number | Booking;
-      } | null)
-    | ({
-        relationTo: 'repairs';
-        value: number | Repair;
       } | null)
     | ({
         relationTo: 'throttle';
@@ -626,48 +577,30 @@ export interface PagesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "topics_select".
+ * via the `definition` "features_select".
  */
-export interface TopicsSelect<T extends boolean = true> {
+export interface FeaturesSelect<T extends boolean = true> {
   name?: T;
   slug?: T;
   description?: T;
-  workshops?: T;
+  rooms?: T;
   updatedAt?: T;
   createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "workshops_select".
+ * via the `definition` "rooms_select".
  */
-export interface WorkshopsSelect<T extends boolean = true> {
-  title?: T;
+export interface RoomsSelect<T extends boolean = true> {
+  name?: T;
   slug?: T;
-  level?: T;
-  day?: T;
-  startTime?: T;
-  endTime?: T;
-  latestEnd?: T;
+  capacity?: T;
   price?: T;
-  groupSize?: T;
+  location?: T;
   summary?: T;
   description?: T;
   image?: T;
-  topics?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "clinics_select".
- */
-export interface ClinicsSelect<T extends boolean = true> {
-  name?: T;
-  slug?: T;
-  day?: T;
-  startTime?: T;
-  endTime?: T;
-  summary?: T;
+  features?: T;
   timeSlots?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -677,8 +610,9 @@ export interface ClinicsSelect<T extends boolean = true> {
  * via the `definition` "timeSlots_select".
  */
 export interface TimeSlotsSelect<T extends boolean = true> {
-  clinic?: T;
+  room?: T;
   startsAt?: T;
+  endsAt?: T;
   places?: T;
   label?: T;
   bookings?: T;
@@ -691,22 +625,13 @@ export interface TimeSlotsSelect<T extends boolean = true> {
  */
 export interface BookingsSelect<T extends boolean = true> {
   timeSlot?: T;
+  groupName?: T;
+  groupSize?: T;
   name?: T;
   email?: T;
   note?: T;
   member?: T;
   requestId?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "repairs_select".
- */
-export interface RepairsSelect<T extends boolean = true> {
-  name?: T;
-  price?: T;
-  description?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -792,11 +717,11 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 export interface SiteFact {
   id: number;
   /**
-   * Shown on the home page and on every workshop page.
+   * Shown on the home page, the rooms page and every room page.
    */
   pricingRule: string;
   /**
-   * Where the workshops and the clinic are. Shown on the Contact page and on every workshop page.
+   * The address of the house. Shown on the Contact page, on every room page and on the booking confirmation.
    */
   place: string;
   /**

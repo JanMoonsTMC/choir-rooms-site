@@ -2,13 +2,13 @@
 
 // What this is: the main menu, one list of links. The link of the page you are on gets a navy frame
 // with a solid offset and aria-current, so both sighted users and screen readers know where they are.
-// On a phone the links wrap onto a second row instead of hiding behind a menu button: five short links
+// On a phone the links wrap onto a second row instead of hiding behind a menu button: four short links
 // fit, and links you can see need no extra tap.
 //
 // What to change for your own site: the LINKS list (the text and where each link goes).
 // With the optional members' area on (src/lib/membersArea.ts), Header.tsx passes `account`, and the menu
-// gets a sixth link: "My bookings" for a member who is logged in, "Log in" for everyone else. While the
-// area is off the menu is exactly the five links.
+// gets a fifth link: "My bookings" for a member who is logged in, "Log in" for everyone else. While the
+// area is off the menu is exactly the four links.
 // 'use client' because it asks for the address that is open (usePathname). The server still sends the
 // finished menu as HTML, so it also works without JavaScript.
 import Link from 'next/link'
@@ -17,8 +17,7 @@ import { cn } from '@/lib/utils'
 
 const LINKS = [
   { href: '/', label: 'Home' },
-  { href: '/workshops', label: 'Workshops' },
-  { href: '/clinics', label: 'Book a room' },
+  { href: '/rooms', label: 'Rooms' },
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },
 ]
@@ -27,12 +26,11 @@ const ACCOUNT_LINK = { href: '/account', label: 'My bookings' }
 const LOGIN_LINK = { href: '/account/login', label: 'Log in' }
 
 // "page": this exact page is open. "true": a page inside this part of the site is open, for example
-// one workshop's page under Workshops (the topic pages belong to Workshops too).
+// one room's page under Rooms.
 function currentFor(href: string, pathname: string): 'page' | 'true' | undefined {
   if (pathname === href) return 'page'
   if (href === '/') return undefined
   if (pathname.startsWith(`${href}/`)) return 'true'
-  if (href === '/workshops' && pathname.startsWith('/topics/')) return 'true'
   return undefined
 }
 

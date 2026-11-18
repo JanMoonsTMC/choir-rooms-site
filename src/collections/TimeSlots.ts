@@ -7,7 +7,7 @@ import { positiveInteger } from './fields'
 /**
  * A time slot's start, written the way people in Brussels read it, for example "10 Oct 2026, 15:00".
  * The database stores every time in UTC (world time), which is one or two hours behind Brussels, so
- * showing the stored value as it is would put every clinic slot at the wrong hour.
+ * showing the stored value as it is would put every time slot at the wrong hour.
  */
 export function brusselsTime(startsAt: string | Date | null | undefined): string {
   const date = new Date(startsAt ?? Number.NaN)
@@ -15,14 +15,14 @@ export function brusselsTime(startsAt: string | Date | null | undefined): string
   return new Intl.DateTimeFormat('en-GB', { timeZone: SITE_TIME_ZONE, dateStyle: 'medium', timeStyle: 'short' }).format(date)
 }
 
-// One bookable half hour of a clinic.
+// One bookable time slot of a room, usually two hours. One group books it (places: 1).
 export const TimeSlots: CollectionConfig = {
   slug: 'timeSlots',
   admin: {
     // Payload can only use a saved field as a record's title, so the edit page shows startsAt. The list
     // shows the friendlier 'When (Brussels time)' column instead.
     useAsTitle: 'startsAt',
-    defaultColumns: ['label', 'clinic', 'places'],
+    defaultColumns: ['label', 'room', 'places'],
   },
   access: publicContent,
   hooks: {
@@ -34,7 +34,7 @@ export const TimeSlots: CollectionConfig = {
       ),
     ],
     beforeChange: [
-      requireExistingRelation('clinic', 'clinics', 'This clinic no longer exists. Choose another clinic.'),
+      requireExistingRelation('room', 'rooms', 'This room no longer exists. Choose another room.'),
       preventCapacityReduction,
     ],
     afterRead: [
@@ -48,11 +48,11 @@ export const TimeSlots: CollectionConfig = {
     ],
   },
   fields: [
-    // One-to-many: every time slot belongs to exactly one clinic. Stored here.
+    // One-to-many: every time slot belongs to exactly one room. Stored here.
     {
-      name: 'clinic',
+      name: 'room',
       type: 'relationship',
-      relationTo: 'clinics',
+      relationTo: 'rooms',
       required: true,
     },
     {
@@ -69,15 +69,34 @@ export const TimeSlots: CollectionConfig = {
         },
       },
     },
+    // When the room must be free again. Shown with the start ("19:00–21:00") and put in the calendar file.
+    {
+      name: 'endsAt',
+      type: 'date',
+      required: true,
+      admin: {
+        date: {
+          pickerAppearance: 'dayAndTime',
+          displayFormat: 'd MMM yyyy, HH:mm',
+          timeFormat: 'HH:mm',
+        },
+      },
+      validate: (value: unknown, { siblingData }: { siblingData: Record<string, unknown> }) => {
+        if (!value) return 'Choose when the time slot ends.'
+        const start = new Date(String(siblingData.startsAt ?? ''))
+        if (!Number.isNaN(start.getTime()) && new Date(String(value)) <= start) return 'The end must be after the start.'
+        return true
+      },
+    },
     {
       name: 'places',
       type: 'number',
       required: true,
-      defaultValue: 2,
+      defaultValue: 1,
       min: 1,
       validate: positiveInteger,
       admin: {
-        description: 'How many groups can book this time slot. A practice room takes 1.',
+        description: 'How many groups can book this time slot. A practice room takes 1 group at a time.',
       },
     },
     // Not stored: worked out from startsAt every time a time slot is read, for the list in /admin.

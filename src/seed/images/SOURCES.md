@@ -13,10 +13,10 @@ it here the same way. Never upload photos of people to this site.
 
 | File | Shows | Icons |
 | --- | --- | --- |
-| `warm-up-your-voice.jpg` | A singer's microphone in a yellow circle | Lucide `mic-vocal`, `music` |
-| `read-music-from-scratch.jpg` | An open book in a green circle | Lucide `book-open`, `music-2` |
-| `sight-sing-a-new-piece.jpg` | Two music notes in a pink circle | Lucide `music-2`, `book-open` |
-| `breathe-for-long-phrases.jpg` | Three gusts of wind in a green circle | Lucide `wind`, `mic-vocal` |
+| `the-hall.jpg` | A grand piano in a yellow circle | Lucide `piano`, `users-round` |
+| `the-studio.jpg` | Two theatre masks in a pink circle | Lucide `drama`, `music` |
+| `the-loft.jpg` | A music keyboard in a green circle | Lucide `keyboard-music`, `sun` |
+| `the-band-room.jpg` | A drum in a yellow circle | Lucide `drum`, `guitar` |
 | `rehearsal-house.jpg` | A house in a yellow circle | Lucide `house`, `music` |
 | `practice-rooms.jpg` | A calendar with a clock in a pink circle | Lucide `calendar-clock`, `keyboard-music` |
 

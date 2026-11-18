@@ -9,12 +9,10 @@ import sharp from 'sharp'
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
 import { Pages } from './collections/Pages'
-import { Topics } from './collections/Topics'
-import { Workshops } from './collections/Workshops'
-import { Clinics } from './collections/Clinics'
+import { Features } from './collections/Features'
+import { Rooms } from './collections/Rooms'
 import { TimeSlots } from './collections/TimeSlots'
 import { Bookings } from './collections/Bookings'
-import { Repairs } from './collections/Repairs'
 import { Throttle } from './collections/Throttle'
 import { Members } from './collections/Members'
 import { SiteFacts } from './globals/SiteFacts'
@@ -52,7 +50,7 @@ const config = buildConfig({
     },
   },
   // Members: the optional members' area, off unless MEMBERS_AREA=on (src/lib/membersArea.ts).
-  collections: [Users, Media, Pages, Topics, Workshops, Clinics, TimeSlots, Bookings, Repairs, Throttle, Members],
+  collections: [Users, Media, Pages, Features, Rooms, TimeSlots, Bookings, Throttle, Members],
   globals: [SiteFacts],
   plugins: [vercelBlobStorage({
     enabled: Boolean(process.env.BLOB_READ_WRITE_TOKEN),

@@ -9,7 +9,7 @@ import { checkPlaces } from '../tasks/book-slot/capacity'
 // one place.
 export const SLOT_GONE_MESSAGE = 'This time slot no longer exists. Choose another time slot.'
 
-// One user's booking for one clinic time slot. It holds a name and an e-mail address, so it is private:
+// One group's booking of one room's time slot. It holds a name and an e-mail address, so it is private:
 // only editors can see it (and, when the optional members' area is on, the member who made it).
 export const Bookings: CollectionConfig = {
   slug: 'bookings',
@@ -32,19 +32,37 @@ export const Bookings: CollectionConfig = {
     ],
   },
   fields: [
-    // Every booking belongs to exactly one time slot. A later exercise in the course adds a second
-    // relationship here: repairs.
+    // Every booking belongs to exactly one time slot, and through it to one room.
     {
       name: 'timeSlot',
       type: 'relationship',
       relationTo: 'timeSlots',
       required: true,
       admin: {
-        description: 'The clinic time slot this booking is for.',
+        description: 'The room time slot this booking is for.',
       },
     },
+    // The group that rehearses, and how many people come. Not required here, so an editor can still save
+    // a booking made before these fields existed; the booking form (src/tasks/book-slot/createBooking.ts)
+    // asks for both, and checks that the group fits the room.
+    {
+      name: 'groupName',
+      label: 'Group',
+      type: 'text',
+    },
+    {
+      name: 'groupSize',
+      label: 'People in the group',
+      type: 'number',
+      min: 1,
+      admin: {
+        description: 'How many people come. The booking form refuses a group bigger than the room.',
+      },
+    },
+    // The contact person for this booking.
     {
       name: 'name',
+      label: 'Contact name',
       type: 'text',
       required: true,
     },

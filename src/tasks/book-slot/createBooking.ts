@@ -1,10 +1,10 @@
-// Saving one booking from the clinic page's form: every check, then the save, then an answer the form
+// Saving one booking from a room page's form: every check, then the save, then an answer the form
 // can show. saveBooking.ts calls this and, when the booking is saved, opens the confirmation page.
 //
 // The checks, in this order:
 //   1. the trap field (guards.ts): a program filled it in, so nothing is saved;
 //   2. the fields themselves: a name, an e-mail address, an optional note, and a time slot of THIS
-//      clinic that has not started yet;
+//      room that has not started yet;
 //   3. the same form sent twice (a double click, or a retry after a lost answer) saves one booking;
 //   4. the rate limit (guards.ts): at most 5 bookings an hour from one device. Only a send that got
 //      this far counts, so typing mistakes never use it up;
@@ -17,9 +17,8 @@ import { FULL_MESSAGE } from './capacity'
 import { allowRequest, BOOKING_LIMIT, isTrapFilled } from './guards'
 
 // The fields a user fills in, as text. On any failure they go back to the form, so nothing is lost.
-// repairs: the ids of the repairs the user ticked (W6's repair choice); empty until W6.
-export type BookingValues = { timeSlot: string; name: string; email: string; note: string; repairs?: string[] }
-export type BookingField = Exclude<keyof BookingValues, 'repairs'>
+export type BookingValues = { timeSlot: string; name: string; email: string; note: string }
+export type BookingField = keyof BookingValues
 
 export type BookingResult =
   | { ok: true; bookingId: number }
@@ -60,11 +59,7 @@ function read(formData: FormData, name: string): string {
 /**
  * What the user filled in, to give back to the form when the booking was not saved, so nothing is
  * lost. Only these fields are read; anything else the form carries (member=1, a made-up id, ...) is
- * ignored.
- *
- * repairs only hands the ticked repairs back to the form, so they stay ticked; nothing here is saved.
- * Before W6 the form has no repair choice, so it is always empty. What is SAVED is only what
- * payload.create below lists, which is still the whitelist.
+ * ignored. What is SAVED is only what payload.create below lists: that is the whitelist.
  */
 function readValues(formData: FormData): BookingValues {
   return {
@@ -72,11 +67,10 @@ function readValues(formData: FormData): BookingValues {
     name: read(formData, 'name'),
     email: read(formData, 'email'),
     note: read(formData, 'note'),
-    repairs: formData.getAll('repairs').map(String).filter((id) => /^\d+$/.test(id)),
   }
 }
 
-// The form's hidden requestId: a random code the clinic page made for this one form. Anything that does
+// The form's hidden requestId: a random code the room page made for this one form. Anything that does
 // not look like one is ignored (the booking is then saved without it).
 function readRequestId(formData: FormData): string | undefined {
   const value = read(formData, 'requestId')
@@ -92,7 +86,7 @@ const EMAIL =
 const EMAIL_MESSAGE = 'Enter your e-mail address in the right form, like name@example.com.'
 
 /** Checks the fields; returns a message for each field with a problem (none: all is well). */
-async function check(values: BookingValues, clinicSlug: string, { payload, now }: BookingContext) {
+async function check(values: BookingValues, roomSlug: string, { payload, now }: BookingContext) {
   const errors: Partial<Record<BookingField, string>> = {}
 
   // The time slot comes first, as it does in the form.
@@ -100,12 +94,12 @@ async function check(values: BookingValues, clinicSlug: string, { payload, now }
   if (!values.timeSlot) {
     errors.timeSlot = 'Choose a time.'
   } else {
-    const clinic = (await payload.find({ collection: 'clinics', where: { slug: { equals: clinicSlug } }, depth: 0, limit: 1, joins: false })).docs[0]
+    const room = (await payload.find({ collection: 'rooms', where: { slug: { equals: roomSlug } }, depth: 0, limit: 1, joins: false })).docs[0]
     const slot = Number.isInteger(slotId) && slotId > 0
       ? await payload.findByID({ collection: 'timeSlots', id: slotId, depth: 0, joins: false, disableErrors: true })
       : null
-    // depth: 0 gives the slot's clinic as a plain id.
-    if (!clinic || !slot || slot.clinic !== clinic.id) {
+    // depth: 0 gives the slot's room as a plain id.
+    if (!room || !slot || slot.room !== room.id) {
       errors.timeSlot = 'Choose one of the times on this page.'
     } else if (new Date(slot.startsAt) <= now) {
       errors.timeSlot = STARTED_MESSAGE
@@ -151,7 +145,7 @@ function sameBooking(earlier: Booking, values: BookingValues): BookingResult {
   return { ok: false, message: FORM_USED_MESSAGE, values }
 }
 
-/** Checks and saves one booking from the clinic page's form. Never throws: every outcome is an answer. */
+/** Checks and saves one booking from a room page's form. Never throws: every outcome is an answer. */
 export async function createBooking(formData: FormData, context: BookingContext): Promise<BookingResult> {
   try {
     return await checkAndSave(formData, context)
@@ -171,22 +165,18 @@ async function checkAndSave(formData: FormData, context: BookingContext): Promis
   // below are saved, so nobody can set a field the form does not offer.
   const values = readValues(formData)
   const requestId = readRequestId(formData)
-  // Which clinic's page the form is on, to check the time slot belongs to that clinic. Not saved.
-  const clinicSlug = read(formData, 'clinic')
-
-  // W6: switch on the repair choice. Remove the // in front of the next line, and of `repairs,` in
-  // payload.create below. It keeps only whole numbers, the ids of the repairs the user ticked.
-  // const repairs = formData.getAll('repairs').map(Number).filter(Number.isInteger)
+  // Which room's page the form is on, to check the time slot belongs to that room. Not saved.
+  const roomSlug = read(formData, 'room')
 
   // 1. The trap field. The message says only that the booking was not saved: a program that filled
   // the trap learns nothing about why.
   if (isTrapFilled(formData)) return { ok: false, message: NOT_SAVED_MESSAGE, values }
 
-  // 2. The fields. These checks read the database (the clinic and the slot) BEFORE the rate limit
+  // 2. The fields. These checks read the database (the room and the slot) BEFORE the rate limit
   // below. That is the price of counting only sends that pass the checks, so typing mistakes never
   // use up the limit: a flood of invalid sends still costs these reads. The trap field (above) and
   // the hosting platform's own limits cover that.
-  const errors = await check(values, clinicSlug, context)
+  const errors = await check(values, roomSlug, context)
   if (Object.keys(errors).length > 0) return fieldProblems(errors, values)
 
   // 3. This same form was saved before (the user sent it again after a lost answer): the same booking.
@@ -215,7 +205,6 @@ async function checkAndSave(formData: FormData, context: BookingContext): Promis
         requestId,
         // The logged-in member, never anything the form sends: only with the members' area on.
         member: membersAreaOn() ? context.member : undefined,
-        // repairs,
       },
       overrideAccess: true,
     })

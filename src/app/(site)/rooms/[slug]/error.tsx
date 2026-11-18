@@ -1,6 +1,6 @@
 'use client'
 
-// The last safety net for a clinic's pages (/clinics/<slug> and its confirmation): Next.js shows this
+// The last safety net for a room's pages (/rooms/<slug> and its confirmation): Next.js shows this
 // instead of the page when something unexpected goes wrong while the page is made, for example when
 // the database cannot be reached. It must run in the browser ('use client'), because its button works
 // there.
@@ -19,17 +19,17 @@ type ErrorPageProps = {
   retry: () => void
 }
 
-export default function ClinicError({ retry }: ErrorPageProps) {
+export default function RoomError({ retry }: ErrorPageProps) {
   return (
     <div className="pb-6">
       <PageTitle
         title="This page could not be shown"
-        intro="Something went wrong while showing this page. Try again, or go back to the room booking page."
+        intro="Something went wrong while showing this page. Try again, or go back to all rooms."
         tone="yellow"
       />
       <div className="flex flex-wrap gap-3">
         <Button type="button" onClick={() => retry()}>Try again</Button>
-        <ButtonLink href="/clinics" variant="secondary">Book a room</ButtonLink>
+        <ButtonLink href="/rooms" variant="secondary">All rooms</ButtonLink>
       </div>
     </div>
   )
