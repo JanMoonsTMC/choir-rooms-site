@@ -25,9 +25,20 @@ import { filterQuery, parseFilters, type SearchParams } from '@/tasks/find-room/
 
 export const dynamic = 'force-dynamic'
 
-// How far ahead the form offers time slots: the next two weeks, so the list stays short enough to read
-// on a phone. Later slots appear as the days pass.
-const SHOWN_DAYS = 14
+// The form offers two weeks of time slots at a time, so the list stays short enough to read on a phone.
+// "Later time slots" opens the next two weeks: /rooms/the-loft?from=2 starts two weeks from today. A
+// plain link, so it works without JavaScript and Back returns to the weeks before.
+const SHOWN_WEEKS = 2
+const WEEK = 7 * 24 * 60 * 60 * 1000
+// The farthest a user can page ahead: well past the 8 weeks of slots the seed adds.
+const MAX_FROM = 50
+
+/** The ?from= value: a whole number of weeks from today, in steps of SHOWN_WEEKS; anything else is 0. */
+function weeksFrom(value: string | string[] | undefined): number {
+  const text = Array.isArray(value) ? value[0] : value
+  const weeks = Number(text)
+  return Number.isInteger(weeks) && weeks > 0 && weeks <= MAX_FROM && weeks % SHOWN_WEEKS === 0 ? weeks : 0
+}
 
 // searchParams: the filters of the rooms list the user came from (/rooms/the-loft?people=12), so
 // "Back" returns to that same list. No JavaScript and no browser history are needed for that.
@@ -58,16 +69,27 @@ export default async function RoomPage({ params, searchParams }: Props) {
   const room = await findRoom((await params).slug)
   // No room with this slug: the "not found" page, which explains and offers a way on.
   if (!room) notFound()
-  const filters = parseFilters((await searchParams) ?? {})
+  const query = (await searchParams) ?? {}
+  const filters = parseFilters(query)
   const back = `/rooms${filterQuery(filters)}`
+  // Which two weeks of time slots to show, and the links to the ones before and after (with the filters,
+  // so Back to the list still works from there).
+  const from = weeksFrom(query.from)
+  const weeksLink = (weeks: number) => {
+    const params = new URLSearchParams(filterQuery(filters).slice(1))
+    if (weeks > 0) params.set('from', String(weeks))
+    const text = params.toString()
+    return `/rooms/${room.slug}${text ? `?${text}` : ''}#book`
+  }
   const payload = await getPayload({ config })
 
-  // The room's time slots that have not started yet, in the next SHOWN_DAYS days, earliest first.
+  // The room's time slots that have not started yet, in the two weeks asked for, earliest first.
   const now = new Date()
-  const until = new Date(now.getTime() + SHOWN_DAYS * 24 * 60 * 60 * 1000)
+  const start = new Date(now.getTime() + from * WEEK)
+  const until = new Date(now.getTime() + (from + SHOWN_WEEKS) * WEEK)
   const upcoming = await payload.find({
     collection: 'timeSlots',
-    where: { room: { equals: room.id }, startsAt: { greater_than: now.toISOString(), less_than: until.toISOString() } },
+    where: { room: { equals: room.id }, startsAt: { greater_than: start.toISOString(), less_than: until.toISOString() } },
     sort: 'startsAt',
     depth: 0,
     limit: 100,
@@ -98,6 +120,9 @@ export default async function RoomPage({ params, searchParams }: Props) {
     places: slot.places,
   }))
   const allBooked = slots.length > 0 && slots.every((slot) => slot.placesLeft === 0)
+  // Are there time slots after these two weeks? Then the form offers "Later time slots".
+  const later = (await payload.count({ collection: 'timeSlots', where: { room: { equals: room.id }, startsAt: { greater_than_equal: until.toISOString() } } })).totalDocs > 0
+  const which = from === 0 ? 'the next two weeks' : `weeks ${from + 1} and ${from + 2} from now`
 
   // The place and the pricing rule, from the Site facts global (src/globals/SiteFacts.ts).
   const facts = await payload.findGlobal({ slug: 'site-facts', depth: 0 })
@@ -150,22 +175,35 @@ export default async function RoomPage({ params, searchParams }: Props) {
           )}
 
           <section aria-labelledby="book" className="framed grid gap-5 p-5 offset-brass sm:p-8">
-            <h2 id="book" className="text-2xl">Book a time slot</h2>
+            <div className="grid gap-1">
+              <h2 id="book" className="scroll-mt-6 text-2xl">Book a time slot</h2>
+              <p className="text-ink-soft">{`Time slots in ${which}. Each slot is for one group; nobody pays online.`}</p>
+            </div>
+            {(from > 0 || later) && (
+              <nav aria-label="Weeks" className="flex flex-wrap gap-3">
+                {from > 0 && (
+                  <ButtonLink href={weeksLink(from - SHOWN_WEEKS)} variant="secondary" size="sm" className="min-h-11">Earlier time slots</ButtonLink>
+                )}
+                {later && (
+                  <ButtonLink href={weeksLink(from + SHOWN_WEEKS)} variant="secondary" size="sm" className="min-h-11">Later time slots</ButtonLink>
+                )}
+              </nav>
+            )}
             {slots.length === 0 ? (
               <Notice tone="warning" label="No times yet">
-                <p>This room has no free time slots in the next two weeks. Check back soon, or look at the other rooms.</p>
+                <p>{`This room has no time slots in ${which}.`} {later ? 'Look at the later time slots, or at the other rooms.' : 'Check back soon, or look at the other rooms.'}</p>
                 <ButtonLink href="/rooms" variant="secondary" className="mt-2 w-fit">All rooms</ButtonLink>
               </Notice>
             ) : allBooked ? (
               <Notice tone="warning" label="Fully booked">
-                <p className="font-semibold">Every time slot in the next two weeks is booked.</p>
-                <p>Check this page again later, or look at the other rooms.</p>
+                <p className="font-semibold">{`Every time slot in ${which} is booked.`}</p>
+                <p>{later ? 'Look at the later time slots, or at the other rooms.' : 'Check this page again later, or look at the other rooms.'}</p>
                 <ButtonLink href="/rooms" variant="secondary" className="mt-2 w-fit">All rooms</ButtonLink>
               </Notice>
             ) : (
               // The time slots are shown inside the form, by SlotPicker (src/components/site/SlotPicker.tsx).
               // requestId: a new random code for each form, so the same form sent twice saves one booking.
-              <BookingForm room={room.slug} slots={slots} requestId={randomUUID()} member={member && { name: member.name ?? '', email: member.email }} />
+              <BookingForm room={room.slug} capacity={room.capacity} slots={slots} requestId={randomUUID()} member={member && { name: member.name ?? '', email: member.email }} />
             )}
           </section>
 

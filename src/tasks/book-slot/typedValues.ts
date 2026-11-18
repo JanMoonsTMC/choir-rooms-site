@@ -4,5 +4,5 @@ import type { BookingValues } from './createBooking'
 
 export function typedValues(formData: FormData): BookingValues {
   const text = (name: string) => String(formData.get(name) ?? '')
-  return { timeSlot: text('timeSlot'), name: text('name'), email: text('email'), note: text('note') }
+  return { timeSlot: text('timeSlot'), groupName: text('groupName'), groupSize: text('groupSize'), name: text('name'), email: text('email'), note: text('note') }
 }
