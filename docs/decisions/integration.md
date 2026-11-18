@@ -1,139 +1,111 @@
 # Decision: an integration
 
-Whether the site connects to another service, and to which. Its reader comes later, with one
-question: can I change this, and what happens if I do?
+Written by: Test A, with Test B
 
-**How to fill in this file**
+Whether the site connects to another service, and to which. Its reader comes later, with one question:
+can I change this, and what happens if I do?
 
-- Write your own text in the lines and tables under each grey box.
-- Replace every TODO, and the hint after it, with your own text. A section that still holds a TODO
-  counts as not filled in.
-- Delete a line or a table row that you do not use.
-- The grey boxes are guidance. The course's checks do not read them, so you may keep them or delete
-  them. In the editor, a box is every line from the one that starts with `<table` to the line
-  `</td></tr></table>`: to delete a box, delete all of those lines.
+This record replaces our first one of the same day, which chose a calendar file made by our own site.
+That file is not on the course's suggested list, so it stays as a feature of the booking task
+(`docs/content-structure.md`, "Features of the tasks"; `calendar-file.md`), and it is no longer our
+integration.
 
 ## The question
 
-<table width="100%"><tr></tr><tr><td>
-
-**Guidance.** Write in one sentence what had to be decided. Add the need of your users behind it,
-or the requirement it serves, and what forces a choice now.
-
-**Example:** Do we show a map of the way to the library, and from which service? Users who reserve
-a seat need to find the building (requirement R4).
-
-</td></tr></table>
-
-- **The question:** TODO: one sentence
-- **The need or requirement behind it:** TODO:
+- **The question:** Which one service from the course's suggested list (chapter 8.3, "Your integration
+  project's candidates") helps groups most with our two tasks?
+- **The need or requirement behind it:** Requirement R13: a group can ask the choir a question from any
+  public page, without leaving the page and without an account. Our pages leave questions open
+  (`docs/test-report.md`, findings 2 and 3: how long a slot is, how to pay or cancel; finding 7: groups
+  that need a piano may look for other words). The only other way to ask is the Contact page's e-mail
+  address, which is a made-up `.example` address where nothing arrives.
 
 ## Options considered
 
-<table width="100%"><tr></tr><tr><td>
-
-**Guidance.** Write at least two options, one row each: what the option would give, and what it
-would cost. No integration at all is an option too: it is the first row here. Choose your
-integration from the course's suggested list (Integration Patterns: APIs and Webhooks, Your
-integration project's candidates):
-- a chat window (tawk.to);
-- an e-mail service for confirmations (Resend);
-- a booking calendar (Cal.com);
-- a newsletter sign-up;
-- a map (OpenStreetMap).
-
-None of these has been tried with this starter, so check the one you choose yourself. The brief rules
-out payments, so the list has no payment provider. Add a row for each further option.
-
-**Example:** No integration: the address as text on the "Visit us" page. It costs nothing and sends
-no data to anyone, but a user must look up the way in another app.
-
-</td></tr></table>
-
 | Option | What it would give | What it would cost |
 | --- | --- | --- |
-| No integration | TODO: | TODO: |
-| TODO: | TODO: | TODO: |
+| No integration: only the calendar file our own site makes | Nothing leaves our site, and no account is needed. | It is not on the suggested list, and it answers no question a group has before booking. |
+| tawk.to, a chat window (an embed: tawk.to's script runs in our pages and draws the chat) | Free for life with its "Powered by tawk.to" line. A question is asked on the page the group is reading. No secret key, only a public widget address. | A script from another company on every page, which stores its own cookies and local storage in the user's browser. The messages go to tawk.to. It needs a tawk.to account, and someone has to answer. |
+| Cal.com, a booking calendar (an embed, or a link to its booking page) | Calendars and reminders included. | An account, and it would replace our own booking task (R6 to R9: one group per slot, group size, made-up data) instead of supporting it. |
+| Resend, an e-mail service (an API request, and a webhook back) | A confirmation e-mail arrives where people look. | An account, a secret API key on our server and a sending domain. It would send real e-mails to the made-up addresses our site holds. |
+| OpenStreetMap, a map (an embed from its Share panel, or a "Directions" link) | No account and no key. | It answers only "where is it?", which the Contact page's address already answers. An embedded map sends every user's internet address to OpenStreetMap's servers. |
+| A newsletter sign-up (no provider named on the list) | We could tell groups about new time slots. | It collects e-mail addresses, real personal data that our test site must not hold, and we have nothing to send regularly. |
 
 ## The decision
 
-<table width="100%"><tr></tr><tr><td>
-
-**Guidance.** Write the option you chose as one sentence. Once it is installed, add what you
-installed, where its settings are, and how you checked that it does what you expected: the grading
-list asks for it. Until then, write "Not installed yet" on those lines. In a team, name who took part
-in the decision. Working alone, delete that line.
-
-**Example:** We chose a map from OpenStreetMap on the "Visit us" page. Its code is in the page's
-file, with the library's place in it. We opened the page on the live site, on a phone and on a
-laptop: the map shows the marker on the library.
-
-</td></tr></table>
-
-- **We chose:** TODO:
-- **What we installed, and where its settings are:** TODO:
-- **How we checked that it does what we expected:** TODO:
-- **Who took part in the decision:** TODO:
+- **We chose:** The tawk.to chat window, on every public page.
+- **What we installed, and where its settings are:** No package. `src/lib/chat.ts` holds tawk.to's own
+  loader, as its dashboard gives it (Administration → Chat Widget), and the widget's address
+  `https://embed.tawk.to/6ad4b263b2e7a834cef07781/1k57dhl5o`. `src/components/site/SiteChat.tsx` runs
+  it with Next.js's `Script` (`lazyOnload`), in the public pages' frame (`src/app/(site)/layout.tsx`),
+  so every public page has it and `/admin` does not. `NEXT_PUBLIC_CHAT=tawk` in `.env.production`
+  switches it on for every production build; any other value, or none, leaves the chat out. The chat's
+  own settings (its colours, its greeting, when it shows as offline) are in tawk.to's dashboard, in the
+  account that owns the property.
+- **How we checked that it does what we expected:** The unit tests (`tests/unit/chat.test.ts`) and the
+  privacy migration's tests (`tests/integration/live-content.test.ts`) passed in CI on pull request #8.
+  Its Vercel preview did not build, so we checked on the live site on 18 October 2026, right after the
+  merge, in Chrome driven by a script (puppeteer, headless, at 1100 px): `/` and `/rooms` each requested
+  the widget's address (200) and showed the chat button in the bottom corner; pressing it opened the
+  chat window ("Hi! How can we help?" and a box "Type here and press enter"). `/admin/login` holds no
+  tawk.to address, and `/privacy` shows "The chat window".
+- **Who took part in the decision:** Test A (releases), with Test B, on 18 October 2026.
 
 ## Why
 
-<table width="100%"><tr></tr><tr><td>
-
-**Guidance.** Give each reason with its evidence: what you checked before you decided. Then say what
-that evidence cannot tell you. Two or three reasons are enough.
-
-**Example:** The map needs no account and no key: we read OpenStreetMap's page on embedding a map.
-The events coordinator told us that people phone the library to ask the way. Her answer cannot tell
-us how many users would look at a map.
-
-</td></tr></table>
-
-- **Why we chose it:** TODO: each reason with what you checked
-- **What this evidence cannot tell us:** TODO:
+- **Why we chose it:**
+  - It is the one candidate that answers R13: a question on the page the group is reading, before it
+    books. Cal.com would replace our booking task, Resend and a newsletter would hold or send real
+    e-mail addresses, and the map answers a question the Contact page already answers.
+  - It costs nothing: tawk.to's pricing page (read on 18 October 2026) says the chat is free for life
+    as long as its "Powered by tawk.to" line stays.
+  - It needs no account of ours and no secret key: the teacher made the tawk.to property for this test
+    project and gave us its public widget address.
+  - The booking does not depend on it: the chat loads after the page, and a page whose chat fails to
+    load works the same.
+- **What this evidence cannot tell us:** We typed no message and have no login to tawk.to, so we have
+  not seen a message arrive in the dashboard. That is for the account holder to check. The browser
+  checks cannot tell either: their Chrome cannot reach tawk.to (`playwright.config.ts`), and axe never
+  audits tawk.to's widget.
 
 ## Consequences
 
-<table width="100%"><tr></tr><tr><td>
-
-**Guidance.** Write what you accepted with the choice, both the good and the bad. One line for each
-point below is enough.
-
-**Example:** OpenStreetMap receives each user's internet address when the map loads, and our
-privacy page says so. When the service is down, the page still shows the address as text.
-
-</td></tr></table>
-
-- **The accounts it needs, and its cost in money and in time:** TODO:
-- **Who maintains it:** TODO:
-- **What we give up:** TODO:
-- **How we could leave the service later:** TODO:
-- **The personal data that leaves our site, and whether it needs a cookie banner:** TODO:
-- **What happens to our site when the service is down:** TODO:
+- **The accounts it needs, and its cost in money and in time:** One tawk.to account, here the teacher's.
+  No money while the "Powered by tawk.to" line stays (removing it costs USD 29 a month). Time: someone
+  has to read and answer the messages.
+- **Who maintains it:** The holder of the tawk.to account reads and answers the messages and changes the
+  chat's settings. The releases role keeps the widget's address in `src/lib/chat.ts`.
+- **What we give up:** tawk.to's code runs in our pages with the same rights as ours. Lighthouse and axe
+  on the live site now also see tawk.to's widget, which we do not control. And the site, which holds
+  made-up data only, now takes real text: a chat message is whatever a user types. The privacy page
+  asks for made-up details in the chat too.
+- **How we could leave the service later:** Give `NEXT_PUBLIC_CHAT` in `.env.production` any value but
+  `tawk`, and take "The chat window" off the privacy page. A next owner who keeps the chat makes their
+  own tawk.to property and puts its widget address in `src/lib/chat.ts` (`docs/handover.md`).
+- **The personal data that leaves our site, and whether it needs a cookie banner:** When a page loads
+  the chat, the user's browser sends tawk.to the user's internet address, the browser's details and the
+  page's address, and tawk.to stores its cookies and local storage (one of them recognises the browser
+  for six months), before anyone types. A message is sent only when the user types one, with a name or
+  an e-mail address only if the user gives one. Nothing of our bookings goes to tawk.to. Our privacy
+  page says all this ("The chat window"; the live page got the text through the migration
+  `20261018_120000_privacy_chat`). We show no consent question. A site with real users has to decide
+  whether it must: tawk.to can ask for consent before it stores anything (its consent form, in its
+  dashboard).
+- **What happens to our site when the service is down:** There is no chat button, and everything else
+  works. When nobody answers, a question waits in tawk.to.
 
 ## Facts read on
 
-<table width="100%"><tr></tr><tr><td>
-
-**Guidance.** List each provider's page you read, with its link and the date you read it. Plans and
-limits change, so the date tells the next reader how old the facts are. Add a row for each page.
-
-**Example:** OpenStreetMap's page on embedding a map, with its link, read on 20 April 2026.
-
-</td></tr></table>
-
 | Page | Its link | Read on |
 | --- | --- | --- |
-| TODO: | TODO: | TODO: date |
+| tawk.to Help Center, Adding a widget to your website (the widget code from Administration → Chat Widget; each property has its own code) | https://help.tawk.to/article/adding-a-widget-to-your-website | 18 October 2026 |
+| tawk.to Help Center, What are tawk.to cookies and what do they do? (its cookies and local storage, one recognising a returning user's browser for six months; without its consent form, "cookies will be stored as soon as the widget loads") | https://help.tawk.to/article/what-are-tawkto-cookies-and-what-do-they-do | 18 October 2026 |
+| tawk.to Pricing (the chat is free; removing the "Powered by tawk.to" line costs USD 29 a month) | https://www.tawk.to/pricing/ | 18 October 2026 |
+| tawk.to Privacy Policy (the site that uses the widget is the data controller; tawk.to collects the internet addresses of the site's users and keeps data as long as its purposes need) | https://www.tawk.to/privacy-policy/ | 18 October 2026 |
+| The course's list of candidates, chapter 8.3 "Integration Patterns: APIs and Webhooks", which classes tawk.to as an embed | In the course | 18 October 2026 |
 
 ## Review when
 
-<table width="100%"><tr></tr><tr><td>
-
-**Guidance.** Name the event that should make someone look at this decision again. One line is
-enough.
-
-**Example:** We review it when the library moves, or when the map stops loading on the live site.
-
-</td></tr></table>
-
-TODO: when to review it.
+When the site gets real users (then: tawk.to's consent form or a consent question of our own, and the
+privacy page again), when the site is handed to an owner with their own tawk.to account, when nobody
+answers the chat for a week, or when tawk.to's free plan or its cookies change.
