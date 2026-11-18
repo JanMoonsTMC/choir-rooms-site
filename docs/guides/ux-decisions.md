@@ -235,7 +235,7 @@ tab through a page to see that the focus ring still stands out.
 Each task has its own README, with what each file does, why it is built that way, and how to turn it
 into a task of your own site:
 
-- [Find a workshop by topic and level](../../src/tasks/find-workshop/README.md): for example, concerts
+- [Find a workshop by topic and level](https://github.com/buildingbetterwebsites/campuscycle-starter/blob/main/src/tasks/find-workshop/README.md): for example, concerts
   by genre and city.
 - [Book a clinic slot](../../src/tasks/book-slot/README.md): for example, seats for performances.
 

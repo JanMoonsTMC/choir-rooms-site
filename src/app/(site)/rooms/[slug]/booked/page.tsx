@@ -1,5 +1,5 @@
-// The booking confirmation, /clinics/<slug>/booked?ref=<booking id>.<signature>. The booking form
-// opens it after a booking was saved. It says only what really happened: it shows the clinic and the
+// The booking confirmation, /rooms/<slug>/booked?ref=<booking id>.<signature>. The booking form
+// opens it after a booking was saved. It says only what really happened: it shows the room and the
 // time of the booking named in the link, and only when the link's signature is right
 // (src/tasks/book-slot/receipt.ts). A link that is missing, changed or made up never claims a booking.
 //
@@ -32,8 +32,8 @@ type Props = {
 export default async function BookedPage({ params, searchParams }: Props) {
   const payload = await getPayload({ config })
   const { slug } = await params
-  const clinic = (await payload.find({ collection: 'clinics', where: { slug: { equals: slug } }, depth: 0, limit: 1, joins: false })).docs[0]
-  if (!clinic) notFound()
+  const room = (await payload.find({ collection: 'rooms', where: { slug: { equals: slug } }, depth: 0, limit: 1, joins: false })).docs[0]
+  if (!room) notFound()
 
   // The booking named in the link, if its signature is right. Bookings are private, so this server
   // code reads it with overrideAccess: true, and only its time slot (select): never the name or e-mail.
@@ -43,8 +43,8 @@ export default async function BookedPage({ params, searchParams }: Props) {
     : await payload.findByID({ collection: 'bookings', id, depth: 0, select: { timeSlot: true, member: true }, overrideAccess: true, disableErrors: true })
   const slotId = typeof booking?.timeSlot === 'number' ? booking.timeSlot : null
   const slot = slotId === null ? null : await payload.findByID({ collection: 'timeSlots', id: slotId, depth: 0, joins: false, disableErrors: true })
-  // The booking must also be for THIS clinic: a link to another clinic's booking shows nothing.
-  const confirmed = slot !== null && slot.clinic === clinic.id
+  // The booking must also be for THIS room: a link to another room's booking shows nothing.
+  const confirmed = slot !== null && slot.room === room.id
 
   if (!confirmed) {
     return (
@@ -52,8 +52,8 @@ export default async function BookedPage({ params, searchParams }: Props) {
         <PageTitle title="Booking confirmation" tone="yellow" />
         <Notice tone="warning" label="Please note" className="max-w-3xl">
           <p className="font-heading text-xl font-extrabold">We can&apos;t show this booking confirmation.</p>
-          <p>The link may be incomplete or out of date. The booking page shows its times and how many places each one has left.</p>
-          <ButtonLink href={`/clinics/${clinic.slug}`} variant="secondary" className="mt-2 w-fit">Back to booking</ButtonLink>
+          <p>The link may be incomplete or out of date. The room&apos;s page shows its time slots and which ones are still free.</p>
+          <ButtonLink href={`/rooms/${room.slug}`} variant="secondary" className="mt-2 w-fit">{`Back to ${room.name}`}</ButtonLink>
         </Notice>
       </div>
     )
@@ -91,20 +91,20 @@ export default async function BookedPage({ params, searchParams }: Props) {
         <section aria-labelledby="booking" className="framed grid gap-4 p-6 offset-mint">
           <h2 id="booking" className="text-xl">Your booking</h2>
           <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-2">
-            <dt className="text-ink-soft">Booked at</dt>
-            <dd className="min-w-0 font-semibold [overflow-wrap:anywhere]">{clinic.name}</dd>
+            <dt className="text-ink-soft">Room</dt>
+            <dd className="min-w-0 font-semibold [overflow-wrap:anywhere]">{room.name}</dd>
             <dt className="text-ink-soft">Time</dt>
-            <dd className="font-semibold">{formatSlotTime(slot.startsAt)}</dd>
+            <dd className="font-semibold">{formatSlotTime(slot.startsAt, slot.endsAt)}</dd>
             {facts.place && (
               <>
-                <dt className="text-ink-soft">Place</dt>
+                <dt className="text-ink-soft">Address</dt>
                 <dd className="min-w-0 font-semibold [overflow-wrap:anywhere]">{facts.place}</dd>
               </>
             )}
           </dl>
         </section>
         <div className="flex flex-wrap gap-3">
-          <ButtonLink href={`/clinics/${clinic.slug}`} variant="secondary">Back to booking</ButtonLink>
+          <ButtonLink href={`/rooms/${room.slug}`} variant="secondary">{`Back to ${room.name}`}</ButtonLink>
           <ButtonLink href="/" variant="quiet">Home</ButtonLink>
         </div>
       </div>

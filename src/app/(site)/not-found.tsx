@@ -1,5 +1,5 @@
 // The "page not found" page (error 404): shown when an address has no page behind it, for example a
-// mistyped link or a workshop that was removed. It says what happened in plain words and offers the
+// mistyped link or a room that was removed. It says what happened in plain words and offers the
 // two most useful ways on, instead of leaving the user stuck.
 import { ButtonLink } from '@/components/site/ButtonLink'
 import { PageTitle } from '@/components/site/PageTitle'
@@ -17,7 +17,7 @@ export default function NotFound() {
       />
       <div className="flex flex-wrap gap-3 px-6 sm:px-10 lg:px-14">
         <ButtonLink href="/">Go to the home page</ButtonLink>
-        <ButtonLink href="/workshops" variant="secondary">See the workshops</ButtonLink>
+        <ButtonLink href="/rooms" variant="secondary">See the rooms</ButtonLink>
       </div>
     </div>
   )

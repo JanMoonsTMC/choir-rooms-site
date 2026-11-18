@@ -2,7 +2,7 @@ import type { GlobalConfig } from 'payload'
 import { anyone, editorsOnly } from '../access'
 
 // The facts that several pages show: one record, so each fact has one source. An editor changes the
-// pricing rule here once, and the home page and every workshop page show the new text at once.
+// pricing rule here once, and the home page and every room page show the new text at once.
 // A "global" is a record that exists exactly once (there is one set of site facts, not a list).
 export const SiteFacts: GlobalConfig = {
   slug: 'site-facts',
@@ -21,7 +21,7 @@ export const SiteFacts: GlobalConfig = {
       type: 'textarea',
       required: true,
       admin: {
-        description: 'Shown on the home page and on every workshop page.',
+        description: 'Shown on the home page, the rooms page and every room page.',
       },
     },
     {
@@ -29,7 +29,7 @@ export const SiteFacts: GlobalConfig = {
       type: 'text',
       required: true,
       admin: {
-        description: 'Where the workshops and the clinic are. Shown on the Contact page and on every workshop page.',
+        description: 'The address of the house. Shown on the Contact page, on every room page and on the booking confirmation.',
       },
     },
     {

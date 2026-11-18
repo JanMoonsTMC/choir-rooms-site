@@ -56,7 +56,7 @@ export async function Header() {
             </span>
             {SITE_NAME}
           </Link>
-          {/* A sixth menu link only while the optional members' area is on: "My bookings" for a member
+          {/* A fifth menu link only while the optional members' area is on: "My bookings" for a member
               who is logged in, "Log in" for everyone else. */}
           <MainNav account={membersAreaOn()} loggedIn={member !== null} />
           {member && (

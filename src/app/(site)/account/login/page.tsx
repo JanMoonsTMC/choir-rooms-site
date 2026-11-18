@@ -36,7 +36,7 @@ export default async function LoginPage({ searchParams }: Props) {
         )}
         <LoginForm />
         <p className="text-ink-soft">
-          No account? You do not need one to book: <Link href="/clinics">book a practice room</Link>{' '}
+          No account? You do not need one to book: <Link href="/rooms">book a practice room</Link>{' '}
           without logging in. Accounts are made by the site&apos;s editors.
         </p>
       </div>
