@@ -23,7 +23,7 @@ export const dynamic = 'force-dynamic'
 
 // The clinic's picture, from the media library (the seed uploads it). To use another one, upload it
 // in /admin and put its file name here.
-const CLINIC_IMAGE = 'clinic-tools'
+const CLINIC_IMAGE = 'practice-rooms'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -95,10 +95,10 @@ export default async function ClinicPage({ params }: Props) {
 
   return (
     <article className="pb-6">
-      <ParentLink href="/clinics" label="Repair clinic" current={clinic.name} />
+      <ParentLink href="/clinics" label="Book a room" current={clinic.name} />
       <PageTitle
         title={clinic.name}
-        intro="Choose a time, book it here, and bring your bicycle for a check or a repair."
+        intro="Choose a time, book it here, and bring your group."
         image={imageFrom(picture)}
         className="mt-3 sm:mt-4"
       />
@@ -121,7 +121,7 @@ export default async function ClinicPage({ params }: Props) {
 
         <div className="grid content-start gap-block lg:col-start-1 lg:row-start-1">
           <section aria-labelledby="about" className="grid gap-3">
-            <h2 id="about" className="text-2xl">About the clinic</h2>
+            <h2 id="about" className="text-2xl">About booking</h2>
             <p className="max-w-(--container-reading)">{clinic.summary}</p>
             {/* W5: show the clinic's "What to bring" list here, the same way this page shows its prices below. */}
           </section>
@@ -154,7 +154,7 @@ export default async function ClinicPage({ params }: Props) {
             ) : allFull ? (
               <Notice tone="warning" label="Fully booked">
                 <p className="font-semibold">Every time slot is full.</p>
-                <p>Check this page again later, or learn to do a repair yourself in a workshop.</p>
+                <p>Check this page again later, or join one of our workshops for singers.</p>
                 <ButtonLink href="/workshops" variant="secondary" className="mt-2 w-fit">Find a workshop</ButtonLink>
               </Notice>
             ) : (

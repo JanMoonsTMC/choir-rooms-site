@@ -27,7 +27,7 @@ export default async function LoginPage({ searchParams }: Props) {
 
   return (
     <div className="pb-6">
-      <PageTitle title="Log in" intro="Log in to see the repair clinic bookings you made while logged in." tone="blue" />
+      <PageTitle title="Log in" intro="Log in to see the room bookings you made while logged in." tone="blue" />
       <div className="grid max-w-xl gap-block">
         {signedOut && (
           <Notice tone="success" label="Done" role="status">
@@ -36,7 +36,7 @@ export default async function LoginPage({ searchParams }: Props) {
         )}
         <LoginForm />
         <p className="text-ink-soft">
-          No account? You do not need one to book: <Link href="/clinics">book a repair clinic slot</Link>{' '}
+          No account? You do not need one to book: <Link href="/clinics">book a practice room</Link>{' '}
           without logging in. Accounts are made by the site&apos;s editors.
         </p>
       </div>

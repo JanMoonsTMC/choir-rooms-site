@@ -9,7 +9,7 @@ import { FramedCard } from '@/components/site/FramedCard'
 import { Hero } from '@/components/site/Hero'
 import { Notice } from '@/components/site/Notice'
 import { Badge } from '@/components/ui/badge'
-import { SITE_NAME } from '@/content/campus-cycle'
+import { SITE_NAME } from '@/content/riverside-voices'
 import { formatPrice, formatWhen, imageFrom, levelLabel } from '@/lib/format'
 import config from '@/payload.config'
 
@@ -19,7 +19,7 @@ export const dynamic = 'force-dynamic'
 
 // The home page's picture, from the media library. To use another one, upload it in /admin and put
 // its file name here.
-const HOME_IMAGE = 'workshop-tools'
+const HOME_IMAGE = 'rehearsal-house'
 
 export default async function HomePage() {
   const payload = await getPayload({ config })
@@ -43,7 +43,7 @@ export default async function HomePage() {
           <>
             <ButtonLink href="/workshops" size="lg">Find a workshop</ButtonLink>
             <ButtonLink href={clinic ? `/clinics/${clinic.slug}` : '/clinics'} variant="secondary" size="lg">
-              Repair clinic
+              Book a room
             </ButtonLink>
           </>
         }
@@ -53,9 +53,9 @@ export default async function HomePage() {
         <h2 id="choose" className="text-2xl">What would you like to do?</h2>
         <div className="grid gap-block md:grid-cols-2">
           <div className="framed grid content-start gap-4 p-6 offset-purple sm:p-8">
-            <Badge tone="purple">Learn it yourself</Badge>
+            <Badge tone="purple">Sing with us</Badge>
             <h3 className="text-xl">Find a workshop</h3>
-            <p>Short maintenance workshops in small groups. Choose a topic:</p>
+            <p>Short workshops for singers, in small groups. Choose a topic:</p>
             <ul className="flex flex-wrap gap-2">
               {topics.map((topic) => (
                 <li key={topic.id}>
@@ -69,8 +69,8 @@ export default async function HomePage() {
             <ButtonLink href="/workshops" className="w-fit">See all workshops</ButtonLink>
           </div>
           <div className="framed grid content-start gap-4 p-6 offset-coral sm:p-8">
-            <Badge tone="coral">Let us fix it</Badge>
-            <h3 className="text-xl">Repair clinic</h3>
+            <Badge tone="coral">Rehearse here</Badge>
+            <h3 className="text-xl">Book a practice room</h3>
             {clinic ? (
               <>
                 <p className="font-semibold">{clinic.name} · {formatWhen(clinic)}</p>
@@ -79,8 +79,8 @@ export default async function HomePage() {
               </>
             ) : (
               <>
-                <p className="font-semibold">The repair clinic opens soon</p>
-                <p>When it opens, you can book a time slot here and bring your bicycle for a check or a repair.</p>
+                <p className="font-semibold">Room booking opens soon</p>
+                <p>When it opens, you can book a two-hour time slot here for your choir, band or theatre group.</p>
               </>
             )}
           </div>

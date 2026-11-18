@@ -97,7 +97,7 @@
       ]
     },
     {
-      "path": "/workshops?topic=brakes-and-gears&level=beginner",
+      "path": "/workshops?topic=reading-music&level=beginner",
       "groups": [
         {
           "criterion": 3,
@@ -120,10 +120,10 @@
       ]
     },
     {
-      "path": "/workshops/adjust-your-brakes"
+      "path": "/workshops/read-music-from-scratch"
     },
     {
-      "path": "/topics/brakes-and-gears"
+      "path": "/topics/reading-music"
     },
     {
       "path": "/clinics"

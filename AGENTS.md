@@ -1,4 +1,4 @@
-# Campus Cycle starter: notes for coding agents
+# Riverside Voices (built on the course starter): notes for coding agents
 
 - **What this is:** the starter website of the course "Building better websites": Next.js 16 with
   Payload CMS 3 on Postgres (Neon), images in Vercel Blob, Tailwind CSS 4. Learners copy it and
